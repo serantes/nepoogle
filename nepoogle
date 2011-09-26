@@ -13,7 +13,7 @@ from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.1'
+PROGRAM_VERSION_VERSION = 'v0.2git'
 PROGRAM_VERSION_DATE = '2011/09/24'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
@@ -100,7 +100,7 @@ def lvalue(items, value, searchColumn = 0, valueColumn = 0):
 
 
 def NAO(name = '', returnQUrl = False):
-    ontology, property = name.strip().split('#')
+    ontology, property = name.strip().split(':')
     date = lvalue(knownOntologies, ontology, 0, 1)
     if date != None:
         value = 'http://www.semanticdesktop.org/ontologies/' + date + '/' + ontology + '#' + property
@@ -194,11 +194,14 @@ class nsSparqlBuilder():
                     ]
     shortcuts = [ \
                     ['_nmm:actor->nco:fullname','actor',  'ac'], \
-                    #['rdf:type=nmm:actor->nco:fullname', 'actors', 'acs'], \
+                    #['nmm:actor->nco:fullname', 'actors', 'acs'], \
+                    #  optional { ?x0 nmm:actor ?x00 . ?x00 nco:fullname ?fullname . }
+                    #  HAVING (REGEX(?fullname, '', 'i'))
                     ['nmm:musicAlbum->nie:title', 'album', 'al'], \
                     ['rdf:type=nmm:MusicAlbum->nie:title', 'albums', 'als'], \
                     ['nao:altLabel', 'altlabel', 'all'], \
-                    ['rdf:type=nco:Contact->nco:fullname', 'contact', 'co'], \
+                    #['_nco:Contact->nco:fullname', 'contact', 'co'], \
+                    ['rdf:type=nco:Contact->nco:fullname', 'contacts', 'cos'], \
                     ['nco:creator->nco:fullname', 'creator', 'cr'], \
                     ['nao:description', 'description', 'de'], \
                     ['_nmm:director->nco:fullname', 'director', 'di'], \
@@ -981,6 +984,12 @@ class Nepoogle(QWidget):
         elif url[:6] == 'prop:/':
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
             
+        elif url[:7] == 'query:/':
+            self.leSearch.setText(url[7:])
+            self.pendingQuery = True
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
         else:
             # KDE must do the job.
             subprocess.Popen(["kioclient", "exec", url])
@@ -1150,7 +1159,8 @@ class Nepoogle(QWidget):
 
         if htmlOutput:
             result += '<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n'
-            
+
+        resources = []
         for item in data:
             if htmlOutput:
                 text = '<tr>'
@@ -1158,95 +1168,139 @@ class Nepoogle(QWidget):
             else:
                 text = ''
                 
-            textData = ''
-            itemType = ''
-            links = ''
-            resourceID = ''
-            unplugged = False
             imgStyle = "border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
+            resRow = []
             for subItem in item:
                 if subItem == '':
-                    pass
+                    continue
                   
-                elif htmlOutput:
+                if htmlOutput:
                     subItem = fromPercentEncoding(subItem)
                     if (subItem[:7] == 'file://'):
-                        subItem = fromPercentEncoding(subItem)
-                        if textData != '':
-                            textData += '<br />'
-
-                        if (os.path.isfile(subItem[7:]) or os.path.islink(subItem[7:])):
-                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)} \
-                                        + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
-                                        % {'dir': os.path.dirname(subItem), 'icon': self.iconFileManager, 'style': imgStyle}
-                                        
-
-                        else:
-                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)}
+                        resRow += [['file', subItem]]
 
                     elif ((subItem[:7] == 'http://') or (subItem[:6] == 'ftp://') or (subItem[:8] == 'https://')):
-                        subItem = fromPercentEncoding(subItem)
-                        if textData != '':
-                            textData += '<br />'
-                            
-                        textData = "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)}
+                        resRow += [['url', subItem]]
 
                     elif (subItem[:8] == 'filex://'):
-                        if textData != '':
-                            textData += '<br />'
-
-                        #textData = "%(filex)s<br />%(name)s" \
-                        #            % {'filex': '/'.join(subItem.split('/')[0:3]), \
-                        #                'name': '/' + '/'.join(subItem[8:].split('/')[1:])}
-                        textData = "<b>[%(dev)s<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties for %(id)s\" src=\"file://%(icon)s\"></a>]</b><em>%(name)s</em>" \
-                                    % {'dev': 'Unplugged', \
-                                        'id': 'nepomuk:/res/' + subItem[8:].split('/')[0], \
-                                        'name': '/' + '/'.join(subItem[8:].split('/')[1:]), \
-                                        'icon': self.iconDocumentInfo, 'style': imgStyle}
-                        unplugged = True
+                        resRow += [['filex', subItem]]
                         
                     #elif (subItem[0] == '[') and (subItem[-1] == ']'):
-                        #if textData != '':
-                            #textData += '<br />'
-
-                        #textData += "type(s): " + subItem
+                        #resRow += [['type', subItem]]
 
                     elif (subItem[:9] == 'nepomuk:/'):
+                        resRow += [['nepomuk', subItem]]
                         resourceID = subItem
 
                     else:
+                        resRow += [['', subItem]]
+
+            resources += [resRow]
+
+            for row in resources:
+                links = ''
+                textData = ''
+                queryLink = ''
+                nepomukResource = None
+                for i in range(0, len(row)):
+                    item = row[i]
+                    if item[0] == 'nepomuk':
+                        nepomukResource = Nepomuk.Resource(item[1])
+                        htmlstr = "<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(icon)s\"></a>" \
+                                        % {'id': item[1], 'icon': self.iconDocumentInfo, 'style': imgStyle}
+                                        
+                        if links == '':
+                            links = htmlstr
+
+                        else:
+                            links = htmlstr + links
+   
+                    elif item[0] == 'file':
+                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': item[1], 'icon': self.iconFileManager, 'style': imgStyle} \
+                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': item[1], 'icon': self.iconKonqueror, 'style': imgStyle} \
+                                + " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
+                                    % {'id': item[1], 'icon': self.iconSystemRun, 'style': imgStyle}
+
                         if textData != '':
                             textData += '<br />'
+                                    
+                        if (os.path.isfile(item[1][7:]) or os.path.islink(item[1][7:])):
+                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])} \
+                                        + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
+                                        % {'dir': os.path.dirname(item[1]), 'icon': self.iconFileManager, 'style': imgStyle}
 
-                        textData += '<em>' + subItem + '</em>'
+                        else:
+                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
 
-                else:
-                    if text != '':
-                        text += ', '
+                    elif item[0] == 'filex':
+                        if textData != '':
+                            textData += '<br />'
+                        
+                        textData = "<b>[%(dev)s<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties for %(id)s\" src=\"file://%(icon)s\"></a>]</b><em>%(name)s</em>" \
+                                        % {'dev': 'Unplugged', \
+                                            'id': 'nepomuk:/res/' + item[1][8:].split('/')[0], \
+                                            'name': '/' + '/'.join(item[1][8:].split('/')[1:]), \
+                                            'icon': self.iconDocumentInfo, 'style': imgStyle}
+                    
+                    elif item[0] == 'url':
+                        if textData != '':
+                            textData += '<br />'
+                            
+                        textData = "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
 
-            if resourceID != '':
-                links = " <a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(icon)s\"></a>" \
-                            % {'id': resourceID, 'icon': self.iconDocumentInfo, 'style': imgStyle} \
+                    else:
+                        if queryLink == '':
+                            queryLink = item[1]
 
-                if not unplugged:
-                    links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': resourceID, 'icon': self.iconFileManager, 'style': imgStyle} \
-                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': resourceID, 'icon': self.iconKonqueror, 'style': imgStyle} \
-                                + " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
-                                    % {'id': resourceID, 'icon': self.iconSystemRun, 'style': imgStyle}
+                        if structure[i].lower() == 'altlabel':
+                            textData += ' (%s)' % item[1]
 
-                try:
-                    itemType = Nepomuk.Resource(resourceID).resourceType().toString().split('#')[1]
+                        else:
+                            if textData != '':
+                                textData += '<br />'
+                                
+                            textData += '<em>' + item[1] + '</em>'
 
-                except:
-                    itemType = ''
-
-            else:
+            if nepomukResource == None:
                 itemType = 'Property'
 
-            text = '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
+            else:
+                itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
 
+            if itemType == '':
+                itemType = 'unknown'
+
+            else:
+                if queryLink != '':
+                    itemTypeLower = itemType.lower()
+                    if itemTypeLower == 'tag':
+                        textData = '<a href=\"query:/hastag:+\'%(link)s\'\">%(value)s' % {'link': queryLink, 'value': textData}
+                        if (textData.find('</em>') >= 0):
+                            textData = textData.replace('</em>', '</a></em>')
+
+                        else:
+                            textData += '</a>'
+
+                    elif itemTypeLower == 'musicalbum':
+                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': imgStyle} \
+                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': imgStyle} \
+                                + " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconSystemRun, 'style': imgStyle}
+
+                    elif itemTypeLower == 'contact':
+                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': imgStyle} \
+                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': imgStyle} \
+                                + " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconSystemRun, 'style': imgStyle}
+
+
+            text = '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
             if htmlOutput:
                 text += '</tr>'
 
@@ -1283,12 +1337,6 @@ class Nepoogle(QWidget):
         
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
-        #self.repaint()
-        #self.wvOutput.setHtml('<html><body><h3>Searching...</h3></body></html>')
-        #self.repaint()
-        #self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
-        #                        % self.iconProcessIdle)
-        #self.repaint()
         self.setCursor(Qt.BusyCursor)
         self.repaint()
 
@@ -1309,7 +1357,7 @@ class Nepoogle(QWidget):
                 raise Exception('Please, type something.')
 
         #try:
-        #    pass
+            pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
