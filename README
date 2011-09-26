@@ -1,0 +1,23 @@
+nepoogle is a gui to query the Nepomuk's database with a syntax inspired in
+Google's
+
+
+Requirements
+------------
+
+nepoogle is developend in Python so PyKDE bingdings are mandatory.
+
+
+Usage
+-----
+
+nepoogle works in console or in gui mode. Try nepoogle --help in console
+mode.
+
+
+Contact
+-------
+
+For bugs, suggestions or comments write an email to
+
+kde@aynoa.net

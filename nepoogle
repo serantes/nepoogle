@@ -1,0 +1,1486 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os, time, subprocess, sys
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtWebKit import *
+from PyKDE4.kdeui import *
+from PyKDE4.nepomuk import *
+from PyKDE4.soprano import *
+from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
+
+PROGRAM_NAME = os.path.basename(sys.argv[0])
+PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
+PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
+PROGRAM_VERSION_VERSION = 'v0.1'
+PROGRAM_VERSION_DATE = '2011/09/24'
+PROGRAM_AUTHOR_NAME = 'Ig'
+PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
+PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
+                        % {'name': PROGRAM_NAME, \
+                            'version': PROGRAM_VERSION_VERSION, \
+                            'date': PROGRAM_VERSION_DATE \
+                            }
+
+RDF_SCHEMA_RESOURCE = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+
+gSysEncoding = 'utf-8' # Change this for a detection system.
+
+knownOntologies = [ \
+                    ['nao', '2007/08/15'], ['ncal', '2007/04/02'], \
+                    ['nco', '2007/03/22'], ['nexif', '2007/05/10'], \
+                    ['nfo', '2007/03/22'], ['nid3', '2007/05/10'], \
+                    ['nie', '2007/01/19'], ['nmm', '2009/02/19'], \
+                    ['nmo', '2007/03/22'], ['nrl', '2007/08/15'], \
+                    ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
+                ]
+
+                
+def vartype(var):
+    return type(var).__name__
+
+
+def toUtf8(string):
+    try:
+        if vartype(string) == 'QString':
+            return string.toUtf8() # REVISAR: Esto no es coherente con el resto.
+
+        else:
+            return string.encode(gSysEncoding)
+
+    except:
+        return string
+
+
+def toUnicode(string):
+    try:
+
+        if vartype(string) == 'QString':
+            return unicode(str(string.toUtf8()), gSysEncoding)
+
+        if vartype(string) == 'unicode':
+            return string
+
+        return unicode(string, gSysEncoding)
+
+    except:
+        return string
+
+
+def iif(condition = True, value = '', optionalValue = ''):
+    return value if condition else optionalValue
+
+
+def lindex(items, value, column = None):
+    try:
+        if vartype(items[0]) != 'list':
+            column = None
+
+        if column == None:
+            result = next((i for i, element in enumerate(items) if value in element), None)
+
+        else:
+            result = next((i for i, element in enumerate(items) if value == element[column]), None)
+
+    except:
+        result = None
+
+    return result
+
+
+def lvalue(items, value, searchColumn = 0, valueColumn = 0):
+    try:
+        value = items[lindex(items, value, searchColumn)][valueColumn]
+
+    except:
+        value = None
+
+    return value
+
+
+def NAO(name = '', returnQUrl = False):
+    ontology, property = name.strip().split('#')
+    date = lvalue(knownOntologies, ontology, 0, 1)
+    if date != None:
+        value = 'http://www.semanticdesktop.org/ontologies/' + date + '/' + ontology + '#' + property
+
+    else:
+        value = 'Soprano.Vocabulary.%(1)s.%(2)s().toString()' % {'1': ontology.upper(), '2': property}
+        try:
+            value = eval(value)
+
+        except:
+            value = ''
+
+    if returnQUrl:
+        return QUrl(value)
+
+    else:
+        return value
+
+        
+def fromPercentEncoding(url = ''):
+    qurl = QUrl()
+    qurl.setEncodedUrl(toUtf8(url))
+    return toUnicode(qurl.toString())
+
+
+def toPercentEncoding(url = ''):
+    return QUrl.toPercentEncoding(url)
+    #return url.replace(' ', '%20')
+    #return url
+
+
+# begin nssparql.py
+class nsSparqlBuilder():
+
+    _private_main_header = \
+                            "SELECT DISTINCT %s\n" \
+                            "WHERE {\n\n"
+    _private_main_footer = "}\n"
+
+    #columns = '*'
+    # ?x0+>prefLabel ?x0*>url + si * opcional
+    #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
+    columns = '?url ?title ?prefLabel ?fullname ?altLabel'
+    command = ''
+    # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
+    # mal:actors (filtro)
+    commands = [ \
+                ['--actors', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
+                ['--albums', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
+                ['--audios', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
+                ['--connect', ['', [], [], []]], \
+                ['--contacts', ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
+                ['--creators', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
+                ['--daemonize', ['', [], [], []]], \
+                ['--directors', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
+                ['--disconnect', ['', [], [], []]], \
+                ['--genres', ['?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
+                ['--help', ['help', [], [], []]], \
+                ['--images', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
+                ['--movies', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
+                ['--performers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                ['--quit', ['quit', [], [], []]], \
+                ['--tags', ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
+                ['--tvseries', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
+                ['--tvshows', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
+                ['--videos', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
+                ['--writers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
+            ]
+    #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
+    #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
+    # 'nmm:genre', 'nmm:releaseDate', ''
+    fields = [ \
+                [0, 'nie:url', True, True], \
+                [1, 'nie:title', True, True], \
+                [2, 'nao:prefLabel', True, True], \
+                [3, 'nco:fullname', True, True], \
+                [4, 'nao:altLabel', True, True], \
+                [5, 'rdf:type', True, False] \
+            ]
+    filters = []
+    stdoutQuery = False
+    getAllFields = True
+    #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
+    #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
+    ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
+    ontologyTypes = [ \
+                        ['nao:numericrating', 'number'], \
+                        ['nmm:episodenumber', 'number'], \
+                        ['nmm:season', 'number'], \
+                        ['nuao:usagecount', 'number'] \
+                    ]
+    shortcuts = [ \
+                    ['_nmm:actor->nco:fullname','actor',  'ac'], \
+                    #['rdf:type=nmm:actor->nco:fullname', 'actors', 'acs'], \
+                    ['nmm:musicAlbum->nie:title', 'album', 'al'], \
+                    ['rdf:type=nmm:MusicAlbum->nie:title', 'albums', 'als'], \
+                    ['nao:altLabel', 'altlabel', 'all'], \
+                    ['rdf:type=nco:Contact->nco:fullname', 'contact', 'co'], \
+                    ['nco:creator->nco:fullname', 'creator', 'cr'], \
+                    ['nao:description', 'description', 'de'], \
+                    ['_nmm:director->nco:fullname', 'director', 'di'], \
+                    ['nmm:episodeNumber', 'episode', 'ep'], \
+                    ['nco:fullname', 'fullname', 'fn'], \
+                    ['nmm:genre', 'genre', 'ge'], \
+                    ['_nao:hasTag->%nao:identifier', 'hastag', 'ht'], \
+                    ['nie:mimeType', 'mimetype', 'mt'], \
+                    ['rdf:type=nmm:Movie->nie:title', 'movie', 'mo'], \
+                    ['nie:url', 'name', 'na'], \
+                    ['nao:numericRating', 'numericrating', 'nr'], \
+                    ['nmm:performer->nco:fullname', 'performer', 'pe'], \
+                    ['nuao:usageCount', 'playcount', 'pc'], \
+                    ['nao:prefLabel', 'preflabel', 'pl'], \
+                    ['nao:numericRating', 'rating', 'ra'], \
+                    ['nmm:season', 'season', 'se'], \
+                    ['nao:identifier', 'tag', 'ta'], \
+                    ['nie:title', 'title', 'ti'], \
+                    ['nmm:series->nie:title', 'tvserie', 'ts'], \
+                    ['rdf:type=nmm:TVSeries->nie:title', 'tvseries', 'tvs'], \
+                    ['nmm:series->nie:title', 'tvshow', 'tv'], \
+                    ['rdf:type', 'type', 'ty'], \
+                    ['%nie:url', 'url', 'ur'], \
+                    ['nuao:usageCount', 'usagecount', 'uc'], \
+                    ['_nmm:writer->nco:fullname', 'writer', 'wr'] \
+                ]
+    #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
+    typeFilters = []
+    tempData = ['', [], [], []]
+    
+
+    def __init__(self):
+        pass
+
+
+    def __del__(self):
+        pass
+
+
+    def buildQuery(self, searchString = ''):
+
+        if ((self.command == '') and (self.filters == []) and (searchString != '')):
+            self.filters = self.stringQueryConversion(searchString)
+
+        command = self.command.strip().lower()
+        if command == '':
+            pass
+        
+        #elif command == '--help':
+        #    raise Exception('help')
+
+        else:
+            idx = lindex(self.commands, command, 0)
+            if idx >= 0:
+                if self.commands[idx][1][0] == '':
+                    raise Exception("Sorry, command \"%s\" not implemented yet." % self.command)
+
+                else:
+                    self.tempData = self.commands[idx][1]
+
+            else:
+                raise Exception("Unknown command \"%s\", try \"--help\" command." % self.command)
+
+            if self.tempData[0][0] != '?':
+                raise Exception(self.tempData[0])
+
+        if self.tempData[0] == '':
+            columns = self.columns
+
+        else:
+            columns = self.tempData[0]
+            
+        header = self._private_main_header % columns
+        
+        typeFilter = self.bsTypeFilter() + '\n'
+        if self.getAllFields:
+            fields = self.bsFields() + '\n'
+
+        else:
+            fields = ''
+
+        searchFilter = self.bsFilter() + '\n'
+
+        footer = self._private_main_footer
+        having = self.bsHaving()
+        sort = self.bsSort()
+
+        query = header \
+                + typeFilter \
+                + fields \
+                + searchFilter \
+                + footer \
+                + having \
+                + sort
+
+        if self.stdoutQuery:
+            print toUtf8(query)
+
+        self.tempData = ['', [], [], []]
+        
+        return query
+
+
+    def bsFields(self):
+        if self.tempData[1] == []:
+            fields = self.fields
+
+        else:
+            fields = self.tempData[1]
+            
+        text = ""
+        for item in fields:
+            if not item[3]:
+                continue
+
+            try:
+                text += "  optional { ?x0 %(ontology)s ?%(field)s . }\n" \
+                            % {'ontology': item[1], 'field': item[1].split(":")[1]}
+
+            except:
+                pass
+
+        return text
+
+
+    def ontologyConversion(self, ontology = ''):
+        ont = ontology.strip().lower()
+
+        if ont == '':
+            ontology = ''
+        
+        elif ont.find(':') > 0:
+            pass
+          
+        else:
+            idx = lindex(self.shortcuts, ont, 1)
+            if idx == None:
+                # Miramos en las abreviaturas.
+                idx = lindex(self.shortcuts, ont, 2)
+
+            if idx >= 0:
+                ontology = self.shortcuts[idx][0]
+
+            else:
+                raise Exception("Unknown ontology \"%s\"." % ontology)
+
+        return ontology
+
+
+    def bsIndividualFilter(self, value = ''):
+        ontologies = [self.ontologyConversion(value[2])]
+        if ontologies == ['']:
+            if self.tempData[3] == []:
+                ontologies = self.ontologyFilters
+             
+            else:
+                ontologies = self.tempData[3]
+
+        text = ""
+        for item in ontologies:
+            textAux = ""
+            ontologyElements = item.split("->")
+            i = 0
+            optionalUsage = False
+            for ontology in ontologyElements:
+                ontology = ontology.strip()
+
+                try:
+                    val = value[0]
+
+                except:
+                    val = ""
+
+                try:
+                    operator = value[1]
+                    if operator == '':
+                        operator = '='
+
+                except:
+                    operator = '='
+                    
+                valType = ""
+                if ontology[0] == '%':
+                    ontology = ontology[1:]
+                    val = QUrl.toPercentEncoding(val)
+                    #TODO: qué pasa con los paréntesis?
+                    #val.replace('%28', '(').replace('%29', ')')
+
+                elif ontology[0] == '_':
+                    ontology = ontology[1:]
+                    optionalUsage = optionalUsage or (operator == '!=')
+
+                valType = self.ontologyVarType(ontology)
+                #optionalUsage = (optionalUsage and (operator == '!='))
+                if not optionalUsage:
+                    if ontology.find('=') >= 0:
+                        textAux += "?x%(v1)s %(ont)s %(v2)s . " % {'ont': ontology.split('=')[0], 'v1': i, 'v2': ontology.split('=')[1]}
+
+                    else:
+                        textAux += "?x%(v1)s %(ont)s ?x%(v2)s . " % {'ont': ontology, 'v1': i, 'v2': i + 1}
+                        i += 1
+
+            if val == '':
+                filterExpression = '}\n'
+
+            else:
+                if valType == 'number':
+                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+                else:
+                    if operator == '==':
+                        filterExpression = "FILTER(?x%(v2)s %(op)s '%(val)s'^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
+
+                    elif operator == '=':
+                        filterExpression = "FILTER(REGEX(?x%(v2)s, '%(val)s'^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+
+                    elif operator == '!=':
+                        if optionalUsage:
+                            filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, '%(val)s'^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
+                                                    % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+
+                        else:
+                            filterExpression = "FILTER(!REGEX(?x%(v2)s, '%(val)s'^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+
+                    else:
+                        filterExpression = "FILTER(?x%(v2)s %(op)s '%(val)s'^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+            if optionalUsage:
+                        #"      }\n" \
+                        #"    ))\n" \
+                        #"    &&\n" \
+                textAux = \
+                        "    (!bif:exists ((\n" \
+                        "      SELECT *\n" \
+                        "      WHERE {\n" \
+                        "        { " + textAux + filterExpression
+
+            else:
+                if text != "":
+                    text += "      UNION\n"
+                    textAux = "        { " + textAux + filterExpression
+
+                else:
+                    textAux = "    (bif:exists ((\n" \
+                                "      SELECT *\n" \
+                                "      WHERE {\n" \
+                                "        { " + textAux + filterExpression
+
+            text += textAux
+
+        if text != "":
+            if text[0] == '!':
+                text += \
+                            "      }\n" \
+                        "    )))\n" \
+
+            else:
+                text = \
+                                    "%(text)s" \
+                            "      }\n" \
+                        "    )))\n" \
+                        % {'text': text}
+
+        return text
+
+
+    def bsFilter(self):
+        filters = self.filters
+        text = ""
+        for item in filters:
+            if item == []:
+                continue
+            
+            if item[0].lower() == 'or':
+                text += '    ||\n'
+
+            elif item[0].lower() == 'and':
+                text += '    &&\n'
+
+            else:
+                if text != "" and text[-2] == ')':
+                    text += '    &&\n'
+                text += self.bsIndividualFilter(item)
+
+        if text != "":
+            text = \
+                    "  FILTER(\n" \
+                        "%s" \
+                    "  )\n" \
+                    % text
+
+        return text
+
+
+    def bsHaving(self):
+        return '\n'
+        #return "HAVING !(?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
+        #return "HAVING (?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
+        #return "GROUP BY (?x0)\n"
+
+
+    def bsSort(self):
+        if self.tempData[1] == []:
+            fields = self.fields
+
+        else:
+            fields = self.tempData[1]
+
+        text = ""
+        for item in fields:
+            if item[2]:
+                try:
+                    text += "?" + item[1].split(":")[1] + " "
+
+                except:
+                    pass
+
+        if text != "":
+            text = "ORDER BY " + text + "\n"
+
+        return text
+
+
+    def bsTypeFilter(self):
+        text = ""
+        if self.tempData[2] == []:
+            typeFilters = self.typeFilters
+
+        else:
+            typeFilters = self.tempData[2]
+
+        if len(typeFilters) == 1:
+            items = typeFilters[0].split("->")
+            if len(items) > 1:
+                i = 0
+                text = ''
+                #oldVarName = 'x0'
+                for item in items:
+                    if item != '':
+                        #varName = items[i].split(':')[-1]
+                        text += "  ?x%(oldVarName)s %(ontology)s ?x%(varName)s .\n" \
+                                % {'oldVarName': i, 'varName': i+1, 'ontology': item}
+                        #oldVarName = varName
+                        i += 1
+
+            else:
+                items = typeFilters[0].split("=")
+                if len(items) > 1:
+                    text += "  ?x0 %(ontology1)s %(ontology2)s .\n" \
+                            % {'ontology1': items[0], 'ontology2': items[1]}
+
+                else:
+                    text += "  ?x0 %(ontology)s ?x1 .\n" \
+                            % {'ontology': items[0]}
+
+        else:
+            #TODO: cambiar el rdf:type igual que arriba.
+            for item in typeFilters:
+                if text != '':
+                    text += '        UNION\n'
+                text += '        { ?x0 rdf:type %s . }\n' % item
+
+            if text != "":
+                text = \
+                        "  ?x0 rdf:type ?type .\n" \
+                        "  FILTER(\n" \
+                            "    bif:exists ((\n" \
+                                "      SELECT *\n" \
+                                "      WHERE {\n" \
+                                "%s" \
+                                "      }\n" \
+                            "    ))\n" \
+                        "  )\n" \
+                        % text
+
+            else:
+                text = \
+                        "  ?x0 rdf:type ?type .\n" \
+
+        return text
+
+
+    def addField(self, name = ''):
+        pass
+
+
+    def removeField(self, name = '', logop = ''):
+        pass
+
+
+    def addFilter(self, name = ''):
+        pass
+
+
+    def removeFilter(self, name = ''):
+        pass
+
+
+    def addOntologyFilter(self, name = ''):
+        pass
+
+
+    def removeOntologyFilter(self, name = ''):
+        pass
+
+
+    def addTypeFilter(self, name = ''):
+        pass
+
+
+    def removeTypeFilter(self, name = ''):
+        pass
+
+
+    def setOrder(self, orderList = []):
+        pass
+
+
+    def ontologyVarType(self, ontology = ''):
+        return lvalue(self.ontologyTypes, ontology.lower().strip(), 0, 1)
+        
+        
+    def split(self, string = ''):
+        #print string
+        specialChars = [":", "+", "-", ">", "<", "="]
+        result = []
+        if string != '':
+            breakChar = ' '
+            newItem = True
+            for i in range(0, len(string)):
+                if string[i] == breakChar:
+                    newItem = True
+                    breakChar = ' '
+                    continue
+
+                if string[i] == '"' or string[i] == "'":
+                    #if ((i == 0) or (string[i-1] != ':')):
+                    if ((i == 0) or (string[i-1] not in specialChars)):
+                        newItem = True
+
+                    breakChar = string[i]
+                    continue
+
+                if newItem and ((result == []) or (result[-1] != '')):
+                    result += ['']
+                    newItem = False
+
+                result[-1] += string[i]
+                #print newItem, breakChar, result[-1]
+
+        return result
+
+    def stringQueryConversion(self, string = ''):
+        if string == '':
+            raise Exception("Type something to start querying.")
+
+        allFilters = []
+        oneFilter = []
+        items = self.split(string)
+        #print toUtf8(string)
+        #print toUtf8(items)
+
+        commandFound = False
+        addAnd = False
+        for item in items:
+            if item[:2] == '--':
+                commandFound = True
+                oneFilter = [item, '', '']
+          
+            elif item.lower() == 'or':
+                oneFilter = ['or', '', '']
+                addAnd = False
+
+            elif item.lower() == 'and':
+                oneFilter = ['and', '', '']
+                addAnd = False
+
+            else:
+                if addAnd == True:
+                    allFilters += [['and', '', '']]
+
+                ontology = ''
+                while True:
+                    parts = item.partition(':')
+                    if parts[1] == ':':
+                        ontology += parts[0] + ':'
+                        item = parts[2]
+
+                    else:
+                        ontology = ontology[0:-1]
+                        data = parts[0]
+                        break
+
+                if data == '':
+                    raise Exception("Syntax error, please check your search text.")
+
+                if data == '':
+                    operator = ''
+                    
+                else:
+                    operator = data[0]
+                    
+                if operator == '-':
+                    operator = '!='
+                    data = data[1:]
+
+                elif operator == '+':
+                    operator = '=='
+                    data = data[1:]
+
+                elif operator == '>':
+                    operator = data[1]
+                    if operator == '=':
+                        operator = '>='
+                        data = data[2:]
+
+                    else:
+                        operator = '>'
+                        data = data[1:]
+
+                elif operator == '<':
+                    operator = data[1]
+                    if operator == '=':
+                        operator = '<='
+                        data = data[2:]
+
+                    else:
+                        operator = '<'
+                        data = data[1:]
+
+                else:
+                    operator = '='
+
+                oneFilter = [data, operator, ontology]
+                addAnd = True
+
+            allFilters += [oneFilter]
+
+        # Check basic errors.
+        if allFilters[len(allFilters)-1][0] == 'and' or allFilters[len(allFilters)-1][0] == 'or':
+            allFilters = []
+            raise Exception("Syntax error, please check your search text.")
+          
+        if (commandFound and (len(allFilters) > 1)):
+            allFilters = []
+            raise Exception("Syntax error, commands and queryes are mutual exclude.")
+
+        # ¿Es un comando?
+        if ((len(allFilters) == 1) and (allFilters[0][0][:2] == "--")):
+            dummy = allFilters[0][0].split(':')
+            self.command = dummy[0]
+            if (len(dummy) > 1):
+                allFilters = [[dummy[1], '=', '']]
+
+            else:
+                allFilters = []
+            
+        return allFilters
+
+    def executeQuery(self, query = []):
+        model = Nepomuk.ResourceManager.instance().mainModel()
+
+        queryTime = time.time()
+        result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        queryTime = time.time() - queryTime
+        
+        structure = []
+        data = []
+        
+        if result.isValid():
+            for bindings in result.allBindings():
+                if structure == []:
+                    for bindingName in bindings.bindingNames():
+                        structure += [toUnicode(bindingName.toUtf8())]
+                
+                aRow = []
+                for bindingName in bindings.bindingNames():
+                    #value = toUnicode(toPercentEncoding(bindings[bindingName].toString()))
+                    value = toUnicode(bindings[bindingName].toString())
+
+                    if value != '':
+                        if bindingName == 'type':
+                            value = os.path.basename(toUnicode(value))
+                            value = value.split("#")
+                            try:
+                                value = '[' + value[1] + ']'
+
+                            except:
+                                value = value[0]
+
+                        elif value[:7] == 'file://' or value[:7] == 'http://' or value[:8] == 'https://':
+                            # Novedad en kde 4.7.0
+                            qurl = QUrl()
+                            qurl.setEncodedUrl(toUtf8(value))
+                            value = toUnicode(qurl.toString())
+                            # Novedad en kde 4.7.0
+                            
+                        aRow += [value]
+
+                if len(aRow) > 0:
+                    if len(aRow) < len(structure):
+                        for i in range(len(aRow), len(structure)):
+                            aRow += ['']
+                        
+                    data += [aRow]
+                    
+            result.close()
+
+        else:
+            result.close()
+            raise Exception('Can\'t execute query, check syntax and test if Nepomuk is running.')
+
+        return data, structure, queryTime
+
+# end nssparql.py
+
+
+class nCompleter(QCompleter):
+
+    separator = " "
+    
+    def __init__(self, *args):
+
+        QCompleter.__init__(self, *args)
+        
+        model = QStringListModel()
+        wordList = [ \
+                    u"and", u"or",\
+                    u"actor:", \
+                    u"album", \
+                    u"creator", \
+                    u"director:", \
+                    u"genre", \
+                    u"hasTag:", \
+                    u"name:", \
+                    u"performer", \
+                    u"preflabel:", \
+                    u"rating:", \
+                    u"tag:", \
+                    u"title:", \
+                    u"url:", \
+                    u"writer:", \
+                    u"--help", \
+                    u"--allActors", \
+                    u"--allAlbums", \
+                    #u"--allCreators", \
+                    u"--allDirectors", \
+                    u"--allGenres", \
+                    u"--allPerformers", \
+                    u"--allTags", \
+                    u"--allWriters" \
+                    ]
+
+        model.setStringList(wordList)
+        self.setModel(model)
+        self.setCaseSensitivity(Qt.CaseInsensitive);
+        self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
+        
+        #self.setCompletionMode(QCompleter.PopupCompletion)
+        #self.setCompletionMode(QCompleter.InlineCompletion)
+
+    def pathFromIndex(self, index):
+        path = QCompleter.pathFromIndex(self, index)
+
+        lst = str(self.widget().text()).split(self.separator)
+        if len(lst) > 1:
+            path = '%s%s%s' % (self.separator.join(lst[:-1]), self.separator, path)
+
+        return path
+
+    def splitPath(self, path):
+        path = str(path.split(self.separator)[-1]).lstrip(self.separator)
+        return [path]
+
+
+class nWebView(QWebView):
+
+    def __init__(self, *args):
+        QWebView.__init__(self, *args)
+      
+        #self.setContextMenuPolicy(Qt.PreventContextMenu)
+        #self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+    
+    def customContextMenuRequested(self, pos):
+        print 'customContextMenuRequested'
+
+
+class Nepoogle(QWidget):
+    iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.NoGroup)
+    iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
+    iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
+    iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
+    iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
+
+    pendingQuery = False
+
+    def __init__(self, parent = None, string = ''):
+        QWidget.__init__(self, parent)
+
+        #self.setGeometry(300, 300, 250, 150)
+        #self.setWindowTitle(os.path.basename(sys.argv[0]))
+        self.setWindowTitle(PROGRAM_NAME)
+        #self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk',  KIconLoader.NoGroup)))
+
+        self.leSearch = QLineEdit()
+        #self.leSearch.setCompleter(nCompleter())
+        self.leSearch.selectOnEntry = True
+
+        self.wvOutput = nWebView(self)
+        self.connect(self.wvOutput, SIGNAL("linkClicked(const QUrl&)"), self.linkClicked)
+        self.connect(self.wvOutput, SIGNAL("loadStarted()"), self.loadStarted)
+        self.connect(self.wvOutput, SIGNAL("loadFinished(bool)"), self.loadFinished)
+        self.connect(self.wvOutput, SIGNAL("loadProgress(int)"), self.loadProgress)
+        self.connect(self.wvOutput.page(), SIGNAL("customContextMenuRequested(const QPoint&)"), self.customContextMenuRequested)
+
+        self.grid = QGridLayout()
+        self.grid.setSpacing(10)
+        self.grid.addWidget(self.leSearch, 1, 1)
+        self.grid.addWidget(self.wvOutput, 2, 1, 5, 1)
+
+        self.setLayout(self.grid)
+
+        self.resize(680, 510)
+        if string == '':
+            self.leSearch.setText(toUnicode('Type search here'))
+
+        else:
+            self.leSearch.setText(string)
+
+        self.leSearch.setSelection(0,999)
+        self.leSearch.setFocus()
+        
+        if string == '':
+            self.execQuery('--help')
+    
+    def loadStarted(self):
+        #print 'loadStarted'
+        pass
+    
+    def loadFinished(self, ok):
+        #print 'loadFinished:', ok
+        self.repaint()
+        if self.pendingQuery:
+            self.execQuery()
+
+    def loadProgress(self, progress):
+        #print 'loadProgress:', progress
+        pass
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            self.pendingQuery = True
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+                
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+            
+        #elif event.key() == QKeySequence("Ctrl+E"):
+        #    self.leSearch.keyPressEvent(self, event)
+      
+    def customContextMenuRequested(self, pos):
+        print 'customContextMenuRequested'
+    
+    def linkClicked(self, url):
+        url = toUnicode(url.toString())
+        print toUtf8(url)
+        
+        if url[:6] == 'dolp:/':
+            subprocess.Popen(['dolphin', url[6:]])
+
+        elif url[:6] == 'konq:/':
+            subprocess.Popen(['konqueror', url[6:]])
+
+        elif url[:9] == 'nepomuk:/':
+            subprocess.Popen(['kioclient', 'exec', url])
+
+        elif url[:6] == 'prop:/':
+            subprocess.Popen(['kioclient', 'openProperties', url[6:]])
+            
+        else:
+            # KDE must do the job.
+            subprocess.Popen(["kioclient", "exec", url])
+            #subprocess.Popen(["konqueror", "--select", url])
+            #subprocess.call(['kioclient', 'exec', url])
+    
+    def buildHelp(self, oNsSparqlBuilder):
+        commands = '<p><b>Commands</b>:\n<ul>\n'
+        for command in oNsSparqlBuilder.commands:
+            commands += '<li>%s</li>\n' % command[0]
+        commands += '</ul></p>\n'
+
+        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n<table style=\"text-align:left;" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tbody>\n'
+        for shortcut in oNsSparqlBuilder.shortcuts:
+            if shortcut[0].find('%') >= 0:
+                shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em> (using percent encoding)</td></tr>\n' \
+                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': shortcut[0].replace('%', '')}
+
+            else:
+                shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em></td></tr>\n' \
+                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': shortcut[0]}
+
+        shortcuts += '</tbody></table></ul></p>\n'
+
+        remarks = "<p><b>Remarks</b>:<br \>\n" \
+                    "<ul>\n" \
+                    "<li>Query syntax is inspired in Google's search syntax</li>\n" \
+                    "<li>Nepoogle do a case insensitive text search in identifiers, descriptions, tags, fullnames, titles and urls</li>\n" \
+                    "<li>Wildcards, dates and parenthesis are not supported</li>\n" \
+                    "<li>Nepoogle works with Soprano and don't uses Nepomuk to do queries</li>\n" \
+                    "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results</li>\n" \
+                    "</ul></p>\n" \
+
+        commandsList = ''
+        for command in oNsSparqlBuilder.commands:
+            if commandsList != '':
+                commandsList += ' | ' + command[0]
+
+            else:
+                commandsList += command[0]
+
+        shortcutsList = ''
+        for shortcut in oNsSparqlBuilder.shortcuts:
+            if shortcutsList != '':
+                shortcutsList += ' | ' + shortcut[1]
+
+            else:
+                shortcutsList += shortcut[1]
+
+        syntax = "<p><b>The query syntax is</b>:<ul>\n" \
+                    "<em>query</em> :== item [[logop] item]... | command<br />\n"\
+                    "<br />\n" \
+                    "<em>item</em> :== [ontology:][op]text<br />\n" \
+                    "<br />\n" \
+                    "<em>logop</em> :== and | or<br />\n" \
+                    "<em>op</em> :== + | - | < | <= | > | >=<br />\n" \
+                    "<br />\n" \
+                    "<em>ontology</em> :== [ontitem=]ontitem[->[ontitem=]ontitem]]...<br />\n" \
+                    "<em>ontitem</em> :== shortcutontology | shortontology | fullontology<br />\n" \
+                    "<em>shortcutontology</em> :== %(shortcuts)s<br />\n" \
+                    "<em>shortontology</em> :== prefix:name<br />\n" \
+                    "<em>fullontology</em> :== http://url<br />\n" \
+                    "<br />\n" \
+                    "<em>text</em> :== string | number<br />\n" \
+                    "<em>string</em> :== chars | \"chars\" | 'chars'<br />\n" \
+                    "<em>number</em> :== 0..9<br />\n" \
+                    "<em>chars</em> :== any number of utf-8 characters<br />\n" \
+                    "<br />\n" \
+                    "<em>command</em> :== instruction[:string]<br />\n" \
+                    "<em>instruction</em> :== %(instructions)s\n" \
+                    "</ul></p>\n" \
+                    % {'shortcuts': shortcutsList, 'instructions': commandsList}
+
+        examples = "<p><b>Examples</b>:\n" \
+                    "<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"3\" cellspacing=\"0\"><tbody>" \
+                    "<tr><td><b>query</b></td>\n" \
+                        "<td><b>result</b></td></tr>\n" \
+                    "<tr><td><em>movie</em></td>\n" \
+                        "<td>contains 'movie'</td></tr>\n" \
+                    "<tr><td><em>+movie</em></td>\n" \
+                        "<td>equals 'movie'</td></tr>\n" \
+                    "<tr><td><em>-movie</em></td>\n" \
+                        "<td>not contains 'movie'</td></tr>\n" \
+                    "<tr><td><em>-dorama +'takeuchi yuuko' 'hiroshi'</em></td>\n" \
+                        "<td>not contains 'dorama' and equals 'takeuchi yuuko' and contains 'hiroshi'</td></tr>\n" \
+                    "<tr><td><em>movie or hasTag:'takeuchi yuuko'</em></td>\n" \
+                        "<td>contains movie or contains tag 'takeuchi yuuko'</td></tr>\n" \
+                    "<tr><td><em>hasTag:+movie rating:>=5</em></td>\n" \
+                        "<td>tag equals 'movie' and rating >= 5</td></tr>\n" \
+                    "<tr><td><em>mimetype:video/x-matroska url:Tiger</em></td>\n" \
+                        "<td>mimetype matroska and contains 'Tiger' in url</td></tr>\n" \
+                    "<tr><td><em>playcount:0 hastag:corea genre:drama actor:+'Yeong-ae Lee' director:Park</em></td>\n" \
+                        "<td>not played movie dramas tagged 'corean' with actress 'Yeong-ae Lee' and with director name contains 'Park'</td></tr>\n" \
+                    "<tr><td><em>actor:'Zhang Ziyi' actor:-'Bingbing Fan'</em></td>\n" \
+                        "<td>movies with actress 'Zhang Ziyi' but without actress 'Bingbing Fan'</td></tr>\n" \
+                    "<tr><td><em>tvshow:Coupling season:2 episode:4</em></td>\n" \
+                        "<td>Episode 4 of Season 2 of Coupling</td></tr>\n" \
+                    "<tr><td><em>--tags</em></td>\n" \
+                        "<td>all tags</td></tr>\n" \
+                    "<tr><td><em>--actors:luppi</em></td>\n" \
+                        "<td>all actors containing 'luppi'</td></tr>\n" \
+                    "</tbody></table>\n" \
+                    "</p>\n"
+
+        output = "<html>\n  <head>\n"\
+                    "<style type=\"text/css\">" \
+                    "body {%(body_style)s}\n" \
+                    "p {%(p_style)s}\n" \
+                    "ul {%(ul_style)s}\n" \
+                    "li {%(li_style)s}\n" \
+                    "tr {%(tr_style)s}\n" \
+                    "</style>\n" \
+                    "<title>%(title)s</title>\n    " \
+                    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
+                    "\n  </head>\n<body>\n" \
+                    "<p><h3>%(program)s's help</h3></p>\n" \
+                    "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
+                    "%(examples)s" \
+                    "%(remarks)s" \
+                    "%(shortcuts)s" \
+                    "%(commands)s" \
+                    "%(syntax)s" \
+                    "For bugs, sugestions or wishes send a mail to kde@aynoa.net\n" \
+                    "%(powered)s</body>\n</html>" \
+                    % {'title': 'Querying Nepomuk', \
+                        'error': sys.exc_info()[1], \
+                        'program': os.path.basename(sys.argv[0]), \
+                        'powered': PROGRAM_HTML_POWERED, \
+                        'remarks': remarks, \
+                        'syntax': syntax, \
+                        'shortcuts': shortcuts, \
+                        'commands': commands, \
+                        'examples': examples, \
+                        'body_style': "font-size:small", \
+                        'p_style': "font-size:small", \
+                        'ul_style': "font-size:small", \
+                        'li_style': "font-size:small", \
+                        'tr_style': "font-size:small;" \
+                        }
+
+        return output
+
+
+    def formatData(self, data = [], structure = [], queryTime = 0, htmlOutput = True, stdout = False):
+        htmlQueryTime = time.time()
+        result = ''
+        if htmlOutput:
+            text = "<html>\n" \
+                    "<head>\n" \
+                    "<style type=\"text/css\">" \
+                    "    body {%(body_style)s}\n" \
+                    "    tr {%(tr_style)s}\n" \
+                    "    p {%(p_style)s}\n" \
+                    "</style>\n" \
+                    "<title>%(title)s</title>\n" \
+                    "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
+                    "</head>\n<body>" \
+                    % {'title': 'Querying Nepomuk', \
+                        'body_style': "font-size:small", \
+                        'p_style': "font-size:small", \
+                        'tr_style': "font-size:small;" \
+                        }
+            if stdout:
+                print toUtf8(text)
+                
+            result += text + '\n'
+
+        if htmlOutput:
+            result += '<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n'
+            
+        for item in data:
+            if htmlOutput:
+                text = '<tr>'
+
+            else:
+                text = ''
+                
+            textData = ''
+            itemType = ''
+            links = ''
+            resourceID = ''
+            unplugged = False
+            imgStyle = "border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
+            for subItem in item:
+                if subItem == '':
+                    pass
+                  
+                elif htmlOutput:
+                    subItem = fromPercentEncoding(subItem)
+                    if (subItem[:7] == 'file://'):
+                        subItem = fromPercentEncoding(subItem)
+                        if textData != '':
+                            textData += '<br />'
+
+                        if (os.path.isfile(subItem[7:]) or os.path.islink(subItem[7:])):
+                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)} \
+                                        + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
+                                        % {'dir': os.path.dirname(subItem), 'icon': self.iconFileManager, 'style': imgStyle}
+                                        
+
+                        else:
+                            textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)}
+
+                    elif ((subItem[:7] == 'http://') or (subItem[:6] == 'ftp://') or (subItem[:8] == 'https://')):
+                        subItem = fromPercentEncoding(subItem)
+                        if textData != '':
+                            textData += '<br />'
+                            
+                        textData = "<a href=\"%(url)s\">%(name)s</a>" % {'url': subItem, 'name': os.path.basename(subItem)}
+
+                    elif (subItem[:8] == 'filex://'):
+                        if textData != '':
+                            textData += '<br />'
+
+                        #textData = "%(filex)s<br />%(name)s" \
+                        #            % {'filex': '/'.join(subItem.split('/')[0:3]), \
+                        #                'name': '/' + '/'.join(subItem[8:].split('/')[1:])}
+                        textData = "<b>[%(dev)s<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties for %(id)s\" src=\"file://%(icon)s\"></a>]</b><em>%(name)s</em>" \
+                                    % {'dev': 'Unplugged', \
+                                        'id': 'nepomuk:/res/' + subItem[8:].split('/')[0], \
+                                        'name': '/' + '/'.join(subItem[8:].split('/')[1:]), \
+                                        'icon': self.iconDocumentInfo, 'style': imgStyle}
+                        unplugged = True
+                        
+                    #elif (subItem[0] == '[') and (subItem[-1] == ']'):
+                        #if textData != '':
+                            #textData += '<br />'
+
+                        #textData += "type(s): " + subItem
+
+                    elif (subItem[:9] == 'nepomuk:/'):
+                        resourceID = subItem
+
+                    else:
+                        if textData != '':
+                            textData += '<br />'
+
+                        textData += '<em>' + subItem + '</em>'
+
+                else:
+                    if text != '':
+                        text += ', '
+
+            if resourceID != '':
+                links = " <a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(icon)s\"></a>" \
+                            % {'id': resourceID, 'icon': self.iconDocumentInfo, 'style': imgStyle} \
+
+                if not unplugged:
+                    links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': resourceID, 'icon': self.iconFileManager, 'style': imgStyle} \
+                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': resourceID, 'icon': self.iconKonqueror, 'style': imgStyle} \
+                                + " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
+                                    % {'id': resourceID, 'icon': self.iconSystemRun, 'style': imgStyle}
+
+                try:
+                    itemType = Nepomuk.Resource(resourceID).resourceType().toString().split('#')[1]
+
+                except:
+                    itemType = ''
+
+            else:
+                itemType = 'Property'
+
+            text = '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
+
+            if htmlOutput:
+                text += '</tr>'
+
+            if stdout:
+                print toUtf8(text)
+                
+            result += text + '\n'
+
+        if htmlOutput:
+            text = ''
+            text += '</tbody></table>\n'
+            text += "<br />\n%(records)s records found in %(seconds)s seconds. HTML visualization builded in %(sechtml)s seconds." \
+                        % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
+            if stdout:
+                print toUtf8(text)
+                
+            result += text + '\n'
+
+        else:
+            text = "\n%(records)s records found in %(seconds)s seconds." % {'records': len(data), 'seconds': queryTime}
+            if stdout:
+                print toUtf8(text)
+                
+            result += text + '\n'
+
+        if htmlOutput:
+            text = "%s</body>\n</html>" % PROGRAM_HTML_POWERED
+            if stdout:
+                print toUtf8(text)
+                
+            result += text + '\n'
+
+        return result
+        
+    def execQuery(self, searchString = ''):
+        self.leSearch.readOnly = True
+        #self.repaint()
+        #self.wvOutput.setHtml('<html><body><h3>Searching...</h3></body></html>')
+        #self.repaint()
+        #self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+        #                        % self.iconProcessIdle)
+        #self.repaint()
+        self.setCursor(Qt.BusyCursor)
+        self.repaint()
+
+        if searchString == '':
+            searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
+
+        o = nsSparqlBuilder()
+        o.stdoutQuery = True
+        o.columns = '?x0 AS ?id ' + o.columns
+        
+        #if True:
+        try:
+            if searchString != '':
+                data, structure, time = o.executeQuery(o.buildQuery(searchString))
+                output = self.formatData(data, structure, time)
+
+            else:
+                raise Exception('Please, type something.')
+
+        #try:
+        #    pass
+        
+        except:
+            msgError = "%s" % sys.exc_info()[1]
+            if msgError == 'help':
+                output = self.buildHelp(o)
+
+            elif msgError == 'quit':
+                quit()
+
+            else:
+                output = "<html>\n  <head>\n    <title>%(title)s</title>\n    " \
+                            "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
+                            "\n  </head>\n<body><b>error:</b> %(error)s" \
+                            "%(powered)s</body>\n</html>" \
+                            % {'title': 'Querying Nepomuk', \
+                                'error': sys.exc_info()[1], \
+                                'powered': PROGRAM_HTML_POWERED \
+                                }
+
+        self.pendingQuery = False
+
+        self.wvOutput.setHtml(output)
+        self.setCursor(Qt.ArrowCursor)
+        self.leSearch.readOnly = False
+        self.repaint()
+        
+  
+def buildHelp():
+    print "%(name)s %(version)s (%(date)s)\n" \
+              % {'name': PROGRAM_NAME, 'version': PROGRAM_VERSION_VERSION, 'date': PROGRAM_VERSION_DATE}
+              
+    print "Usage: %s command | query\n" \
+          "\n" \
+          "commands:\n" \
+          "  --help\t--  Shows this help\n" \
+          "  --noqui\t--  Console mode\n" \
+          "  --stdout\t--  Prints SPARQL query to stdout (default in gui mode)\n" \
+          "  --nostdout\t--  Don't prints SPARQL query to stdout (default in console mode)\n" \
+          "\n" \
+          "query:\n" \
+          "  Consult the help in gui mode\n" \
+          % PROGRAM_NAME
+  
+  
+def formatData(data = [], structure = [], queryTime = 0, stdout = False):
+    text = ''
+    for row in data:
+        line = ''
+        for column in row:
+            if column == '':
+                continue
+
+            if column[:9] == 'nepomuk:/':
+                continue
+            
+            if line != '':
+                line += ', '
+                
+            line += toUtf8(column)
+
+        if line != '':
+            text += line + '\n'
+
+    return text
+
+    
+def main(args):
+
+    #app_name = "nepoogle"
+    #catalog = "nepoogle"
+    #program_name = ki18n("nepoogle")
+    #version = "0.1"
+    #description = ki18n("A Google like search engine to Nepomuk.")
+    #license = KAboutData.License_GPL
+    #copyright = ki18n("(C) 2011 Ignacio Serantes")
+    #text = ki18n("An alternative search engine to Nepomuk.")
+    #home_page = "http://www.kde-apps.org"
+    #bug_email = "kde@aynoa.net"
+
+    #about_data = KAboutData(app_name, catalog, program_name, version,
+    #                        description, license, copyright, text, home_page,
+    #                        bug_email)
+
+    #about_data.setProgramIconName("nepomuk")
+
+    #KCmdLineArgs.init(sys.argv, about_data)
+
+    gui = True
+    stdout = None
+    parameters = toUnicode('')
+    for i in range(1, len(args)):
+        parameter = toUnicode(args[i].strip())
+        if parameter.lower() == '--help':
+            buildHelp()
+            quit()
+        
+        elif parameter.lower() == '--nogui':
+            gui = False
+            continue
+        
+        elif parameter.lower() == '--stdout':
+            if stdout == None:
+                stdout = True
+            continue
+        
+        elif parameter.lower() == '--nostdout':
+            if stdout == None:
+                stdout = False
+            continue
+        
+        elif parameter.find(' ') >= 0:
+            j = parameter.rfind(':')
+            if j >= 0:
+                parameter = parameter[:j+1] + '"' + parameter[j+1:] + '"'
+                
+            else:
+                parameter = '"' + parameter + '"'
+            
+        parameters += parameter + ' '
+        
+    if stdout == None:
+        stdout == gui
+
+    if gui:
+        app = QApplication(args)
+        nepoogle = Nepoogle(None, parameters.strip())
+        nepoogle.show()
+        nepoogle.repaint()
+
+        if parameters != '':
+            nepoogle.execQuery()
+
+        sys.exit(app.exec_())
+
+    else:
+
+        o = nsSparqlBuilder()
+        o.stdoutQuery = stdout
+        o.columns = '?x0 AS ?id ' + o.columns
+
+        #if True:
+        try:
+            if parameters != '':
+                data, structure, time = o.executeQuery(o.buildQuery(parameters))
+                output = formatData(data, structure, time)
+
+            else:
+                raise Exception('Please, type something.')
+
+        #try:
+        #    pass
+
+        except:
+            msgError = "%s" % sys.exc_info()[1]
+            if msgError == 'help':
+                output = buildHelp()
+
+            else:
+                output = "%(title)s\n" \
+                            "\nerror: %(error)s\n" \
+                            "\nPowered by %(name)s %(version)s (%(date)s)" \
+                            % {'title': 'Querying Nepomuk', \
+                                'error': sys.exc_info()[1], \
+                                'name': PROGRAM_NAME, \
+                                'version': PROGRAM_VERSION_VERSION, \
+                                'date': PROGRAM_VERSION_DATE \
+                                }
+
+        print toUtf8(output)
+        
+
+if __name__=="__main__":
+    main(sys.argv)
+
