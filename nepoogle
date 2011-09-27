@@ -250,9 +250,6 @@ class nsSparqlBuilder():
         if command == '':
             pass
         
-        #elif command == '--help':
-        #    raise Exception('help')
-
         else:
             idx = lindex(self.commands, command, 0)
             if idx >= 0:
@@ -1004,13 +1001,18 @@ class Nepoogle(QWidget):
 
         shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n<table style=\"text-align:left;" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tbody>\n'
         for shortcut in oNsSparqlBuilder.shortcuts:
-            if shortcut[0].find('%') >= 0:
-                shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em> (using percent encoding)</td></tr>\n' \
-                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': shortcut[0].replace('%', '')}
-
-            else:
-                shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em></td></tr>\n' \
-                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': shortcut[0]}
+            info = ''
+            fmtOntology = shortcut[0]
+            if fmtOntology.find('%') >= 0:
+                fmtOntology = fmtOntology.replace('%', '')
+                info += ' (using percent encoding)'
+                                
+            if fmtOntology.find('_') >= 0:
+                fmtOntology = fmtOntology.replace('_', '')
+                info += ' (using optionals to negate)'
+              
+            shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
+                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': fmtOntology, 'info': info}
 
         shortcuts += '</tbody></table></ul></p>\n'
 
