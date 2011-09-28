@@ -385,12 +385,13 @@ class nsSparqlBuilder():
                     ontology = ontology[1:]
                     val = QUrl.toPercentEncoding(val)
                     # Special characters handling.
-                    val.replace('%28', '\\\(').replace('%29', '\\\)')
+                    val.replace('%28', '(').replace('%29', ')')
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
                     optionalUsage = optionalUsage or (operator == '!=')
 
+                val = val.replace('(', '\\\(').replace(')', '\\\)')
                 valType = self.ontologyVarType(ontology)
                 #optionalUsage = (optionalUsage and (operator == '!='))
                 if not optionalUsage:
@@ -894,6 +895,14 @@ class Nepoogle(QWidget):
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
 
+    renderSize = 50
+    renderedRows = 0
+    renderedCache = ''
+
+    resultData = []
+    resultStructure = []
+    resultTime = None
+
     pendingQuery = False
 
     def __init__(self, parent = None, string = ''):
@@ -985,7 +994,31 @@ class Nepoogle(QWidget):
             self.leSearch.setText(url[7:])
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
-                % self.iconProcessIdle)
+                                    % self.iconProcessIdle)
+
+        elif url[:8] == 'render:/':
+            self.leSearch.readOnly = True
+            self.wvOutput.setHtml('<html><body><h3>Rendering... <img src="file://%s"></h3></body></html>' \
+                                    % self.iconProcessIdle)
+            self.wvOutput.repaint()
+            self.setCursor(Qt.BusyCursor)
+            self.repaint()
+
+            if url[8:] == 'more':
+                output = self.formatData(self.resultData, self.resultStructure, self.resultTime)
+
+            elif url[8:] == 'all':
+                output = self.formatData(self.resultData, self.resultStructure, self.resultTime, len(self.resultData))
+
+            else:
+                output = ''
+
+            if output != '':
+                self.wvOutput.setHtml(output)
+                
+            self.setCursor(Qt.ArrowCursor)
+            self.leSearch.readOnly = False
+            self.repaint()
 
         else:
             # KDE must do the job.
@@ -1135,11 +1168,9 @@ class Nepoogle(QWidget):
         return output
 
 
-    def formatData(self, data = [], structure = [], queryTime = 0, htmlOutput = True, stdout = False):
+    def formatData(self, data = [], structure = [], queryTime = 0, renderSize = 0, stdout = False):
         htmlQueryTime = time.time()
-        result = ''
-        if htmlOutput:
-            text = "<html>\n" \
+        result = "<html>\n" \
                     "<head>\n" \
                     "<style type=\"text/css\">" \
                     "    body {%(body_style)s}\n" \
@@ -1148,54 +1179,57 @@ class Nepoogle(QWidget):
                     "</style>\n" \
                     "<title>%(title)s</title>\n" \
                     "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
-                    "</head>\n<body>" \
+                    "</head>\n<body>\n" \
                     % {'title': 'Querying Nepomuk', \
                         'body_style': "font-size:small", \
                         'p_style': "font-size:small", \
                         'tr_style': "font-size:small;" \
                         }
-            if stdout:
-                print toUtf8(text)
-                
-            result += text + '\n'
+        if stdout:
+            print toUtf8(result)
+            
+        result += '<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n'
 
-        if htmlOutput:
-            result += '<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n'
 
+        if renderSize == 0:
+            renderSize = self.renderSize
+        
         resources = []
-        for item in data:
-            if htmlOutput:
-                text = '<tr>'
+        if self.renderedRows <= 0:
+            text = ''
 
-            else:
-                text = ''
-                
+        else:
+            text = self.renderedCache
+            
+        for i in range(self.renderedRows, min(len(data), renderSize + self.renderedRows)):
+            item = data[i]
+            text += '<tr>'
             imgStyle = "border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
+            
             resRow = []
             for subItem in item:
                 if subItem == '':
                     continue
                   
-                if htmlOutput:
-                    subItem = fromPercentEncoding(subItem)
-                    if (subItem[:7] == 'file://'):
-                        resRow += [['file', subItem]]
+                subItem = fromPercentEncoding(subItem)
+                if (subItem[:7] == 'file://'):
+                    resRow += [['file', subItem]]
 
-                    elif ((subItem[:7] == 'http://') or (subItem[:6] == 'ftp://') or (subItem[:8] == 'https://')):
-                        resRow += [['url', subItem]]
+                elif ((subItem[:7] == 'http://') or (subItem[:6] == 'ftp://') or (subItem[:8] == 'https://')):
+                    resRow += [['url', subItem]]
 
-                    elif (subItem[:8] == 'filex://'):
-                        resRow += [['filex', subItem]]
-                        
-                    #elif (subItem[0] == '[') and (subItem[-1] == ']'):
-                        #resRow += [['type', subItem]]
+                elif (subItem[:8] == 'filex://'):
+                    resRow += [['filex', subItem]]
 
-                    elif (subItem[:9] == 'nepomuk:/'):
-                        resRow += [['nepomuk', subItem]]
-                        resourceID = subItem
+                #elif (subItem[0] == '[') and (subItem[-1] == ']'):
+                    #resRow += [['type', subItem]]
 
-                    else:
-                        resRow += [['', subItem]]
+                elif (subItem[:9] == 'nepomuk:/'):
+                    resRow += [['nepomuk', subItem]]
+                    resourceID = subItem
+
+                else:
+                    resRow += [['', subItem]]
 
             resources += [resRow]
 
@@ -1286,6 +1320,7 @@ class Nepoogle(QWidget):
                             textData += '</a>'
 
                     elif itemTypeLower == 'musicalbum':
+                        # rdfindexer | sed -n '/nco#fullname/{n;p;}' | sed 's/.*"\(.*\)"[^"]*$/\1/'
                         links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
                                     % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': imgStyle} \
                                 + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
@@ -1302,39 +1337,29 @@ class Nepoogle(QWidget):
                                     % {'id': nepomukResource.uri(), 'icon': self.iconSystemRun, 'style': imgStyle}
 
 
-            text = '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
-            if htmlOutput:
-                text += '</tr>'
+            text += '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
+            text += '</tr>\n'
 
             if stdout:
                 print toUtf8(text)
-                
-            result += text + '\n'
 
-        if htmlOutput:
-            text = ''
-            text += '</tbody></table>\n'
-            text += "<br />\n%(records)s records found in %(seconds)s seconds. HTML visualization builded in %(sechtml)s seconds." \
-                        % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
-            if stdout:
-                print toUtf8(text)
-                
-            result += text + '\n'
+            self.renderedRows += 1
 
-        else:
-            text = "\n%(records)s records found in %(seconds)s seconds." % {'records': len(data), 'seconds': queryTime}
-            if stdout:
-                print toUtf8(text)
-                
-            result += text + '\n'
+        self.renderedCache = text
+        if self.renderedRows < len(data):
+            text += '<td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td><td>%s of %s records</td><td width=\"70px\"></td>' \
+                        % (self.renderSize, self.renderedRows, len(data))
+        
+        text += '</tbody></table>\n'
+        text += "<br />\n%(records)s records found in %(seconds)s seconds. HTML visualization builded in %(sechtml)s seconds." \
+                    % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
+        if stdout:
+            print toUtf8(text)
 
-        if htmlOutput:
-            text = "%s</body>\n</html>" % PROGRAM_HTML_POWERED
-            if stdout:
-                print toUtf8(text)
-                
-            result += text + '\n'
-
+        result += text + "\n%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
+        if stdout:
+            print toUtf8(result)
+    
         return result
         
     def execQuery(self, searchString = ''):
@@ -1345,6 +1370,13 @@ class Nepoogle(QWidget):
         if searchString == '':
             searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
 
+        self.renderedRows = 0
+        self.renderedCache = ''
+        
+        self.resultData = []
+        self.resultStructure = []
+        self.resultTime = None
+       
         o = nsSparqlBuilder()
         o.stdoutQuery = True
         o.columns = '?x0 AS ?id ' + o.columns
@@ -1352,8 +1384,8 @@ class Nepoogle(QWidget):
         #if True:
         try:
             if searchString != '':
-                data, structure, time = o.executeQuery(o.buildQuery(searchString))
-                output = self.formatData(data, structure, time)
+                self.resultData, self.resultStructure, self.resultTime = o.executeQuery(o.buildQuery(searchString))
+                output = self.formatData(self.resultData, self.resultStructure, self.resultTime)
 
             else:
                 raise Exception('Please, type something.')
