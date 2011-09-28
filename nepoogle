@@ -384,8 +384,8 @@ class nsSparqlBuilder():
                 if ontology[0] == '%':
                     ontology = ontology[1:]
                     val = QUrl.toPercentEncoding(val)
-                    #TODO: qué pasa con los paréntesis?
-                    #val.replace('%28', '(').replace('%29', ')')
+                    # Special characters handling.
+                    val.replace('%28', '\\\(').replace('%29', '\\\)')
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
