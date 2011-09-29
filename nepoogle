@@ -14,7 +14,7 @@ PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROGRAM_VERSION_VERSION = 'v0.2git'
-PROGRAM_VERSION_DATE = '2011/09/24'
+PROGRAM_VERSION_DATE = '2011/09/29'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -214,6 +214,7 @@ class nsSparqlBuilder():
                     ['nie:url', 'name', 'na'], \
                     ['nao:numericRating', 'numericrating', 'nr'], \
                     ['nmm:performer->nco:fullname', 'performer', 'pe'], \
+                    ['_nmm:producer->nco:fullname', 'producer', 'pr'], \
                     ['nuao:usageCount', 'playcount', 'pc'], \
                     ['nao:prefLabel', 'preflabel', 'pl'], \
                     ['nao:numericRating', 'rating', 'ra'], \
@@ -988,7 +989,8 @@ class Nepoogle(QWidget):
             subprocess.Popen(['kioclient', 'exec', url])
 
         elif url[:6] == 'prop:/':
-            subprocess.Popen(['kioclient', 'openProperties', url[6:]])
+            #subprocess.Popen(['kioclient', 'openProperties', url[6:]])
+            self.showResourceInfo(url[6:])
             
         elif url[:7] == 'query:/':
             self.leSearch.setText(url[7:])
@@ -1005,10 +1007,10 @@ class Nepoogle(QWidget):
             self.repaint()
 
             if url[8:] == 'more':
-                output = self.formatData(self.resultData, self.resultStructure, self.resultTime)
+                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime)
 
             elif url[8:] == 'all':
-                output = self.formatData(self.resultData, self.resultStructure, self.resultTime, len(self.resultData))
+                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime, len(self.resultData))
 
             else:
                 output = ''
@@ -1075,7 +1077,7 @@ class Nepoogle(QWidget):
                 shortcutsList += shortcut[1]
 
         syntax = "<p><b>The query syntax is</b>:<ul>\n" \
-                    "<em>query</em> :== item [[logop] item]... | command<br />\n"\
+                    "<em>query</em> :== item [[logop] item]... | command | uri<br />\n"\
                     "<br />\n" \
                     "<em>item</em> :== [ontology:][op]text<br />\n" \
                     "<br />\n" \
@@ -1168,7 +1170,78 @@ class Nepoogle(QWidget):
         return output
 
 
-    def formatData(self, data = [], structure = [], queryTime = 0, renderSize = 0, stdout = False):
+    def showResourceInfo(self, uri, knownShortcuts = [], stdout = False):
+        query = "select distinct ?x ?ont ?val\nwhere {\n\t<" + uri + "> ?ont ?val .\n}\t"
+
+        if stdout:
+            print toUtf8(query)
+            
+        output = "<html>\n" \
+                  "<head>\n" \
+                  "<style type=\"text/css\">" \
+                  "    body {%(body_style)s}\n" \
+                  "    tr {%(tr_style)s}\n" \
+                  "    p {%(p_style)s}\n" \
+                  "</style>\n" \
+                  "<title>%(title)s</title>\n" \
+                  "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
+                  "</head>\n<body>\n" \
+                  % {'title': 'Querying Nepomuk', \
+                      'body_style': "font-size:small;", \
+                      'p_style': "font-size:small;", \
+                      'tr_style': "font-size:small;" \
+                      }
+        output += "<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n"
+        
+        model = Nepomuk.ResourceManager.instance().mainModel();
+        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql )
+        if data.isValid():
+            ontology = ''
+            values = ''
+            while data.next() :
+                currOnt = os.path.basename(toUnicode(data["ont"].toString())).replace('#', ':')
+                value = data["val"].toString()
+                if value[:9] == 'nepomuk:/':
+                    res = Nepomuk.Resource(value)
+                    if res.hasType(NAO('nco:Contact', True)):
+                        ontLabel = lvalue(knownShortcuts, '_' + currOnt + '->nco:fullname', 0, 1)
+                        if ontLabel == None:
+                            ontLabel = currOnt
+                            
+                        value = '<a href=\"query:/%s:\'%s\'\">%s</a>' \
+                                      % (ontLabel, res.genericLabel(), res.genericLabel())
+                    
+                    else:
+                        value = res.type()
+                        
+                elif currOnt == 'nmm:genre':
+                    value = '<a href=\"query:/genre:\'%(val)s\'\">%(val)s</a>' % {'val': value}
+                        
+                else:
+                    value = os.path.basename(toUnicode(value))
+                    
+                if ontology == currOnt:
+                    if values != '':
+                        values += ', '
+                        
+                    values += value
+                    
+                else:
+                    if ontology != '':
+                        output += '<tr><td width=\"100px\">%s</td><td>%s</td></tr>' \
+                                    % (ontology, values)
+
+                    values = value
+                    ontology = currOnt
+
+        output += "</tbody></table>\n%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
+        if stdout:
+            print toUtf8(output)
+            
+        return output
+            
+        
+    def formatResultData(self, data = [], structure = [], queryTime = 0, renderSize = 0, stdout = False):
         htmlQueryTime = time.time()
         result = "<html>\n" \
                     "<head>\n" \
@@ -1383,9 +1456,13 @@ class Nepoogle(QWidget):
         
         #if True:
         try:
-            if searchString != '':
+          
+            if searchString[:9] == 'nepomuk:/':
+                output = self.showResourceInfo(searchString, o.shortcuts)
+              
+            elif searchString != '':
                 self.resultData, self.resultStructure, self.resultTime = o.executeQuery(o.buildQuery(searchString))
-                output = self.formatData(self.resultData, self.resultStructure, self.resultTime)
+                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime)
 
             else:
                 raise Exception('Please, type something.')
@@ -1412,7 +1489,6 @@ class Nepoogle(QWidget):
                                 }
 
         self.pendingQuery = False
-
         self.wvOutput.setHtml(output)
         self.setCursor(Qt.ArrowCursor)
         self.leSearch.readOnly = False
@@ -1436,7 +1512,7 @@ def buildHelp():
           % PROGRAM_NAME
   
   
-def formatData(data = [], structure = [], queryTime = 0, stdout = False):
+def formatResultData(data = [], structure = [], queryTime = 0, stdout = False):
     text = ''
     for row in data:
         line = ''
@@ -1536,7 +1612,7 @@ def main(args):
         try:
             if parameters != '':
                 data, structure, time = o.executeQuery(o.buildQuery(parameters))
-                output = formatData(data, structure, time)
+                output = formatResultData(data, structure, time)
 
             else:
                 raise Exception('Please, type something.')
