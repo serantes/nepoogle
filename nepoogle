@@ -891,6 +891,7 @@ class nWebView(QWebView):
 
 class Nepoogle(QWidget):
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.NoGroup)
+    iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.NoGroup)
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
@@ -988,9 +989,13 @@ class Nepoogle(QWidget):
         elif url[:9] == 'nepomuk:/':
             subprocess.Popen(['kioclient', 'exec', url])
 
+        elif url[:6] == 'view:/':
+            self.leSearch.setText(url[6:])
+            self.pendingQuery = True
+            self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
+                                    % self.iconProcessIdle)
         elif url[:6] == 'prop:/':
-            #subprocess.Popen(['kioclient', 'openProperties', url[6:]])
-            self.showResourceInfo(url[6:])
+            subprocess.Popen(['kioclient', 'openProperties', url[6:]])
             
         elif url[:7] == 'query:/':
             self.leSearch.setText(url[7:])
@@ -1315,8 +1320,9 @@ class Nepoogle(QWidget):
                     item = row[i]
                     if item[0] == 'nepomuk':
                         nepomukResource = Nepomuk.Resource(item[1])
-                        htmlstr = "<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(icon)s\"></a>" \
-                                        % {'id': item[1], 'icon': self.iconDocumentInfo, 'style': imgStyle}
+                        htmlstr = "<a href=\"view:/%(id)s\"><img %(style)s title=\"viewer\" src=\"file://%(iconProp)s\"></a>" \
+                                    "<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(iconInfo)s\"></a>" \
+                                    % {'id': item[1], 'iconProp': self.iconDocumentProp, 'iconInfo': self.iconDocumentInfo, 'style': imgStyle}
                                         
                         if links == '':
                             links = htmlstr
@@ -1410,7 +1416,7 @@ class Nepoogle(QWidget):
                                     % {'id': nepomukResource.uri(), 'icon': self.iconSystemRun, 'style': imgStyle}
 
 
-            text += '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"70px\">' + links + '</td>'
+            text += '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"80px\">' + links + '</td>'
             text += '</tr>\n'
 
             if stdout:
@@ -1420,7 +1426,7 @@ class Nepoogle(QWidget):
 
         self.renderedCache = text
         if self.renderedRows < len(data):
-            text += '<td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td><td>%s of %s records</td><td width=\"70px\"></td>' \
+            text += '<td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td><td>%s of %s records</td><td width=\"80px\"></td>' \
                         % (self.renderSize, self.renderedRows, len(data))
         
         text += '</tbody></table>\n'
