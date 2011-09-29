@@ -1,2 +1,9 @@
+v02 -- 2011/09/29
+-First implementation of an integrated resource viewer.
+-Added support to URIs as search string.
+-Added support to html fragmented render to speed up data view.
+-Fixed problem searching parenthesis.
+-Removed "_" character from shorcuts help.
+
 v01 -- 2011/09/11
-First public release
+-First public release.
