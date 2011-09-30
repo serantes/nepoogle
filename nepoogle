@@ -68,6 +68,17 @@ def toUnicode(string):
         return string
 
 
+def QStringListToString(stringList = []):
+    result = ''
+    for item in stringList:
+        if result != '':
+            result += ', '
+            
+        result += toUnicode(item)
+
+    return result
+
+    
 def iif(condition = True, value = '', optionalValue = ''):
     return value if condition else optionalValue
 
@@ -131,7 +142,30 @@ def toPercentEncoding(url = ''):
     #return url.replace(' ', '%20')
     #return url
 
+    
+def beautifyOntology(ontology = ''):
+    result = ''
+    if ontology == '':
+        return result
 
+    ontology = ontology.split(':')[1]
+    if ontology == '':
+        return result
+        
+    result += ontology[0].upper()
+    for i in range(1, len(ontology)):
+        if ontology[i] == ontology[i].upper():
+            result += ' ' + ontology[i].lower()
+
+        else:
+            result += ontology[i]
+
+    if result == 'Has tag':
+        result = 'Tags'
+        
+    return result
+    
+    
 # begin nssparql.py
 class nsSparqlBuilder():
 
@@ -1191,12 +1225,13 @@ class Nepoogle(QWidget):
                   "<title>%(title)s</title>\n" \
                   "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
                   "</head>\n<body>\n" \
-                  % {'title': 'Querying Nepomuk', \
+                  % {'title': 'Resource viewer', \
                       'body_style': "font-size:small;", \
                       'p_style': "font-size:small;", \
                       'tr_style': "font-size:small;" \
                       }
-        output += "<table style=\"text-align:left; width: 100%;\" border=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n"
+        output += '<b title=\"%s\">Resource viewer</b><hr>' % uri
+        output += "<table style=\"text-align:left; width: 100%;\" border=\"0\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n"
         
         model = Nepomuk.ResourceManager.instance().mainModel();
         data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql )
@@ -1211,19 +1246,63 @@ class Nepoogle(QWidget):
                     if res.hasType(NAO('nco:Contact', True)):
                         ontLabel = lvalue(knownShortcuts, '_' + currOnt + '->nco:fullname', 0, 1)
                         if ontLabel == None:
-                            ontLabel = currOnt
+                            ontLabel = '_' + currOnt + '->nco:fullname'
+
+                        altLabels = QStringListToString(res.altLabels())
+                        if altLabels != '':
+                            altLabels = ' title=\"%s\">' % altLabels
                             
+                        else:
+                            altLabels = '>'
+                            
+                        value = '<a href=\"query:/%s:\'%s\'\"><abbr%s%s</abbr></a>' \
+                                      % (ontLabel, res.genericLabel(), altLabels, res.genericLabel())
+
+                    elif res.hasType(NAO('nao:Tag', True)):
+                        ontLabel = lvalue(knownShortcuts, '_' + currOnt + '->%nao:identifier', 0, 1)
+                        if ontLabel == None:
+                            ontLabel = '_' + currOnt + '->%nao:identifier'
+
+                        altLabels = QStringListToString(res.altLabels())
+                        if altLabels != '':
+                            altLabels = ' title=\"%s\">' % altLabels
+
+                        else:
+                            altLabels = '>'
+                            
+                        value = '<a href=\"query:/%s:\'%s\'\"><abbr%s%s</abbr></a>' \
+                                      % (ontLabel, res.genericLabel(), altLabels, res.genericLabel())
+
+                    elif res.hasType(NAO('nfo:Folder', True)):
+                        ontLabel = lvalue(knownShortcuts, currOnt + '->nfo:fileName', 0, 1)
+                        if ontLabel == None:
+                            ontLabel = currOnt + '->nfo:fileName'
+
                         value = '<a href=\"query:/%s:\'%s\'\">%s</a>' \
                                       % (ontLabel, res.genericLabel(), res.genericLabel())
-                    
+
+                    elif res.hasType(NAO('rdfs:Resource', True)):
+                        ontLabel = lvalue(knownShortcuts, currOnt + '->nie:url', 0, 1)
+                        if ontLabel == None:
+                            ontLabel = currOnt + '->nie:url'
+
+                        value = '<a href=\"query:/%s:\'%s\'\">%s</a>' \
+                                      % (ontLabel, res.genericLabel(), res.genericLabel())
+
                     else:
                         value = res.type()
                         
                 elif currOnt == 'nmm:genre':
                     value = '<a href=\"query:/genre:\'%(val)s\'\">%(val)s</a>' % {'val': value}
+
+                elif currOnt == '22-rdf-syntax-ns:type':
+                    value = os.path.basename(toUnicode(value)).replace('#', ':')
+
+                elif currOnt == 'nie:url':
+                    value = '<a href=\"%(url)s\">%(url)s</a>' % {'url': value}
                         
                 else:
-                    value = os.path.basename(toUnicode(value))
+                    pass
                     
                 if ontology == currOnt:
                     if values != '':
@@ -1233,13 +1312,13 @@ class Nepoogle(QWidget):
                     
                 else:
                     if ontology != '':
-                        output += '<tr><td width=\"100px\">%s</td><td>%s</td></tr>' \
-                                    % (ontology, values)
+                        output += '<tr><td valign=\"top\" width=\"100px\"><p title=\"%s\">%s:</p></td><td>%s</td></tr>' \
+                                    % (ontology, beautifyOntology(ontology), values)
 
                     values = value
                     ontology = currOnt
 
-        output += "</tbody></table>\n%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
+        output += "</tbody></table><hr>\n%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
         if stdout:
             print toUtf8(output)
             
