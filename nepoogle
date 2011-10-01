@@ -80,6 +80,18 @@ def QStringListToString(stringList = []):
     return result
 
 
+def fileExists(fileName = ''):
+    if fileName == '':
+        return False
+
+    fileName = toUnicode(fileName)
+    if fileName[:7] == 'file://':
+        return os.path.exists(fileName[7:])
+
+    else:
+        return os.path.exists(fileName)
+    
+
 def addLinksToText(text = ''):
     patter1 = re.compile(r"(^|[\n ])(([\w]+?://[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
     patter2 = re.compile(r"#(^|[\n ])(((www|ftp)\.[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
@@ -146,6 +158,7 @@ def fromPercentEncoding(url = ''):
     qurl = QUrl()
     qurl.setEncodedUrl(toUtf8(url))
     qurl.setEncodedUrl(toUtf8(qurl.toString()))
+    qurl.setEncodedUrl(toUtf8(qurl.toString()))
     return toUnicode(qurl.toString())
 
 
@@ -172,9 +185,6 @@ def beautifyOntology(ontology = ''):
         else:
             result += ontology[i]
 
-    if result == 'Has tag':
-        result = 'Tags'
-        
     return result
     
     
@@ -195,8 +205,8 @@ class nsSparqlBuilder():
     # mal:actors (filtro)
     commands = [ \
                 ['--actors', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
-                ['--albums', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
-                ['--audios', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
+                ['--albums', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
+                ['--audios', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
                 ['--connect', ['', [], [], []]], \
                 ['--contacts', ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
                 ['--creators', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
@@ -206,13 +216,13 @@ class nsSparqlBuilder():
                 ['--genres', ['?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
                 ['--help', ['help', [], [], []]], \
                 ['--images', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
-                ['--movies', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
+                ['--movies', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
                 ['--performers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 ['--quit', ['quit', [], [], []]], \
                 ['--tags', ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
                 ['--tvseries', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
                 ['--tvshows', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
-                ['--videos', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
+                ['--videos', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
                 ['--writers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
@@ -864,50 +874,51 @@ class nsSparqlBuilder():
 # end nssparql.py
 
 
-class nCompleter(QCompleter):
+#class nCompleter(QCompleter):
 
-    separator = " "
+    #separator = " "
     
-    def __init__(self, *args):
+    #def __init__(self, *args):
 
-        QCompleter.__init__(self, *args)
+        #QCompleter.__init__(self, *args)
         
-        model = QStringListModel()
-        wordList = [ \
-                    u"and", u"or",\
-                    u"actor:", \
-                    u"album", \
-                    u"creator", \
-                    u"director:", \
-                    u"genre", \
-                    u"hasTag:", \
-                    u"name:", \
-                    u"performer", \
-                    u"preflabel:", \
-                    u"rating:", \
-                    u"tag:", \
-                    u"title:", \
-                    u"url:", \
-                    u"writer:", \
-                    u"--help", \
-                    u"--allActors", \
-                    u"--allAlbums", \
-                    #u"--allCreators", \
-                    u"--allDirectors", \
-                    u"--allGenres", \
-                    u"--allPerformers", \
-                    u"--allTags", \
-                    u"--allWriters" \
-                    ]
+        #model = QStringListModel()
+        #wordList = [ \
+                    #u"and", u"or",\
+                    #u"actor:", \
+                    #u"album", \
+                    #u"creator", \
+                    #u"director:", \
+                    #u"genre", \
+                    #u"hasTag:", \
+                    #u"name:", \
+                    #u"performer", \
+                    #u"preflabel:", \
+                    #u"rating:", \
+                    #u"tag:", \
+                    #u"title:", \
+                    #u"url:", \
+                    #u"writer:", \
+                    #u"--help", \
+                    #u"--allActors", \
+                    #u"--allAlbums", \
+                    ##u"--allCreators", \
+                    #u"--allDirectors", \
+                    #u"--allGenres", \
+                    #u"--allPerformers", \
+                    #u"--allTags", \
+                    #u"--allWriters" \
+                    #]
 
-        model.setStringList(wordList)
-        self.setModel(model)
-        self.setCaseSensitivity(Qt.CaseInsensitive);
-        self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
+        #model.setStringList(wordList)
+        #self.setModel(model)
+        #self.setCaseSensitivity(Qt.CaseInsensitive);
+        #self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
         
-        #self.setCompletionMode(QCompleter.PopupCompletion)
-        #self.setCompletionMode(QCompleter.InlineCompletion)
+        ##self.setCompletionMode(QCompleter.PopupCompletion)
+        ##self.setCompletionMode(QCompleter.InlineCompletion)
 
+        
     def pathFromIndex(self, index):
         path = QCompleter.pathFromIndex(self, index)
 
@@ -917,6 +928,7 @@ class nCompleter(QCompleter):
 
         return path
 
+        
     def splitPath(self, path):
         path = str(path.split(self.separator)[-1]).lstrip(self.separator)
         return [path]
@@ -930,6 +942,7 @@ class nWebView(QWebView):
         #self.setContextMenuPolicy(Qt.PreventContextMenu)
         #self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+
     
     def customContextMenuRequested(self, pos):
         print 'customContextMenuRequested'
@@ -942,18 +955,19 @@ class Nepoogle(QWidget):
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
-    iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
+    #iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
 
-    renderSize = 50
-    renderedRows = 0
+    pendingQuery = False
+
     renderedCache = ''
+    renderedRows = 0
+    renderSize = 50
 
     resultData = []
     resultStructure = []
     resultTime = None
 
-    pendingQuery = False
-
+    
     def __init__(self, parent = None, string = ''):
         QWidget.__init__(self, parent)
 
@@ -993,10 +1007,12 @@ class Nepoogle(QWidget):
         
         if string == '':
             self.execQuery('--help')
+
     
     def loadStarted(self):
         #print 'loadStarted'
         pass
+
     
     def loadFinished(self, ok):
         #print 'loadFinished:', ok
@@ -1004,10 +1020,12 @@ class Nepoogle(QWidget):
         if self.pendingQuery:
             self.execQuery()
 
+            
     def loadProgress(self, progress):
         #print 'loadProgress:', progress
         pass
 
+        
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             self.pendingQuery = True
@@ -1019,9 +1037,11 @@ class Nepoogle(QWidget):
             
         #elif event.key() == QKeySequence("Ctrl+E"):
         #    self.leSearch.keyPressEvent(self, event)
-      
+
+    
     def customContextMenuRequested(self, pos):
         print 'customContextMenuRequested'
+
     
     def linkClicked(self, url):
         url = toUnicode(url.toString())
@@ -1056,24 +1076,28 @@ class Nepoogle(QWidget):
             
 
         elif url[:8] == 'render:/':
+            if url[8:] == 'more':
+                renderSize = 0
+
+            elif url[8:] == 'all':
+                if len(self.resultData) - self.renderedRows > self.renderSize * 3:
+                    reply = QMessageBox.question(self, '%s - render all' % PROGRAM_NAME, "This could be very slow. Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if reply != QMessageBox.Yes:
+                        return
+
+                renderSize = len(self.resultData)
+
+            else:
+                renderSize = -1
+
             self.leSearch.readOnly = True
             self.wvOutput.setHtml('<html><body><h3>Rendering... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             self.wvOutput.repaint()
             self.setCursor(Qt.BusyCursor)
             self.repaint()
-
-            if url[8:] == 'more':
-                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime)
-
-            elif url[8:] == 'all':
-                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime, len(self.resultData))
-
-            else:
-                output = ''
-
-            if output != '':
-                self.wvOutput.setHtml(output)
+            if renderSize >= 0:
+                self.wvOutput.setHtml(self.formatResultData(self.resultData, self.resultStructure, self.resultTime, renderSize))
 
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
@@ -1086,10 +1110,9 @@ class Nepoogle(QWidget):
                                     % self.iconProcessIdle)
 
         else:
-            # KDE must do the job.
+            # In KDE we trust.
             subprocess.Popen(["kioclient", "exec", url])
-            #subprocess.Popen(["konqueror", "--select", url])
-            #subprocess.call(['kioclient', 'exec', url])
+
     
     def buildHelp(self, oNsSparqlBuilder):
         commands = '<p><b>Commands</b>:\n<ul>\n'
@@ -1232,7 +1255,7 @@ class Nepoogle(QWidget):
 
         return output
 
-
+        
     def showResourceInfo(self, uri, knownShortcuts = [], stdout = False):
         query = "select distinct ?x ?ont ?val\nwhere {\n\t<" + uri + "> ?ont ?val .\n}\t"
 
@@ -1258,13 +1281,13 @@ class Nepoogle(QWidget):
         output += "<table style=\"text-align:left; width: 100%;\" border=\"0\" cellpadding=\"2\" cellspacing=\"0\"><tbody>\n"
         
         model = Nepomuk.ResourceManager.instance().mainModel();
-        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql )
+        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
             ontology = ''
             values = ''
             text = ''
             images = []
-            while data.next() :
+            while data.next():
                 currOnt = os.path.basename(toUnicode(data["ont"].toString())).replace('#', ':')
                 value = toUnicode(data["val"].toString())
                 if value[:9] == 'nepomuk:/':
@@ -1324,7 +1347,7 @@ class Nepoogle(QWidget):
                     value = fromPercentEncoding(value)
                     ext = os.path.splitext(value)[1][1:]
                     if ext != '' and ext in QImageReader.supportedImageFormats():
-                        if os.path.exists(value):
+                        if fileExists(value):
                             images += [value]
                         
                     value = '<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>' \
@@ -1334,9 +1357,7 @@ class Nepoogle(QWidget):
                     value = '<a href=\"query:/genre:+\'%(val)s\'\">%(val)s</a>' % {'val': value}
 
                 else:
-                    # Para el resto provamos de añadir los links si hay urls.
-                    value = addLinksToText(value)
-                    if os.path.exists(value):
+                    if fileExists(value):
                         ext = os.path.splitext(value)[1][1:]
                         if ext != '' and ext in QImageReader.supportedImageFormats():
                             images += [value]
@@ -1346,6 +1367,11 @@ class Nepoogle(QWidget):
                             
                         value = '<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>' \
                                     % {'url': value, 'name': os.path.basename(value)}
+
+                    else:
+                        # No es un fichero así que añadimos los links si hay urls.
+                        value = addLinksToText(value)
+
 
                 if ontology == currOnt:
                     if values != '':
@@ -1372,8 +1398,38 @@ class Nepoogle(QWidget):
         else:
             output += text
 
-        output += "</tbody></table><hr>\n"
+        # Reverse resources.
+        query = "select ?uri ?ont\n" \
+                "   where { " \
+                "       ?uri ?ont <%s> ." \
+                "}" \
+                "order by ?ont" % uri
+        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        reverseResources = []
+        if data.isValid():
+            while data.next():
+                uri = toUnicode(data["uri"].toString())
+                res = Nepomuk.Resource(uri)
+                val = fromPercentEncoding(toUnicode(res.genericLabel()))
+                reverseResources += [[uri, os.path.basename(toUnicode(data["ont"].toString())).replace('#', ':'), val]]
 
+            if len(reverseResources) > 0:
+                reverseResources = sorted(reverseResources, key=lambda revRes: revRes[1] + revRes[2])
+                oldOnt = ''
+                for item in reverseResources:
+                    if oldOnt != item[1]:
+                        output += '<tr><td valign=\"top\" width=\"100px\">%s:</td><td>' % beautifyOntology(item[1])
+                        oldOnt = item[1]
+
+                    output += '<a title=\"%(uri)s\" href=\"query:/%(uri)s\">%(val)s</a>, ' \
+                                 % {'uri': item[0], 'val': item[2]}
+
+                output = output[:-2]
+
+            output += '</td></tr>\n'
+
+        output += "</tbody></table><hr>\n"
+        
         # Resource images.
         if len(images) > 0:
             for image in images:
@@ -1621,7 +1677,7 @@ class Nepoogle(QWidget):
                 raise Exception('Please, type something.')
 
         #try:
-            pass
+        #    pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
