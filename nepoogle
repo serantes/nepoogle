@@ -1545,8 +1545,8 @@ class Nepoogle(QWidget):
             knownShortcuts = self.sparql.shortcuts
 
         if queryTime == None:
-            self.resultTime
-        
+            queryTime = self.resultTime
+                
         result = self.htmlHeader % {'title': 'Querying Nepomuk'}
         result += self.htmlTableHeader % {'border': 1}
 
