@@ -120,6 +120,14 @@ def NOC(name = '', returnQUrl = False):
         return value
 
 
+def NOCR(ontology = ''):
+    result = ''
+    if ontology == '':
+        return result
+
+    return os.path.basename(toUnicode(ontology)).replace('#', ':')
+    
+
 def ontologyToHuman(ontology = '', reverse = False):
     result = ''
     if ontology == '':
@@ -140,6 +148,9 @@ def ontologyToHuman(ontology = '', reverse = False):
     if reverse:
         if result == 'Has tag':
             result = 'Is tag of'
+
+        elif result == 'Series':
+            result = 'Episodes'
 
     return result
 
@@ -326,9 +337,9 @@ class nsSparqlBuilder():
             else:
                 raise Exception("Unknown command \"%s\", try \"--help\" command." % self.command)
 
-            # Esto estaba puesto para controlar errores pero no es flexible.
-            #if self.tempData[0][0] != '?':
-            #    raise Exception(self.tempData[0])
+            # La ayuda tiene tratamiento especial
+            if self.tempData[0] == 'help':
+                raise Exception(self.tempData[0])
 
         if self.tempData[0] == '':
             columns = self.columns
@@ -971,6 +982,11 @@ class Nepoogle(QWidget):
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
     #iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
 
+    model = None
+    queries = []
+    queriesIndex = -1
+    sparql = None
+    
     pendingQuery = False
 
     renderedCache = ''
@@ -996,12 +1012,14 @@ class Nepoogle(QWidget):
                     + "<title>%(title)s</title>\n" \
                         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
                         "</head>\n<body>\n"
-    htmlImgStyle = "border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
+    htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
     htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" border=\"%(border)s\" cellpadding=\"0\" cellspacing=\"0\"><tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
         
     def __init__(self, parent = None, string = ''):
         QWidget.__init__(self, parent)
+
+        self.model = Nepomuk.ResourceManager.instance().mainModel()
 
         #self.setGeometry(300, 300, 250, 150)
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
@@ -1009,9 +1027,25 @@ class Nepoogle(QWidget):
         #self.setWindowIcon(QIcon('icon.png'))
         self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk',  KIconLoader.NoGroup)))
 
-        self.leSearch = QLineEdit()
+        self.leSearch = QLineEdit(self)
         #self.leSearch.setCompleter(nCompleter())
         self.leSearch.selectOnEntry = True
+
+        self.pbBackward = QPushButton(self)
+        self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous',  KIconLoader.NoGroup)))
+        self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.connect(self.pbBackward, SIGNAL("clicked()"), self.goBackward)
+    
+        self.pbForward = QPushButton(self)
+        self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next',  KIconLoader.NoGroup)))
+        self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.connect(self.pbForward, SIGNAL("clicked()"), self.goForward)
+
+        self.hbl = QHBoxLayout()
+        self.hbl.setSpacing(1)
+        self.hbl.addWidget(self.pbBackward)
+        self.hbl.addWidget(self.pbForward)
+        self.hbl.addWidget(self.leSearch)
 
         self.wvOutput = nWebView(self)
         self.connect(self.wvOutput, SIGNAL("linkClicked(const QUrl&)"), self.linkClicked)
@@ -1022,7 +1056,8 @@ class Nepoogle(QWidget):
 
         self.grid = QGridLayout()
         self.grid.setSpacing(10)
-        self.grid.addWidget(self.leSearch, 1, 1)
+        #self.grid.addWidget(self.leSearch, 1, 1)
+        self.grid.addLayout(self.hbl, 1, 1)
         self.grid.addWidget(self.wvOutput, 2, 1, 5, 1)
 
         self.setLayout(self.grid)
@@ -1129,7 +1164,7 @@ class Nepoogle(QWidget):
             self.setCursor(Qt.BusyCursor)
             self.repaint()
             if renderSize >= 0:
-                self.wvOutput.setHtml(self.formatResultData(self.resultData, self.resultStructure, self.resultTime, renderSize))
+                self.wvOutput.setHtml(self.formatResultData([], [], [], 0, renderSize))
 
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
@@ -1146,6 +1181,24 @@ class Nepoogle(QWidget):
             subprocess.Popen(["kioclient", "exec", url])
 
     
+    def goBackward(self):
+        #print "Go backward"
+        if (self.queriesIndex > 0):
+            self.queriesIndex -= 1
+            #print 'Going backward:', self.queriesIndex, self.queries[self.queriesIndex]
+            self.leSearch.setText(self.queries[self.queriesIndex])
+            self.execQuery(self.queries[self.queriesIndex])
+
+        
+    def goForward(self):
+        #print "Go forward"
+        if (self.queriesIndex < (len(self.queries) - 1)):
+            self.queriesIndex += 1
+            #print 'Going forward:', self.queriesIndex, self.queries[self.queriesIndex]
+            self.leSearch.setText(self.queries[self.queriesIndex])
+            self.execQuery(self.queries[self.queriesIndex])
+        
+
     def buildHelp(self, oNsSparqlBuilder):
         commands = '<p><b>Commands</b>:\n<ul>\n'
         for command in oNsSparqlBuilder.commands:
@@ -1298,13 +1351,13 @@ class Nepoogle(QWidget):
                     + '<b title=\"%(uri)s\">Resource viewer</b><hr>' % {'uri': uri}
         output += self.htmlTableHeader % {'border': 0}
         
-        model = Nepomuk.ResourceManager.instance().mainModel();
-        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
             processedData = []
             images = []
+            defaultType = NOCR(Nepomuk.Resource(uri).type())
             while data.next():
-                currOnt = os.path.basename(toUnicode(data["ont"].toString())).replace('#', ':')
+                currOnt = NOCR(data["ont"].toString())
                 value = toUnicode(data["val"].toString())
                 if value[:9] == 'nepomuk:/':
                     res = Nepomuk.Resource(value)
@@ -1363,7 +1416,9 @@ class Nepoogle(QWidget):
                         value = res.type()
                         
                 elif currOnt == '22-rdf-syntax-ns:type':
-                    value = os.path.basename(toUnicode(value)).replace('#', ':')
+                    value = NOCR(value)
+                    if value == defaultType:
+                        value = '<em>' + value + '</em>'
  
                 elif currOnt == 'nie:url':
                     value = fromPercentEncoding(value)
@@ -1406,7 +1461,7 @@ class Nepoogle(QWidget):
                     if text != '':
                         text += '</td></tr>\n'
                         
-                    text += '<tr><td valign=\"top\" width=\"100px\"><p title=\"%s\">%s:</p></td><td>%s' \
+                    text += '<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>%s' \
                                 % (row[0], row[1], row[2])
                     oldOnt = row[1]
 
@@ -1414,7 +1469,7 @@ class Nepoogle(QWidget):
                     text += ', ' + row[2]
                         
         if text == '':
-            output += 'No data found for the uri %s.\n' % uri
+            output += '<p>No data found for the uri %s.</p>\n' % uri
 
         else:
             output += text
@@ -1425,29 +1480,35 @@ class Nepoogle(QWidget):
                 "       ?uri ?ont <%s> ." \
                 "}" \
                 "order by ?ont" % uri
-        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         reverseResources = []
         if data.isValid():
             while data.next():
                 uri = toUnicode(data["uri"].toString())
                 res = Nepomuk.Resource(uri)
                 val = fromPercentEncoding(toUnicode(res.genericLabel()))
-                reverseResources += [[uri, os.path.basename(toUnicode(data["ont"].toString())).replace('#', ':'), val]]
+                reverseResources += [[uri, NOCR(data["ont"].toString()), val]]
 
+            tmpOutput = ''
             if len(reverseResources) > 0:
                 reverseResources = sorted(reverseResources, key=lambda revRes: revRes[1] + revRes[2])
                 oldOnt = ''
                 for item in reverseResources:
                     if oldOnt != item[1]:
-                        output += '<tr><td valign=\"top\" width=\"100px\">%s:</td><td>' % ontologyToHuman(item[1], True)
+                        if tmpOutput != '':
+                            output += tmpOutput.replace('</a><a', '</a>, <a')
+                            tmpOutput = ''
+                            
+                        output += '<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>' \
+                                    % (item[1], ontologyToHuman(item[1], True))
                         oldOnt = item[1]
 
-                    output += '<a title=\"%(uri)s\" href=\"query:/%(uri)s\">%(val)s</a>' \
+                    tmpOutput += '<a title=\"%(uri)s\" href=\"query:/%(uri)s\">%(val)s</a>' \
                                  % {'uri': item[0], 'val': item[2]}
 
-                output = output.replace('</a><a>', '</a>, <a>')
+                tmpOutput = tmpOutput.replace('</a><a', '</a>, <a')
 
-            output += '</td></tr>\n'
+            output += tmpOutput + '</td></tr>\n'
 
         output += self.htmlTableFooter + "<hr>\n"
         
@@ -1457,7 +1518,8 @@ class Nepoogle(QWidget):
                 if image[:7] != 'file://':
                     image = 'file://' + image
                     
-                output += '<img title=\"%(url)s\" src=\"%(url)s\"><br />\n' % {'url': image}
+                output += '<img title=\"%(url)s\" src=\"%(url)s\"><br />\n' \
+                            % {'url': image}
 
             output += '<hr>\n'
 
@@ -1469,14 +1531,31 @@ class Nepoogle(QWidget):
         return output
             
         
-    def formatResultData(self, data = [], structure = [], queryTime = 0, renderSize = 0, stdout = False):
+    def formatResultData(self, data = [], structure = [], knownShortcuts = [], \
+                            queryTime = None, renderSize = None, stdout = False):
         htmlQueryTime = time.time()
 
+        if data == []:
+            data = self.resultData
+
+        if structure == []:
+            structure = self.resultStructure
+
+        if knownShortcuts == []:
+            knownShortcuts = self.sparql.shortcuts
+
+        if queryTime == None:
+            self.resultTime
+        
         result = self.htmlHeader % {'title': 'Querying Nepomuk'}
         result += self.htmlTableHeader % {'border': 1}
 
-        if renderSize == 0:
+        if ((renderSize == None) or (renderSize == 0)):
             renderSize = self.renderSize
+
+        # Evitar que queden unos pocos registros.
+        if ((len(data) - self.renderedRows - renderSize) <= (self.renderSize / 3)):
+            renderSize = len(data) - self.renderedRows
         
         resources = []
         if self.renderedRows <= 0:
@@ -1530,6 +1609,7 @@ class Nepoogle(QWidget):
             nepomukResource = None
             for i in range(0, len(row)):
                 item = row[i]
+                # URI.
                 if item[0] == 'nepomuk':
                     nepomukResource = Nepomuk.Resource(item[1])
                     itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
@@ -1544,6 +1624,7 @@ class Nepoogle(QWidget):
                     else:
                         links = htmlstr + links
 
+                # File URL.
                 elif item[0] == 'file':
                     links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
                                 % {'id': item[1], 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
@@ -1563,6 +1644,7 @@ class Nepoogle(QWidget):
                     else:
                         textData += "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
 
+                # Filex URL.
                 elif item[0] == 'filex':
                     if textData != '':
                         textData += '<br />'
@@ -1573,6 +1655,7 @@ class Nepoogle(QWidget):
                                         'name': '/' + '/'.join(item[1][8:].split('/')[1:]), \
                                         'icon': self.iconDocumentInfo, 'style': self.htmlImgStyle}
 
+                # URL.
                 elif item[0] == 'url':
                     if textData != '':
                         textData += '<br />'
@@ -1580,13 +1663,14 @@ class Nepoogle(QWidget):
                     textData = "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" \
                                     % {'url': item[1], 'name': os.path.basename(item[1])}
 
+                # Expecial, to control properties.
                 elif item[0][:6] == 'ont://':
                     itemType = ontologyToHuman(item[0][6:])
                     if textData != '':
                         textData += '<br />'
 
-                    textData += "<a title=\"query:/genre:+\'%(url)s\'\" href=\"query:/genre:+\'%(url)s\'\">%(name)s</a>" \
-                                    % {'url': item[1], 'name': item[1]}
+                    textData += "<a title=\"query:/%(ont)s:+\'%(url)s\'\" href=\"query:/%(ont)s:+\'%(url)s\'\">%(name)s</a>" \
+                                    % {'ont': item[0][6:], 'url': item[1], 'name': item[1]}
 
                 else:
                     if queryLink == '':
@@ -1616,28 +1700,63 @@ class Nepoogle(QWidget):
                 if queryLink != '':
                     itemTypeLower = itemType.lower()
                     if itemTypeLower == 'tag':
-                        textData = '<a title=\"%(link)s\" href=\"query:/hastag:+\'%(link)s\'\">%(value)s' % {'link': queryLink, 'value': textData}
+                        textData = '<a title=\"hastag:+\'%(link)s\'\" href=\"query:/hastag:+\'%(link)s\'\">%(value)s' % {'link': queryLink, 'value': textData}
                         if (textData.find('</em>') >= 0):
-                            textData = textData.replace('</em>', '</a></em>')
+                            textData = textData.replace('</em>', '</a>').replace('<em>', '')
 
                         else:
                             textData += '</a>'
 
                         if textData.find('<br />') >= 0:
-                            textData = textData.replace('<br />', ' (') + ')'
-
-                    elif itemTypeLower == 'musicalbum':
-                        # rdfindexer | sed -n '/nco#fullname/{n;p;}' | sed 's/.*"\(.*\)"[^"]*$/\1/'
-                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
-                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle} #\
+                            textData = textData.replace('<br />', ' (<em>') + '</em>)'
 
                     elif itemTypeLower == 'contact':
                         links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
                                     % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
                                 + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle} #\
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle}
+
+                    elif itemTypeLower == 'musicalbum':
+                        textData = textData.replace('<em>', '').replace('</em>', '')
+                        textData = '<a title=\"album:+\'%(album)s\'\" href=\"query:/album:+\'%(album)s\'\">%(album)s</a>' % {'album': textData}
+                        
+                        query = 'select distinct ?performer ?name\n' \
+                                'where {\n' \
+                                    '   ?uri nmm:musicAlbum <%s> .\n' \
+                                    '   ?uri nmm:performer ?performer . ?performer nco:fullname ?name\n' \
+                                '}\n' \
+                                'order by ?name' \
+                                % nepomukResource.uri()
+                        performers = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        additionalData = ''
+                        if performers.isValid():
+                            while performers.next():
+                                if additionalData != '':
+                                    additionalData += ', '
+                                #additionalData += '<a href=\"view:/%s\"><em>%s</em></a>' \
+                                #                    % (performers["performer"].toString(), performers["name"].toString(), \
+                                #                        )
+                                additionalData += '<a title=\"performer:+\'%(val)s\'\" href=\"query:/performer:+\'%(val)s\'\"><em>%(val)s</em></a>' \
+                                                    % {'uri': performers["performer"].toString(), 'val': performers["name"].toString()} \
+                                                    + " <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
+                                                    % {'uri': performers["performer"].toString(), 'iconProp': self.iconDocumentProp, 'style': self.htmlImgStyle}
+                                                    
+                        if additionalData != '':
+                            additionalData = '<br />Performers: ' + additionalData
+
+                        textData += additionalData
+                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
+                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
+                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle}
+
+                    
+                    elif itemTypeLower == 'tvshow':
+                        additionalData = "<br />Episode: <em>%sx%02d</em> " \
+                                            % (toUnicode(nepomukResource.property(NOC('nmm:season', True)).toString()), \
+                                                int(toUnicode(nepomukResource.property(NOC('nmm:episodeNumber')).toString())))
+                        textData = textData.replace('<br />', additionalData)
+
 
             text += '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"80px\">' + links + '</td>'
             text += '</tr>\n'
@@ -1670,9 +1789,6 @@ class Nepoogle(QWidget):
         self.setCursor(Qt.BusyCursor)
         self.repaint()
 
-        if searchString == '':
-            searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
-
         self.renderedRows = 0
         self.renderedCache = ''
         
@@ -1680,30 +1796,50 @@ class Nepoogle(QWidget):
         self.resultStructure = []
         self.resultTime = None
        
-        o = nsSparqlBuilder()
-        o.stdoutQuery = True
-        o.columns = '?x0 AS ?id ' + o.columns
-        
-        if True:
-        #try:
+        self.sparql = nsSparqlBuilder()
+        self.sparql.stdoutQuery = True
+        self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
+
+        if searchString == '':
+            searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
+            textTyped = True
+
+        else:
+            textTyped = False
+
+        #if True:
+        try:
           
             if searchString[:9] == 'nepomuk:/':
-                output = self.formatResourceInfo(searchString, o.shortcuts)
+                output = self.formatResourceInfo(searchString, self.sparql.shortcuts)
               
             elif searchString != '':
-                self.resultData, self.resultStructure, self.resultTime = o.executeQuery(o.buildQuery(searchString))
-                output = self.formatResultData(self.resultData, self.resultStructure, self.resultTime)
+                self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                output = self.formatResultData()
 
             else:
                 raise Exception('Please, type something.')
 
-        try:
-            pass
+            if (textTyped or (self.queriesIndex < 0)):
+                if ((self.queriesIndex + 1) < len(self.queries)):
+                    self.queries = self.queries[:self.queriesIndex + 1]
+
+                if (self.queries != []):
+                    if (self.queries[self.queriesIndex] != searchString):
+                        self.queries += [searchString]
+                        self.queriesIndex = len(self.queries) - 1
+
+                else:
+                    self.queries = [searchString]
+                    self.queriesIndex = 0
+                
+        #try:
+        #    pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
             if msgError == 'help':
-                output = self.buildHelp(o)
+                output = self.buildHelp(self.sparql)
 
             elif msgError == 'quit':
                 quit()
