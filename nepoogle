@@ -14,8 +14,8 @@ from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.3git'
-PROGRAM_VERSION_DATE = '2011/??/??'
+PROGRAM_VERSION_VERSION = 'v0.3'
+PROGRAM_VERSION_DATE = '2011/10/02'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \

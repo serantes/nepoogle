@@ -1,9 +1,19 @@
-v02 -- 2011/09/29
--First implementation of an integrated resource viewer.
--Added support to URIs as search string.
--Added support to html fragmented render to speed up data view.
--Fixed problem searching parenthesis.
--Removed "_" character from shorcuts help.
+v03 -- 2011/10/02
+-NEW: Added reversed resources in resource viewer after resource properties.
+-NEW: Backward and fordward buttons.
+-NEW: Many improvements in list viewer and resource viewer.
+-NEW: New delete resource link.
+-NEW: Resource viewer displays all image files located in the resource at the bottom.
+-NEW: Tooltips in links.
+-CHANGE: Removed "open with system" icon
+-BUG: Fixed again the problem searching parenthesis.
 
-v01 -- 2011/09/11
+v02 -- 2011/09/29
+-NEW: Added support to URIs as search string.
+-NEW: Added support to html fragmented render to speed up data view.
+-NEW: Added a basic resource viewer.
+-BUG: Fixed problem searching parenthesis.
+-BUG: Removed "_" character from shorcuts help.
+
+v01 -- 2011/09/24
 -First public release.
