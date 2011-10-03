@@ -14,8 +14,8 @@ from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.3'
-PROGRAM_VERSION_DATE = '2011/10/02'
+PROGRAM_VERSION_VERSION = 'v0.4git'
+PROGRAM_VERSION_DATE = '2011/??/??'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -42,8 +42,8 @@ def addLinksToText(text = ''):
     patter1 = re.compile(r"(^|[\n ])(([\w]+?://[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
     patter2 = re.compile(r"#(^|[\n ])(((www|ftp)\.[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
 
-    text = patter1.sub(r'\1<a href="\2" target="_blank">\3</a>', text)
-    text = patter2.sub(r'\1<a href="http:/\2" target="_blank">\3</a>', text)
+    text = patter1.sub(r'\1<a title="\2" href="\2" target="_blank">\3</a>', text)
+    text = patter2.sub(r'\1<a title="http:/\2" href="http:/\2" target="_blank">\3</a>', text)
 
     return text
 
@@ -1121,7 +1121,11 @@ class Nepoogle(QWidget):
             subprocess.Popen(['konqueror', url[6:]])
 
         elif url[:9] == 'nepomuk:/':
-            subprocess.Popen(['kioclient', 'exec', url])
+            #subprocess.Popen(['kioclient', 'exec', url])
+            self.leSearch.setText(url)
+            self.pendingQuery = True
+            self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
+                                    % self.iconProcessIdle)
 
         elif url[:6] == 'prop:/':
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
@@ -1373,7 +1377,7 @@ class Nepoogle(QWidget):
                         else:
                             altLabels = '>'
 
-                        value = '<a title=\"query:/%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
+                        value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
                                     ' <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
                                     % {'ont': ontLabel, 'val': res.genericLabel(), 'labels': altLabels, 'label': res.genericLabel(), \
                                         'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
@@ -1406,7 +1410,7 @@ class Nepoogle(QWidget):
                                         'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
 
                     elif res.hasType(NOC('rdfs:Resource', True)):
-                        value = '<a title=\"%s\" href=\"query:/%s\">%s</a>' % (res.uri(), res.uri(), res.genericLabel())
+                        value = '<a title=\"%s\" href=\"%s\">%s</a>' % (res.uri(), res.uri(), res.genericLabel())
                         ext = os.path.splitext(toUnicode(res.genericLabel()))[1][1:]
                         if ext != '' and ext in QImageReader.supportedImageFormats():
                             if res.hasProperty(NOC('nie:url')):
@@ -1503,7 +1507,7 @@ class Nepoogle(QWidget):
                                     % (item[1], ontologyToHuman(item[1], True))
                         oldOnt = item[1]
 
-                    tmpOutput += '<a title=\"%(uri)s\" href=\"query:/%(uri)s\">%(val)s</a>' \
+                    tmpOutput += '<a title=\"%(uri)s\" href=\"%(uri)s\">%(val)s</a>' \
                                  % {'uri': item[0], 'val': item[2]}
 
                 tmpOutput = tmpOutput.replace('</a><a', '</a>, <a')
@@ -1669,7 +1673,7 @@ class Nepoogle(QWidget):
                     if textData != '':
                         textData += '<br />'
 
-                    textData += "<a title=\"query:/%(ont)s:+\'%(url)s\'\" href=\"query:/%(ont)s:+\'%(url)s\'\">%(name)s</a>" \
+                    textData += "<a title=\"%(ont)s:+\'%(url)s\'\" href=\"query:/%(ont)s:+\'%(url)s\'\">%(name)s</a>" \
                                     % {'ont': item[0][6:], 'url': item[1], 'name': item[1]}
 
                 else:
