@@ -1174,11 +1174,11 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
             
-        elif url[:6] == 'view:/':
-            self.leSearch.setText(url[6:])
-            self.pendingQuery = True
-            self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
-                                    % self.iconProcessIdle)
+        #elif url[:6] == 'view:/':
+            #self.leSearch.setText(url[6:])
+            #self.pendingQuery = True
+            #self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
+                                    #% self.iconProcessIdle)
 
         else:
             # In KDE we trust.
@@ -1378,7 +1378,7 @@ class Nepoogle(QWidget):
                             altLabels = '>'
 
                         value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
-                                    ' <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
+                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
                                     % {'ont': ontLabel, 'val': res.genericLabel(), 'labels': altLabels, 'label': res.genericLabel(), \
                                         'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
 
@@ -1395,7 +1395,7 @@ class Nepoogle(QWidget):
                             altLabels = '>'
                             
                         value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
-                                    ' <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
+                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
                                     % {'ont': ontLabel, 'val': res.genericLabel(), 'labels': altLabels, 'label': res.genericLabel(), \
                                         'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
 
@@ -1405,7 +1405,7 @@ class Nepoogle(QWidget):
                             ontLabel = currOnt + '->nfo:fileName'
 
                         value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\">%(label)s</a>' \
-                                    ' <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
+                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
                                     % {'ont': ontLabel, 'val': res.genericLabel(), 'label': res.genericLabel(), \
                                         'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
 
@@ -1617,7 +1617,7 @@ class Nepoogle(QWidget):
                 if item[0] == 'nepomuk':
                     nepomukResource = Nepomuk.Resource(item[1])
                     itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
-                    htmlstr = "<a href=\"view:/%(id)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
+                    htmlstr = "<a href=\"%(id)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
                                 "<a href=\"remove:/%(id)s\"><img %(style)s title=\"remove resource\" src=\"file://%(iconDel)s\"></a>" \
                                 "<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(iconInfo)s\"></a>" \
                                 % {'id': item[1], 'iconDel': self.iconDelete, 'iconProp': self.iconDocumentProp, 'iconInfo': self.iconDocumentInfo, 'style': self.htmlImgStyle}
@@ -1684,7 +1684,7 @@ class Nepoogle(QWidget):
                         textData += '<br />'
 
                     if itemType == 'Contact':
-                        textData += "<a title=\"view:/%(uri)s\" href=\"view:/%(uri)s\">%(name)s</a>" \
+                        textData += "<a title=\"%(uri)s\" href=\"%(uri)s\">%(name)s</a>" \
                                         % {'uri': nepomukResource.uri(), 'name': item[1]}
 
                     else:
@@ -1737,12 +1737,12 @@ class Nepoogle(QWidget):
                             while performers.next():
                                 if additionalData != '':
                                     additionalData += ', '
-                                #additionalData += '<a href=\"view:/%s\"><em>%s</em></a>' \
+                                #additionalData += '<a href=\"%s\"><em>%s</em></a>' \
                                 #                    % (performers["performer"].toString(), performers["name"].toString(), \
                                 #                        )
                                 additionalData += '<a title=\"performer:+\'%(val)s\'\" href=\"query:/performer:+\'%(val)s\'\"><em>%(val)s</em></a>' \
                                                     % {'uri': performers["performer"].toString(), 'val': performers["name"].toString()} \
-                                                    + " <a href=\"view:/%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
+                                                    + " <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
                                                     % {'uri': performers["performer"].toString(), 'iconProp': self.iconDocumentProp, 'style': self.htmlImgStyle}
                                                     
                         if additionalData != '':
