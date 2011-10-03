@@ -133,7 +133,12 @@ def ontologyToHuman(ontology = '', reverse = False):
     if ontology == '':
         return result
 
-    ontology = ontology.split(':')[1]
+    try:
+        ontology = ontology.split(':')[1]
+        
+    except:
+        pass
+        
     if ontology == '':
         return result
 
@@ -236,6 +241,7 @@ class nsSparqlBuilder():
                 ['--images', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
                 ['--movies', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
                 ['--performers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                ['--producers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 ['--quit', ['quit', [], [], []]], \
                 ['--tags', ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
                 ['--tvseries', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
@@ -274,7 +280,8 @@ class nsSparqlBuilder():
                     ['nmm:musicAlbum->nie:title', 'album', 'al'], \
                     ['rdf:type=nmm:MusicAlbum->nie:title', 'albums', 'als'], \
                     ['nao:altLabel', 'altlabel', 'all'], \
-                    #['_nco:Contact->nco:fullname', 'contact', 'co'], \
+                    #TODO: fix contact shortcut
+                    ['_nco:Contact->nco:fullname', 'contact', 'co'], \
                     ['rdf:type=nco:Contact->nco:fullname', 'contacts', 'cos'], \
                     ['nco:creator->nco:fullname', 'creator', 'cr'], \
                     ['nao:description', 'description', 'de'], \
@@ -980,7 +987,8 @@ class Nepoogle(QWidget):
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
-    #iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
+    iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
+    iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.NoGroup)
 
     model = None
     queries = []
@@ -1013,9 +1021,30 @@ class Nepoogle(QWidget):
                         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
                         "</head>\n<body>\n"
     htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
-    htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" border=\"%(border)s\" cellpadding=\"0\" cellspacing=\"0\"><tbody>\n"
+    htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
+                        "border=\"%(border)s\" cellpadding=\"3\" cellspacing=\"0\">" \
+                        "<tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
-        
+    htmlTime = "<br />\n%(records)s records found in %(seconds)s seconds. '\
+                'HTML visualization builded in %(sechtml)s seconds."
+
+    htmlLinkDolphin = "<a href=\"dolp:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                        % ('%s', htmlImgStyle, 'open with Dolphin', iconFileManager)
+    htmlLinkInfo = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconDocumentInfo)
+    htmlLinkKonqueror = "<a href=\"konq:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                        % ('%s', htmlImgStyle, 'open with Konqueror', iconKonqueror)
+    htmlLinkOpenLocation = "<a href=\"%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                            % ('%s', htmlImgStyle, 'open location', iconFileManager)
+    htmlLinkProperties = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                            % ('%s', htmlImgStyle, 'properties', iconDocumentInfo)
+    htmlLinkRemove = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                            % ('%s', htmlImgStyle, 'remove resource', iconDelete)
+    htmlLinks = "<td width=\"65px\">%s</td>"
+    htmlLinkSearch = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconSystemSearch)
+    htmlLinkSystemRun = "<a href=\"%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+                            % ('%s', htmlImgStyle, 'system run', iconSystemRun)
+
+
     def __init__(self, parent = None, string = ''):
         QWidget.__init__(self, parent)
 
@@ -1025,20 +1054,20 @@ class Nepoogle(QWidget):
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
         self.setWindowTitle(PROGRAM_NAME)
         #self.setWindowIcon(QIcon('icon.png'))
-        self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk',  KIconLoader.NoGroup)))
+        self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
 
         self.leSearch = QLineEdit(self)
         #self.leSearch.setCompleter(nCompleter())
         self.leSearch.selectOnEntry = True
 
         self.pbBackward = QPushButton(self)
-        self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous',  KIconLoader.NoGroup)))
-        self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        #self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbBackward, SIGNAL("clicked()"), self.goBackward)
     
         self.pbForward = QPushButton(self)
-        self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next',  KIconLoader.NoGroup)))
-        self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbForward, SIGNAL("clicked()"), self.goForward)
 
         self.hbl = QHBoxLayout()
@@ -1189,9 +1218,10 @@ class Nepoogle(QWidget):
         #print "Go backward"
         if (self.queriesIndex > 0):
             self.queriesIndex -= 1
-            #print 'Going backward:', self.queriesIndex, self.queries[self.queriesIndex]
-            self.leSearch.setText(self.queries[self.queriesIndex])
-            self.execQuery(self.queries[self.queriesIndex])
+            
+        #print 'Going backward:', self.queriesIndex, self.queries[self.queriesIndex]
+        self.leSearch.setText(self.queries[self.queriesIndex])
+        self.execQuery(self.queries[self.queriesIndex])
 
         
     def goForward(self):
@@ -1345,8 +1375,62 @@ class Nepoogle(QWidget):
         return output
 
         
+    def htmlRenderLink(self, id = 'uri', par1 = '', par2 = ''):
+
+        if id == 'uri':
+            title = "title=\"%s\"" % par1
+            href = "href=\"%s\"" % par1
+            value = par2
+
+        elif id == 'album':
+            title = "title=\"album:+\'%s\'\"" % par1
+            href = "href=\"query:/album:+\'%s\'\"" % par1
+            value = self.htmlLinkSearch
+
+        elif id == 'contact':
+            #TODO: arreglar esto
+            #title = "title=\"contact:+\'%s\'\"" % par1
+            #href = "href=\"query:/contact:+\'%s\'\"" % par1
+            #value = self.htmlLinkSearch
+            return ''
+
+        elif id == 'ontology':
+            title = "title=\"%s:+\'%s\'\"" % (par1, par2)
+            href = "href=\"query:/%s:+\'%s\'\"" % (par1, par2)
+            value = self.htmlLinkSearch
+
+        elif id == 'performer':
+            title = "title=\"performer:+\'%s\'\"" % par1
+            href = "href=\"query:/performer:+\'%s\'\"" % par1
+            value = self.htmlLinkSearch
+
+        elif id == 'tag':
+            title = "title=\"hasTag:+\'%s\'\"" % par1
+            href = "href=\"query:/hasTag:+\'%s\'\"" % par1
+            value = self.htmlLinkSearch
+
+        # This is an exception.    
+        elif id == 'unplugged':
+            return "<b>[Unplugged<a title=\"%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
+                        % (par1, par1, self.htmlLinkInfo, par2)
+                            
+        elif id == 'url':
+            title = "title=\"%s\"" % par1
+            href = "href=\"%s\"" % par1
+            value = par2
+            #TODO: añadir un icono que indique que es un enlace externo.
+            
+        else:
+            return ''
+
+        return "<a %s %s>%s</a>" % (title, href, value)
+
+
     def formatResourceInfo(self, uri, knownShortcuts = [], stdout = False):
-        query = "select distinct ?x ?ont ?val\nwhere {\n\t<" + uri + "> ?ont ?val .\n}\t"
+        query = "select distinct ?x ?ont ?val\n" \
+                "where {\n" \
+                    "\t<" + uri + "> ?ont ?val .\n"\
+                "}\n"
 
         if stdout:
             print toUtf8(query)
@@ -1364,60 +1448,41 @@ class Nepoogle(QWidget):
                 currOnt = NOCR(data["ont"].toString())
                 value = toUnicode(data["val"].toString())
                 if value[:9] == 'nepomuk:/':
-                    res = Nepomuk.Resource(value)
-                    if res.hasType(NOC('nao:Tag', True)):
-                        ontLabel = lvalue(knownShortcuts, '_' + currOnt + '->%nao:identifier', 0, 1)
-                        if ontLabel == None:
-                            ontLabel = '_' + currOnt + '->%nao:identifier'
+                    resource = Nepomuk.Resource(value)
+                    value = ''
+                    if resource.hasType(NOC('nao:Tag', True)):
+                        #altLabels = QStringListToString(resource.altLabels())
+                        ontLabel = '_' + currOnt + '->%nao:identifier'
 
-                        altLabels = QStringListToString(res.altLabels())
-                        if altLabels != '':
-                            altLabels = ' title=\"%s\">' % altLabels
+                    elif resource.hasType(NOC('nco:Contact', True)):
+                        #altLabels = QStringListToString(resource.altLabels())
+                        ontLabel =  '_' + currOnt + '->nco:fullname'
 
-                        else:
-                            altLabels = '>'
+                    elif resource.hasType(NOC('nfo:Folder', True)):
+                        ontLabel = currOnt + '->nfo:fileName'
 
-                        value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
-                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
-                                    % {'ont': ontLabel, 'val': res.genericLabel(), 'labels': altLabels, 'label': res.genericLabel(), \
-                                        'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
+                    elif resource.hasType(NOC('nmm:MusicAlbum', True)):
+                        ontLabel = currOnt + '->nie:title'
 
-                    elif res.hasType(NOC('nco:Contact', True)):
-                        ontLabel = lvalue(knownShortcuts, '_' + currOnt + '->nco:fullname', 0, 1)
-                        if ontLabel == None:
-                            ontLabel = '_' + currOnt + '->nco:fullname'
-
-                        altLabels = QStringListToString(res.altLabels())
-                        if altLabels != '':
-                            altLabels = ' title=\"%s\">' % altLabels
-                            
-                        else:
-                            altLabels = '>'
-                            
-                        value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\"><abbr%(labels)s%(label)s</abbr></a>' \
-                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
-                                    % {'ont': ontLabel, 'val': res.genericLabel(), 'labels': altLabels, 'label': res.genericLabel(), \
-                                        'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
-
-                    elif res.hasType(NOC('nfo:Folder', True)):
-                        ontLabel = lvalue(knownShortcuts, currOnt + '->nfo:fileName', 0, 1)
-                        if ontLabel == None:
-                            ontLabel = currOnt + '->nfo:fileName'
-
-                        value = '<a title=\"%(ont)s:+\'%(val)s\'\" href=\"query:/%(ont)s:+\'%(val)s\'\">%(label)s</a>' \
-                                    ' <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>' \
-                                    % {'ont': ontLabel, 'val': res.genericLabel(), 'label': res.genericLabel(), \
-                                        'uri': res.uri(), 'style': self.htmlImgStyle, 'iconProp': self.iconDocumentProp}
-
-                    elif res.hasType(NOC('rdfs:Resource', True)):
-                        value = '<a title=\"%s\" href=\"%s\">%s</a>' % (res.uri(), res.uri(), res.genericLabel())
-                        ext = os.path.splitext(toUnicode(res.genericLabel()))[1][1:]
+                    elif resource.hasType(NOC('rdfs:Resource', True)):
+                        ontLabel = ''
+                        ext = os.path.splitext(toUnicode(resource.genericLabel()))[1][1:]
                         if ext != '' and ext in QImageReader.supportedImageFormats():
-                            if res.hasProperty(NOC('nie:url')):
-                                images += [toUnicode(res.property(NOC('nie:url')).toString())]
+                            if resource.hasProperty(NOC('nie:url')):
+                                images += [toUnicode(resource.property(NOC('nie:url')).toString())]
 
                     else:
-                        value = res.type()
+                        value = toUnicode(resource.type())
+
+                    if value == '':
+                        shorcut = lvalue(knownShortcuts, ontLabel, 0, 1)
+                        if shorcut == None:
+                            shorcut = ontLabel
+
+                        value = '<!--' + toUnicode(resource.genericLabel()) + '-->' \
+                                    + self.htmlRenderLink('uri', resource.uri(), resource.genericLabel())
+                        if ontLabel != '':
+                            value += ' ' + self.htmlRenderLink('ontology', shorcut, resource.genericLabel())
                         
                 elif currOnt == '22-rdf-syntax-ns:type':
                     value = NOCR(value)
@@ -1425,17 +1490,26 @@ class Nepoogle(QWidget):
                         value = '<em>' + value + '</em>'
  
                 elif currOnt == 'nie:url':
-                    value = fromPercentEncoding(value)
-                    ext = os.path.splitext(value)[1][1:]
+                    url = fromPercentEncoding(value)
+                    ext = os.path.splitext(url)[1][1:]
                     if ext != '' and ext in QImageReader.supportedImageFormats():
                         if fileExists(value):
                             images += [value]
                         
-                    value = '<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>' \
-                                % {'url': value, 'name': os.path.basename(value)}
+                    value = ''
+                    if url[:7] == 'file://':
+                        value += url
+                        if (os.path.exists(url[7:]) or os.path.islink(url[7:])):
+                            value += ' ' + self.htmlLinkSystemRun % (url)
+                            value += ' ' + self.htmlLinkOpenLocation % (os.path.dirname(url))
+
+                    elif url[:8] == 'filex://':
+                        value += self.htmlRenderLink('unplugged', \
+                                            url[8:].split('/')[0], \
+                                            '/' + '/'.join(url[8:].split('/')[1:]))
 
                 elif currOnt == 'nmm:genre':
-                    value = '<a title=\"genre:+\'%(val)s\'\" href=\"query:/genre:+\'%(val)s\'\">%(val)s</a>' % {'val': value}
+                    value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
 
                 else:
                     if fileExists(value):
@@ -1465,7 +1539,8 @@ class Nepoogle(QWidget):
                     if text != '':
                         text += '</td></tr>\n'
                         
-                    text += '<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>%s' \
+                    text += '<tr><td valign=\"top\" width=\"100px\">' \
+                            '<b title=\"%s\">%s</b>:</td><td>%s' \
                                 % (row[0], row[1], row[2])
                     oldOnt = row[1]
 
@@ -1500,17 +1575,21 @@ class Nepoogle(QWidget):
                 for item in reverseResources:
                     if oldOnt != item[1]:
                         if tmpOutput != '':
-                            output += tmpOutput.replace('</a><a', '</a>, <a')
+                            output += tmpOutput.replace('</a><', '</a>, <')
                             tmpOutput = ''
                             
                         output += '<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>' \
                                     % (item[1], ontologyToHuman(item[1], True))
                         oldOnt = item[1]
 
-                    tmpOutput += '<a title=\"%(uri)s\" href=\"%(uri)s\">%(val)s</a>' \
-                                 % {'uri': item[0], 'val': item[2]}
+                    #tmpOutput += '<a title=\"%(uri)s\" href=\"%(uri)s\">%(val)s</a>' \
+                    #             % {'uri': item[0], 'val': item[2]}
 
-                tmpOutput = tmpOutput.replace('</a><a', '</a>, <a')
+                    tmpOutput += '<!-- ' + item[2] + '-->' \
+                                    + self.htmlRenderLink('uri', item[0], item[2]) # \
+                                    #+ ' ' + self.htmlRenderLink('ontology', item[1], item[2])
+
+                tmpOutput = tmpOutput.replace('</a><', '</a>, <')
 
             output += tmpOutput + '</td></tr>\n'
 
@@ -1613,15 +1692,14 @@ class Nepoogle(QWidget):
             nepomukResource = None
             for i in range(0, len(row)):
                 item = row[i]
+
                 # URI.
                 if item[0] == 'nepomuk':
                     nepomukResource = Nepomuk.Resource(item[1])
                     itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
-                    htmlstr = "<a href=\"%(id)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
-                                "<a href=\"remove:/%(id)s\"><img %(style)s title=\"remove resource\" src=\"file://%(iconDel)s\"></a>" \
-                                "<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties\" src=\"file://%(iconInfo)s\"></a>" \
-                                % {'id': item[1], 'iconDel': self.iconDelete, 'iconProp': self.iconDocumentProp, 'iconInfo': self.iconDocumentInfo, 'style': self.htmlImgStyle}
-
+                    
+                    htmlstr = self.htmlLinkProperties % (item[1])
+                    htmlstr += ' ' + self.htmlLinkRemove % (item[1])
                     if links == '':
                         links = htmlstr
 
@@ -1630,62 +1708,80 @@ class Nepoogle(QWidget):
 
                 # File URL.
                 elif item[0] == 'file':
-                    links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
-                                % {'id': item[1], 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
-                            + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                % {'id': item[1], 'icon': self.iconKonqueror, 'style': self.htmlImgStyle} # \
-                            #+ " <a href=\"%(id)s\"><img %(style)s title=\"open with system\"src=\"file://%(icon)s\"></a></td>" \
-                            #    % {'id': item[1], 'icon': self.iconSystemRun, 'style': self.htmlImgStyle}
+                    links += ' ' + self.htmlLinkDolphin % (item[1])
+                    links += ' ' + self.htmlLinkKonqueror % (item[1])
 
                     if textData != '':
                         textData += '<br />'
 
-                    if (os.path.isfile(item[1][7:]) or os.path.islink(item[1][7:])):
-                        textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])} \
-                                    + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
-                                    % {'dir': os.path.dirname(item[1]), 'icon': self.iconFileManager, 'style': self.htmlImgStyle}
+                    if (os.path.exists(item[1][7:]) or os.path.islink(item[1][7:])):
+                        #textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])} \
+                        #            + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
+                        #            % {'dir': os.path.dirname(item[1]), 'icon': self.iconFileManager, 'style': self.htmlImgStyle}
+                        textData += self.htmlRenderLink("uri", nepomukResource.uri(), os.path.basename(item[1]))
+                        textData += ' ' + self.htmlLinkSystemRun % (item[1])
+                        textData += ' ' + self.htmlLinkOpenLocation % (os.path.dirname(item[1]))
 
                     else:
-                        textData += "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
+                        #textData += "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
+                        textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
 
                 # Filex URL.
                 elif item[0] == 'filex':
                     if textData != '':
                         textData += '<br />'
 
-                    textData = "<b>[%(dev)s<a href=\"prop:/%(id)s\"><img %(style)s title=\"properties for %(id)s\" src=\"file://%(icon)s\"></a>]</b><em>%(name)s</em>" \
-                                    % {'dev': 'Unplugged', \
-                                        'id': 'nepomuk:/res/' + item[1][8:].split('/')[0], \
-                                        'name': '/' + '/'.join(item[1][8:].split('/')[1:]), \
-                                        'icon': self.iconDocumentInfo, 'style': self.htmlImgStyle}
+                    textData += self.htmlRenderLink('unplugged', \
+                                            item[1][8:].split('/')[0], \
+                                            '/' + '/'.join(item[1][8:].split('/')[1:]))
 
                 # URL.
                 elif item[0] == 'url':
                     if textData != '':
                         textData += '<br />'
 
-                    textData = "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" \
-                                    % {'url': item[1], 'name': os.path.basename(item[1])}
-
+                    textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
+                        
                 # Expecial, to control properties.
                 elif item[0][:6] == 'ont://':
                     itemType = ontologyToHuman(item[0][6:])
                     if textData != '':
                         textData += '<br />'
 
-                    textData += "<a title=\"%(ont)s:+\'%(url)s\'\" href=\"query:/%(ont)s:+\'%(url)s\'\">%(name)s</a>" \
-                                    % {'ont': item[0][6:], 'url': item[1], 'name': item[1]}
+                    textData += item[1] + ' ' + self.htmlRenderLink('ontology', item[0][6:], item[1])
 
                 else:
+                    print item
                     if queryLink == '':
                         queryLink = item[1]
 
                     if textData != '':
                         textData += '<br />'
 
-                    if itemType == 'Contact':
-                        textData += "<a title=\"%(uri)s\" href=\"%(uri)s\">%(name)s</a>" \
-                                        % {'uri': nepomukResource.uri(), 'name': item[1]}
+                    itemTypeLower = itemType.lower()
+                    if itemTypeLower == 'contact':
+                        # En las queries genéricas la columna se llama url.
+                        #TODO: mal hack, esto es confuso, mirar de arreglarlo.
+                        if structure[i] == 'url':
+                            textData += self.htmlRenderLink('uri', nepomukResource.uri(), item[1]) \
+                                            + ' ' + self.htmlRenderLink('contact', item[1])
+                            links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
+                            links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
+
+                    elif itemTypeLower == 'tag':
+                        # En las queries genéricas la columna se llama url.
+                        #TODO: mal hack, esto es confuso, mirar de arreglarlo.
+                        if structure[i] == 'prefLabel' or structure[i] == 'url':
+                            textData += self.htmlRenderLink('uri', nepomukResource.uri(), item[1]) \
+                                            + ' ' + self.htmlRenderLink('tag', item[1])
+                                            
+                        else:
+                            #TODO: mal hack, esto es confuso, mirar de arreglarlo.
+                            if structure[i] == 'title':
+                                textData += '%s: %s' % (ontologyToHuman('nie:altLabel'), item[1])
+                                
+                            else:
+                                textData += '%s: %s' % (ontologyToHuman(structure[i]), item[1])
 
                     else:
                         textData += '<em>' + item[1] + '</em>'
@@ -1703,26 +1799,11 @@ class Nepoogle(QWidget):
             else:
                 if queryLink != '':
                     itemTypeLower = itemType.lower()
-                    if itemTypeLower == 'tag':
-                        textData = '<a title=\"hastag:+\'%(link)s\'\" href=\"query:/hastag:+\'%(link)s\'\">%(value)s' % {'link': queryLink, 'value': textData}
-                        if (textData.find('</em>') >= 0):
-                            textData = textData.replace('</em>', '</a>').replace('<em>', '')
-
-                        else:
-                            textData += '</a>'
-
-                        if textData.find('<br />') >= 0:
-                            textData = textData.replace('<br />', ' (<em>') + '</em>)'
-
-                    elif itemTypeLower == 'contact':
-                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
-                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle}
-
-                    elif itemTypeLower == 'musicalbum':
+                    if itemTypeLower == 'musicalbum':
                         textData = textData.replace('<em>', '').replace('</em>', '')
-                        textData = '<a title=\"album:+\'%(album)s\'\" href=\"query:/album:+\'%(album)s\'\">%(album)s</a>' % {'album': textData}
+                        #textData = '<a title=\"album:+\'%(album)s\'\" href=\"query:/album:+\'%(album)s\'\">%(album)s</a>' % {'album': textData}
+                        textData = self.htmlRenderLink('uri', nepomukResource.uri(), textData) \
+                                    + ' ' + self.htmlRenderLink('album', textData)
                         
                         query = 'select distinct ?performer ?name\n' \
                                 'where {\n' \
@@ -1737,23 +1818,17 @@ class Nepoogle(QWidget):
                             while performers.next():
                                 if additionalData != '':
                                     additionalData += ', '
-                                #additionalData += '<a href=\"%s\"><em>%s</em></a>' \
-                                #                    % (performers["performer"].toString(), performers["name"].toString(), \
-                                #                        )
-                                additionalData += '<a title=\"performer:+\'%(val)s\'\" href=\"query:/performer:+\'%(val)s\'\"><em>%(val)s</em></a>' \
-                                                    % {'uri': performers["performer"].toString(), 'val': performers["name"].toString()} \
-                                                    + " <a href=\"%(uri)s\"><img %(style)s title=\"view resource\" src=\"file://%(iconProp)s\"></a>" \
-                                                    % {'uri': performers["performer"].toString(), 'iconProp': self.iconDocumentProp, 'style': self.htmlImgStyle}
+                                    
+                                additionalData += self.htmlRenderLink('uri', performers["performer"].toString(), performers["name"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('performer', performers["name"].toString())
                                                     
                         if additionalData != '':
-                            additionalData = '<br />Performers: ' + additionalData
+                            additionalData = '<br />Performer: ' + additionalData
 
                         textData += additionalData
-                        links += "<a href=\"dolp:/%(id)s\"><img %(style)s title=\"open with dolphin\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconFileManager, 'style': self.htmlImgStyle} \
-                                + " <a href=\"konq:/%(id)s\"><img %(style)s title=\"open with konqueror\" src=\"file://%(icon)s\"></a>" \
-                                    % {'id': nepomukResource.uri(), 'icon': self.iconKonqueror, 'style': self.htmlImgStyle}
-
+                        
+                        links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
+                        links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
                     elif itemTypeLower == 'tvshow':
                         additionalData = "<br />Episode: <em>%sx%02d</em> " \
@@ -1762,7 +1837,8 @@ class Nepoogle(QWidget):
                         textData = textData.replace('<br />', additionalData)
 
 
-            text += '<td>' + textData + '</td><td>' + itemType + '</td><td width=\"80px\">' + links + '</td>'
+            text += '<td>' + textData + '</td><td>' + itemType + '</td>'
+            text += self.htmlLinks % links
             text += '</tr>\n'
 
             if stdout:
@@ -1772,12 +1848,14 @@ class Nepoogle(QWidget):
 
         self.renderedCache = text
         if self.renderedRows < len(data):
-            text += '<td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td><td>%s of %s records</td><td width=\"80px\"></td>' \
+            text += '<td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
+                    '<td>%s of %s records</td>' \
                         % (self.renderSize, self.renderedRows, len(data))
+            text += self.htmlLinks % ''
+
         
         text += self.htmlTableFooter
-        text += "<br />\n%(records)s records found in %(seconds)s seconds. HTML visualization builded in %(sechtml)s seconds." \
-                    % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
+        text += self.htmlTime % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
         if stdout:
             print toUtf8(text)
 
