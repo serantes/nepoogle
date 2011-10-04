@@ -1762,7 +1762,6 @@ class Nepoogle(QWidget):
                     textData += item[1] + ' ' + self.htmlRenderLink('ontology', item[0][6:], item[1])
 
                 else:
-                    print item
                     if queryLink == '':
                         queryLink = item[1]
 
@@ -1773,7 +1772,7 @@ class Nepoogle(QWidget):
                     if itemTypeLower == 'contact':
                         # En las queries genéricas la columna se llama url.
                         #TODO: mal hack, esto es confuso, mirar de arreglarlo.
-                        if structure[i] == 'url':
+                        if structure[i] == 'fullname' or structure[i] == 'url':
                             textData += self.htmlRenderLink('uri', nepomukResource.uri(), item[1]) \
                                             + ' ' + self.htmlRenderLink('contact', item[1])
                             links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
