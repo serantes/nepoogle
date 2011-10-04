@@ -1,11 +1,14 @@
+v04 -- 2011/??/??
+-
+
 v03 -- 2011/10/02
--NEW: Added reversed resources in resource viewer after resource properties.
+-NEW: Added reverse resources in resource viewer.
 -NEW: Backward and fordward buttons.
--NEW: Many improvements in list viewer and resource viewer.
+-NEW: Many improvements in results viewer and resource viewer.
 -NEW: New delete resource link.
--NEW: Resource viewer displays all image files located in the resource at the bottom.
+-NEW: Resource viewer displays all image files located in the resource.
 -NEW: Tooltips in links.
--CHANGE: Removed "open with system" icon
+-CHANGE: Removed "open with system" icon.
 -BUG: Fixed again the problem searching parenthesis.
 
 v02 -- 2011/09/29
