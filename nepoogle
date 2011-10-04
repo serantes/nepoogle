@@ -1048,7 +1048,7 @@ class Nepoogle(QWidget):
                             % ('%s', htmlImgStyle, 'open location', iconFileManager)
     htmlLinkProperties = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
                             % ('%s', htmlImgStyle, 'properties', iconDocumentInfo)
-    htmlLinkRemove = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
+    htmlLinkRemove = "<a href=\"remove:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
                             % ('%s', htmlImgStyle, 'remove resource', iconDelete)
     htmlLinks = "<td width=\"65px\">%s</td>"
     htmlLinkSearch = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconSystemSearch)
