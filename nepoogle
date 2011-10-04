@@ -125,7 +125,8 @@ def NOCR(ontology = ''):
     if ontology == '':
         return result
 
-    return os.path.basename(toUnicode(ontology)).replace('#', ':')
+    return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('rdf-schema:', 'rdfs:')
+
     
 
 def ontologyToHuman(ontology = '', reverse = False):
@@ -154,6 +155,9 @@ def ontologyToHuman(ontology = '', reverse = False):
         if result == 'Has tag':
             result = 'Is tag of'
 
+        elif result == 'Performer':
+            result = 'Is performer of'
+            
         elif result == 'Series':
             result = 'Episodes'
 
@@ -274,6 +278,7 @@ class nsSparqlBuilder():
                     ]
     shortcuts = [ \
                     ['_nmm:actor->nco:fullname','actor',  'ac'], \
+                    #TODO: fix actors shortcut
                     #['nmm:actor->nco:fullname', 'actors', 'acs'], \
                     #  optional { ?x0 nmm:actor ?x00 . ?x00 nco:fullname ?fullname . }
                     #  HAVING (REGEX(?fullname, '', 'i'))
@@ -281,6 +286,12 @@ class nsSparqlBuilder():
                     ['rdf:type=nmm:MusicAlbum->nie:title', 'albums', 'als'], \
                     ['nao:altLabel', 'altlabel', 'all'], \
                     #TODO: fix contact shortcut
+                    #SELECT DISTINCT ?x0 AS ?id ?ont
+                    #WHERE {
+                    #    ?x0 ?ont ?x1 .
+                    #    ?x1 nco:fullname ?x2 FILTER(REGEX(?x2, 'miryo'^^xsd:string, 'i')) .
+                    #}
+                    #order by ?ont
                     ['_nco:Contact->nco:fullname', 'contact', 'co'], \
                     ['rdf:type=nco:Contact->nco:fullname', 'contacts', 'cos'], \
                     ['nco:creator->nco:fullname', 'creator', 'cr'], \
