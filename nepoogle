@@ -11,6 +11,20 @@ from PyKDE4.nepomuk import *
 from PyKDE4.soprano import *
 from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 
+#TODO: añadir soporte a --connect, --disconnect, --daemonize y moverlos a Nepoogle.
+#TODO: configuración externa
+#TODO: multilenguage
+#TODO: paréntesis
+#TODO: wildcards
+#TODO: editor: gestionar comentarios, rating y tags.
+#TODO: soporte para la modificación de comentarios
+#TODO: soporte para la modificación del rating
+#TODO: soporte para la gestión de tags. Idea: 
+#       Más usados: los 10 tags más usados listados alfabéticamente.
+#       Usados: los últimos tags usados, debajo los últimos que has usado.
+#       Alfabética: la vista normal.
+#       Botón de eliminar todos.
+
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
