@@ -292,7 +292,7 @@ class nsSparqlBuilder():
                     #    ?x1 nco:fullname ?x2 FILTER(REGEX(?x2, 'miryo'^^xsd:string, 'i')) .
                     #}
                     #order by ?ont
-                    ['_nco:Contact->nco:fullname', 'contact', 'co'], \
+                    ['?ont->nco:fullname', 'contact', 'co'], \
                     ['rdf:type=nco:Contact->nco:fullname', 'contacts', 'cos'], \
                     ['nco:creator->nco:fullname', 'creator', 'cr'], \
                     ['nao:description', 'description', 'de'], \
