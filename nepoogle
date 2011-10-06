@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, re, subprocess, sys, time
+import gettext, os, re, subprocess, sys, time
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -50,6 +50,11 @@ knownOntologies = [ \
                     ['nmo', '2007/03/22'], ['nrl', '2007/08/15'], \
                     ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
                 ]
+
+gettext.bindtextdomain(PROGRAM_NAME, '') #'/path/to/my/language/directory')
+gettext.textdomain(PROGRAM_NAME)
+_ = gettext.gettext
+#gettext.translation(PROGRAM_NAME, languages=['es']).install()
 
                 
 def addLinksToText(text = ''):
@@ -245,27 +250,27 @@ class nsSparqlBuilder():
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
     # mal:actors (filtro)
     commands = [ \
-                ['--actors', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
-                ['--albums', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
-                ['--audios', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
-                ['--connect', ['', [], [], []]], \
-                ['--contacts', ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
-                ['--creators', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
-                ['--daemonize', ['', [], [], []]], \
-                ['--directors', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
-                ['--disconnect', ['', [], [], []]], \
-                ['--genres', ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
-                ['--help', ['help', [], [], []]], \
-                ['--images', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
-                ['--movies', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
-                ['--performers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
-                ['--producers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
-                ['--quit', ['quit', [], [], []]], \
-                ['--tags', ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
-                ['--tvseries', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
-                ['--tvshows', ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
-                ['--videos', ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
-                ['--writers', ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
+                [_('--actors'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
+                [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
+                [_('--audios'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
+                #[_('--connect'), ['', [], [], []]], \
+                [_('--contacts'), ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
+                [_('--creators'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
+                #[_('--daemonize'), ['', [], [], []]], \
+                [_('--directors'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
+                #[_('--disconnect'), ['', [], [], []]], \
+                [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
+                [_('--help'), ['help', [], [], []]], \
+                [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
+                [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
+                [_('--performers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                [_('--producers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
+                [_('--quit'), ['quit', [], [], []]], \
+                [_('--tags'), ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
+                [_('--tvseries'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
+                [_('--tvshows'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
+                [_('--videos'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
+                [_('--writers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
     #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
@@ -291,14 +296,14 @@ class nsSparqlBuilder():
                         ['nuao:usagecount', 'number'] \
                     ]
     shortcuts = [ \
-                    ['_nmm:actor->nco:fullname','actor',  'ac'], \
+                    ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
                     #TODO: fix actors shortcut
-                    #['nmm:actor->nco:fullname', 'actors', 'acs'], \
+                    #['nmm:actor->nco:fullname', _('actors', _('acs'], \
                     #  optional { ?x0 nmm:actor ?x00 . ?x00 nco:fullname ?fullname . }
                     #  HAVING (REGEX(?fullname, '', 'i'))
-                    ['nmm:musicAlbum->nie:title', 'album', 'al'], \
-                    ['rdf:type=nmm:MusicAlbum->nie:title', 'albums', 'als'], \
-                    ['nao:altLabel', 'altlabel', 'all'], \
+                    ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
+                    ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
+                    ['nao:altLabel', _('altlabel'), _('all')], \
                     #TODO: fix contact shortcut
                     #SELECT DISTINCT ?x0 AS ?id ?ont
                     #WHERE {
@@ -306,34 +311,34 @@ class nsSparqlBuilder():
                     #    ?x1 nco:fullname ?x2 FILTER(REGEX(?x2, 'miryo'^^xsd:string, 'i')) .
                     #}
                     #order by ?ont
-                    ['?ont->nco:fullname', 'contact', 'co'], \
-                    ['rdf:type=nco:Contact->nco:fullname', 'contacts', 'cos'], \
-                    ['nco:creator->nco:fullname', 'creator', 'cr'], \
-                    ['nao:description', 'description', 'de'], \
-                    ['_nmm:director->nco:fullname', 'director', 'di'], \
-                    ['nmm:episodeNumber', 'episode', 'ep'], \
-                    ['nco:fullname', 'fullname', 'fn'], \
-                    ['nmm:genre', 'genre', 'ge'], \
-                    ['_nao:hasTag->%nao:identifier', 'hastag', 'ht'], \
-                    ['nie:mimeType', 'mimetype', 'mt'], \
-                    ['rdf:type=nmm:Movie->nie:title', 'movie', 'mo'], \
-                    ['nie:url', 'name', 'na'], \
-                    ['nao:numericRating', 'numericrating', 'nr'], \
-                    ['_nmm:performer->nco:fullname', 'performer', 'pe'], \
-                    ['_nmm:producer->nco:fullname', 'producer', 'pr'], \
-                    ['nuao:usageCount', 'playcount', 'pc'], \
-                    ['nao:prefLabel', 'preflabel', 'pl'], \
-                    ['nao:numericRating', 'rating', 'ra'], \
-                    ['nmm:season', 'season', 'se'], \
-                    ['nao:identifier', 'tag', 'ta'], \
-                    ['nie:title', 'title', 'ti'], \
-                    ['nmm:series->nie:title', 'tvserie', 'ts'], \
-                    ['rdf:type=nmm:TVSeries->nie:title', 'tvseries', 'tvs'], \
-                    ['nmm:series->nie:title', 'tvshow', 'tv'], \
-                    ['rdf:type', 'type', 'ty'], \
-                    ['%nie:url', 'url', 'ur'], \
-                    ['nuao:usageCount', 'usagecount', 'uc'], \
-                    ['_nmm:writer->nco:fullname', 'writer', 'wr'] \
+                    ['?ont->nco:fullname', _('contact'), _('co')], \
+                    ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
+                    ['nco:creator->nco:fullname', _('creator'), _('cr')], \
+                    ['nao:description', _('description'), _('de')], \
+                    ['_nmm:director->nco:fullname', _('director'), _('di')], \
+                    ['nmm:episodeNumber', _('episode'), _('ep')], \
+                    ['nco:fullname', _('fullname'), _('fn')], \
+                    ['nmm:genre', _('genre'), _('ge')], \
+                    ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
+                    ['nie:mimeType', _('mimetype'), _('mt')], \
+                    ['rdf:type=nmm:Movie->nie:title', _('movie'), _('mo')], \
+                    ['nie:url', _('name'), _('na')], \
+                    ['nao:numericRating', _('numericrating'), _('nr')], \
+                    ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
+                    ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
+                    ['nuao:usageCount', _('playcount'), _('pc')], \
+                    ['nao:prefLabel', _('preflabel'), _('pl')], \
+                    ['nao:numericRating', _('rating'), _('ra')], \
+                    ['nmm:season', _('season'), _('se')], \
+                    ['nao:identifier', _('tag'), _('ta')], \
+                    ['nie:title', _('title'), _('ti')], \
+                    ['nmm:series->nie:title', _('tvserie'), _('ts')], \
+                    ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs')], \
+                    ['nmm:series->nie:title', _('tvshow'), _('tv')], \
+                    ['rdf:type', _('type'), _('ty')], \
+                    ['%nie:url', _('url'), _('ur')], \
+                    ['nuao:usageCount', _('usagecount'), _('uc')], \
+                    ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
@@ -1047,7 +1052,7 @@ class Nepoogle(QWidget):
                         "</head>\n<body>\n"
     htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
     htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
-                        "border=\"%(border)s\" cellpadding=\"3\" cellspacing=\"0\">" \
+                        "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
                         "<tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
     htmlTime = "<br />\n%(records)s records found in %(seconds)s seconds. '\
@@ -1264,7 +1269,8 @@ class Nepoogle(QWidget):
             commands += '<li>%s</li>\n' % command[0]
         commands += '</ul></p>\n'
 
-        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + self.htmlTableHeader % {'border': 0}
+        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + self.htmlTableHeader \
+                        % {'border': 0, 'cellpadding': 0}
         for shortcut in oNsSparqlBuilder.shortcuts:
             info = ''
             fmtOntology = shortcut[0]
@@ -1331,7 +1337,7 @@ class Nepoogle(QWidget):
                     % {'shortcuts': shortcutsList, 'instructions': commandsList}
 
         examples = "<p><b>Examples</b>:\n" \
-                    + self.htmlTableHeader % {'border': 1} + \
+                    + self.htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
                     "<tr><td><b>query</b></td>\n" \
                         "<td><b>result</b></td></tr>\n" \
                     "<tr><td><em>movie</em></td>\n" \
@@ -1462,7 +1468,7 @@ class Nepoogle(QWidget):
             
         output = self.htmlHeader % {'title': 'Resource viewer'} \
                     + '<b title=\"%(uri)s\">Resource viewer</b><hr>' % {'uri': uri}
-        output += self.htmlTableHeader % {'border': 0}
+        output += self.htmlTableHeader % {'border': 0, 'cellpadding': 3}
         
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
@@ -1656,7 +1662,7 @@ class Nepoogle(QWidget):
             queryTime = self.resultTime
                 
         result = self.htmlHeader % {'title': 'Querying Nepomuk'}
-        result += self.htmlTableHeader % {'border': 1}
+        result += self.htmlTableHeader % {'border': 1, 'cellpadding': 3}
 
         if ((renderSize == None) or (renderSize == 0)):
             renderSize = self.renderSize
