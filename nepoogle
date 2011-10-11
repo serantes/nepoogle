@@ -343,6 +343,9 @@ class nsSparqlBuilder():
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
     tempData = ['', [], [], []]
+
+    resultsetLimit = 0
+    resultsetOffset = 0
     
 
     def __init__(self):
@@ -398,6 +401,7 @@ class nsSparqlBuilder():
         footer = self._private_main_footer
         having = self.bsHaving()
         sort = self.bsSort()
+        limits = self.bsResulsetLimits()
 
         query = header \
                 + typeFilter \
@@ -405,7 +409,8 @@ class nsSparqlBuilder():
                 + searchFilter \
                 + footer \
                 + having \
-                + sort
+                + sort \
+                + limits
 
         if self.stdoutQuery:
             print toUtf8(query)
@@ -691,6 +696,17 @@ class nsSparqlBuilder():
             else:
                 text = \
                         "  ?x0 rdf:type ?type .\n" \
+
+        return text
+
+
+    def bsResulsetLimits(self):
+        text = ''
+        if self.resultsetLimit > 0:
+            text += "LIMIT %s\n" % self.resultsetLimit
+
+        if self.resultsetOffset > 0:
+            text += "OFFSET %s" % self.resultsetOffset
 
         return text
 
