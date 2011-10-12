@@ -1,5 +1,10 @@
-v04 -- 2011/??/??
--
+v04 -- 2011/10/12
+-NEW: Added "Contact" shortcut.
+-NEW: Added "Producer" shorcut.
+-NEW: Search link in results.
+-CHANGE: All links have tooltip.
+-CHANGE: Several changes in Html renderers to be more coherent displaying different data.
+-CHANGE: Several improvements in SPARQL query builder.
 
 v03 -- 2011/10/02
 -NEW: Added reverse resources in resource viewer.
