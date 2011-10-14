@@ -16,7 +16,6 @@ from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: los links a visor deben funcionar con los discos desconectados
-#TODO: añadir el título del álbum a MusicPiece
 #TODO: añadir al recorce viewer los siguientes links: . << < > >>
 #TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 
@@ -1635,9 +1634,6 @@ class Nepoogle(QWidget):
                                     % (item[1], ontologyToHuman(item[1], True))
                         oldOnt = item[1]
 
-                    #tmpOutput += '<a title=\"%(uri)s\" href=\"%(uri)s\">%(val)s</a>' \
-                    #             % {'uri': item[0], 'val': item[2]}
-
                     tmpOutput += '<!-- ' + item[2] + '-->' \
                                     + self.htmlRenderLink('uri', item[0], item[2]) # \
                                     #+ ' ' + self.htmlRenderLink('ontology', item[1], item[2])
@@ -1768,15 +1764,11 @@ class Nepoogle(QWidget):
                         textData += '<br />'
 
                     if (os.path.exists(item[1][7:]) or os.path.islink(item[1][7:])):
-                        #textData += "<a href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])} \
-                        #            + " <a href=\"%(dir)s\"><img %(style)s title=\"open location\" src=\"file://%(icon)s\"></a>" \
-                        #            % {'dir': os.path.dirname(item[1]), 'icon': self.iconFileManager, 'style': self.htmlImgStyle}
                         textData += self.htmlRenderLink("uri", nepomukResource.uri(), os.path.basename(item[1]))
                         textData += ' ' + self.htmlLinkSystemRun % (item[1])
                         textData += ' ' + self.htmlLinkOpenLocation % (os.path.dirname(item[1]))
 
                     else:
-                        #textData += "<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>" % {'url': item[1], 'name': os.path.basename(item[1])}
                         textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
 
                 # Filex URL.
@@ -1874,13 +1866,33 @@ class Nepoogle(QWidget):
                                                     + ' ' + self.htmlRenderLink('performer', performers["name"].toString())
                                                     
                         if additionalData != '':
-                            additionalData = '<br />Performer: ' + additionalData
+                            additionalData = '<br />%s: ' % _('Performer') + additionalData
 
                         textData += additionalData
                         
                         links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
                         links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
+                    elif itemTypeLower == 'musicpiece':
+                        query = 'select distinct ?title\n' \
+                            'where {\n' \
+                                '   <%s> nie:title ?title .\n' \
+                            '}\n' \
+                            % nepomukResource.property(NOC('nmm:musicAlbum')).toString()
+                        albumTitle = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        additionalData = ''
+                        if albumTitle.isValid():
+                            # I known, there is only one possible record but...
+                            while albumTitle.next():
+                                if additionalData != '':
+                                    additionalData += ', '
+
+                                additionalData += self.htmlRenderLink('uri', nepomukResource.uri(), albumTitle["title"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('album', albumTitle["title"].toString())
+
+                        if additionalData != '':
+                            textData += '<br />%s: ' % _('Album') + additionalData
+
                     elif itemTypeLower == 'tvshow':
                         additionalData = "<br />Episode: <em>%sx%02d</em> " \
                                             % (toUnicode(nepomukResource.property(NOC('nmm:season', True)).toString()), \
