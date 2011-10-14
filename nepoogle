@@ -271,6 +271,7 @@ class nsSparqlBuilder():
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
                 [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
+                [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
                 [_('--performers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 [_('--producers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 [_('--quit'), ['quit', [], [], []]], \
@@ -304,6 +305,7 @@ class nsSparqlBuilder():
                         ['nuao:usagecount', 'number'] \
                     ]
     shortcuts = [ \
+                    #TODO: singulares y plurales para todo
                     ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
                     #TODO: fix actors shortcut
                     #['nmm:actor->nco:fullname', _('actors', _('acs'], \
@@ -312,13 +314,6 @@ class nsSparqlBuilder():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
-                    #TODO: fix contact shortcut
-                    #SELECT DISTINCT ?x0 AS ?id ?ont
-                    #WHERE {
-                    #    ?x0 ?ont ?x1 .
-                    #    ?x1 nco:fullname ?x2 FILTER(REGEX(?x2, 'miryo'^^xsd:string, 'i')) .
-                    #}
-                    #order by ?ont
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
                     ['nco:creator->nco:fullname', _('creator'), _('cr')], \
@@ -329,6 +324,7 @@ class nsSparqlBuilder():
                     ['nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
+                    ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movie'), _('mo')], \
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
