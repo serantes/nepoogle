@@ -11,12 +11,15 @@ from PyKDE4.nepomuk import *
 from PyKDE4.soprano import *
 from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 
+#BUG: carácter ' de Singin' in the Rain
+
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: los links a visor deben funcionar con los discos desconectados
-#BUG: carácter ' de Singin' in the Rain
+#TODO: añadir el título del álbum a MusicPiece
+#TODO: añadir al recorce viewer los siguientes links: . << < > >>
+#TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 
-#TODO: añadir soporte a --connect, --disconnect, --daemonize y moverlos a Nepoogle
 #TODO: configuración externa
 #TODO: multilenguage
 #TODO: paréntesis y wildcards
@@ -24,11 +27,11 @@ from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
 #TODO: soporte para la modificación de comentarios
 #TODO: soporte para la modificación del rating
 #TODO: soporte para la gestión de tags. Idea:
-
 #       Más usados: los 10 tags más usados listados alfabéticamente.
 #       Usados: los últimos tags usados, debajo los últimos que has usado.
 #       Alfabética: la vista normal.
 #       Botón de eliminar todos.
+#TODO: añadir soporte a --connect, --disconnect, --daemonize y moverlos a Nepoogle
 
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
@@ -316,7 +319,7 @@ class nsSparqlBuilder():
                     ['nao:altLabel', _('altlabel'), _('all')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
-                    ['nco:creator->nco:fullname', _('creator'), _('cr')], \
+                    ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
