@@ -1379,7 +1379,7 @@ class Nepoogle(QWidget):
                         "<td>mimetype matroska and contains 'Tiger' in url</td></tr>\n" \
                     "<tr><td><em>playcount:0 hastag:corea genre:drama actor:+'Yeong-ae Lee' director:Park</em></td>\n" \
                         "<td>not played movie dramas tagged 'corean' with actress 'Yeong-ae Lee' and with director name contains 'Park'</td></tr>\n" \
-                    "<tr><td><em>actor:'Zhang Ziyi' actor:-'Bingbing Fan'</em></td>\n" \
+                    "<tr><td><em>actor:'Zhang Ziyi' and actor:-'Bingbing Fan'</em></td>\n" \
                         "<td>movies with actress 'Zhang Ziyi' but without actress 'Bingbing Fan'</td></tr>\n" \
                     "<tr><td><em>tvshow:Coupling season:2 episode:4</em></td>\n" \
                         "<td>Episode 4 of Season 2 of Coupling</td></tr>\n" \
@@ -2066,7 +2066,7 @@ def main(args):
 
     #KCmdLineArgs.init(sys.argv, about_data)
 
-    gui = True
+    gui = not sys.stdout.isatty()
     stdout = None
     parameters = toUnicode('')
     for i in range(1, len(args)):
@@ -2075,8 +2075,8 @@ def main(args):
             buildHelp()
             quit()
         
-        elif parameter.lower() == '--nogui':
-            gui = False
+        elif parameter.lower() == '--gui':
+            gui = True
             continue
         
         elif parameter.lower() == '--stdout':
