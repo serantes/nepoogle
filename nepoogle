@@ -9,14 +9,17 @@ from PyQt4.QtWebKit import *
 from PyKDE4.kdeui import *
 from PyKDE4.nepomuk import *
 from PyKDE4.soprano import *
-from PyKDE4.kdecore import KAboutData, ki18n, KCmdLineArgs
+#from PyKDE4.kdecore import ki18n, i18n, KCmdLineArgs, KAboutData
+#from PyKDE4.kdeui import KApplication, KXmlGuiWindow, KStandardAction, KAction, KIcon
+#from PyKDE4.kdecore import *
+#from PyKDE4.kdeui import *
 
 #BUG: carácter ' de Singin' in the Rain
 
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: los links a visor deben funcionar con los discos desconectados
-#TODO: añadir al recorce viewer los siguientes links: . << < > >>
+#TODO: añadir al resource viewer los siguientes links: . << < > >>
 #TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 
 #TODO: configuración externa
@@ -1213,7 +1216,17 @@ class Nepoogle(QWidget):
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
 
         elif url[:7] == 'query:/':
-            self.leSearch.setText(url[7:])
+            urlElements = url[7:].split("'")
+            if len(urlElements) > 3:
+                tmpUrl = urlElements[0] + '"'
+                for i in range(1, len(urlElements) - 1):
+                    tmpUrl += "'" + urlElements[i]
+                tmpUrl += '"'
+
+            else:
+                tmpUrl = urlElements[0] + "'" + urlElements[1] + "'"
+
+            self.leSearch.setText(tmpUrl)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
@@ -2014,9 +2027,8 @@ def buildHelp():
           "\n" \
           "commands:\n" \
           "  --help\t--  Shows this help\n" \
-          "  --noqui\t--  Console mode\n" \
+          "  --gui\t\t--  Console mode\n" \
           "  --stdout\t--  Prints SPARQL query to stdout (default in gui mode)\n" \
-          "  --nostdout\t--  Don't prints SPARQL query to stdout (default in console mode)\n" \
           "\n" \
           "query:\n" \
           "  Consult the help in gui mode\n" \
@@ -2047,25 +2059,30 @@ def formatResultData(data = [], structure = [], queryTime = 0, stdout = False):
     
 def main(args):
 
-    #app_name = PROGRAM_NAME
+    #appName = PROGRAM_NAME
     #catalog = PROGRAM_NAME
-    #program_name = ki18n(PROGRAM_NAME)
+    #programName = ki18n(PROGRAM_NAME)
     #version = PROGRAM_VERSION_VERSION
     #description = ki18n("An alternate search engine for Nepomuk inspired in Google search syntax.")
     #license = KAboutData.License_GPL
     #copyright = ki18n("(C) 2011 Ignacio Serantes")
     #text = ki18n("A search engine for Nepomuk.")
-    #home_page = "http://www.kde-apps.org"
-    #bug_email = "kde@aynoa.net"
+    #homePage = "http://www.kde-apps.org"
+    #bugEmail = "kde@aynoa.net"
 
-    #about_data = KAboutData(app_name, catalog, program_name, version,
-                            #description, license, copyright, text, home_page,
-                            #bug_email)
+    #aboutData = KAboutData(appName, catalog, programName, version,
+                            #description, license, copyright, text, homePage,
+                            #bugEmail)
 
-    #about_data.setProgramIconName("nepomuk")
+    #KCmdLineArgs.init(sys.argv, aboutData)
 
-    #KCmdLineArgs.init(sys.argv, about_data)
-
+    #options = KCmdLineOptions()
+    #options.add("--help", ki18n("this help"))
+    #options.add("--gui", ki18n("force gui in console mode"))
+    #options.add("--stdout", ki18n("force stdout in console mode"))
+    #options.add("--nostdout", ki18n("force no stdout in gui mode"))
+    #KCmdLineArgs.addCmdLineOptions(options)
+    
     gui = not sys.stdout.isatty()
     stdout = None
     parameters = toUnicode('')
@@ -2084,11 +2101,6 @@ def main(args):
                 stdout = True
             continue
         
-        elif parameter.lower() == '--nostdout':
-            if stdout == None:
-                stdout = False
-            continue
-        
         elif parameter.find(' ') >= 0:
             j = parameter.rfind(':')
             if j >= 0:
@@ -2103,6 +2115,13 @@ def main(args):
         stdout == gui
 
     if gui:
+        #app = KApplication()
+        #window = Nepoogle(parameters.strip())
+        #window.show()
+
+        #if parameters != '':
+        #    window.execQuery()
+        
         app = QApplication(args)
         nepoogle = Nepoogle(None, parameters.strip())
         nepoogle.show()
