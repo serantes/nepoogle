@@ -19,11 +19,12 @@ from PyKDE4.soprano import *
 #_BUG: encoding incorrecto
 #_BUG: sample rate se visualiza en notación científica
 #_TODO: visualizar las fechas correctamente
+#_TODO: los links a visor deben funcionar con los discos desconectados
 
+#TODO: musicpiece debe de incluir el intérprete
 #TODO: añadir soporte a nepomuk:/ en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
-#TODO: los links a visor deben funcionar con los discos desconectados
 #TODO: añadir al resource viewer los siguientes links: . << < > >>
 #TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 #TODO: count()
@@ -237,7 +238,13 @@ def QStringListToString(stringList = []):
 
 
 def toN3(url = ''):
-    return QUrl(url).toEncoded()
+    if url[0] == '^':
+        result = '^' + QUrl(url[1:]).toEncoded()
+
+    else:
+        result = QUrl(url).toEncoded()
+
+    return result
 
 
 def toPercentEncoding(url = ''):
@@ -1381,7 +1388,8 @@ class Nepoogle(QWidget):
                     "<ul>\n" \
                     "<li>Query syntax is inspired in Google's search syntax</li>\n" \
                     "<li>Nepoogle do a text search in identifiers, descriptions, tags, fullnames, titles and urls</li>\n" \
-                    "<li>Wildcards, dates and parenthesis are not supported</li>\n" \
+                    "<li>Dates and parenthesis are not supported</li>\n" \
+                    "<li>You can use regular expressions searching strings</li>\n" \
                     "<li>Nepoogle works with Soprano and don't uses Nepomuk to do queries</li>\n" \
                     "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results</li>\n" \
                     "</ul></p>\n" \
@@ -1530,9 +1538,24 @@ class Nepoogle(QWidget):
 
         # This is an exception.    
         elif id == 'unplugged':
-            return "<b>[Unplugged<a title=\"%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
-                        % (par1, par1, self.htmlLinkInfo, par2)
-                            
+            if par1 == '':
+                return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
+                        % (par2[8:].split('/')[0], \
+                            par2[8:].split('/')[0], \
+                            self.htmlLinkInfo, \
+                            '/' + '/'.join(par2[8:].split('/')[1:]) \
+                            )
+
+            else:
+                return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><a title=\"%s\" href=\"%s\"><em>%s</em></a>" \
+                        % (par2[8:].split('/')[0], \
+                            par2[8:].split('/')[0], \
+                            self.htmlLinkInfo, \
+                            par1, \
+                            par1, \
+                            '/' + '/'.join(par2[8:].split('/')[1:]) \
+                            )
+                        
         elif id == 'url':
             title = "title=\"%s\"" % par1
             href = "href=\"%s\"" % par1
@@ -1640,8 +1663,11 @@ class Nepoogle(QWidget):
 
                     elif url[:8] == 'filex://':
                         value += self.htmlRenderLink('unplugged', \
-                                            url[8:].split('/')[0], \
-                                            '/' + '/'.join(url[8:].split('/')[1:]))
+                                                        '', \
+                                                        url \
+                                                    )
+#                                            url[8:].split('/')[0], \
+#                                            '/' + '/'.join(url[8:].split('/')[1:]))
 
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
@@ -1859,9 +1885,13 @@ class Nepoogle(QWidget):
                     if textData != '':
                         textData += '<br />'
 
+
                     textData += self.htmlRenderLink('unplugged', \
-                                            item[1][8:].split('/')[0], \
-                                            '/' + '/'.join(item[1][8:].split('/')[1:]))
+                                                        nepomukResource.uri(), \
+                                                        item[1]\
+                                                    )
+                    #                        item[1][8:].split('/')[0], \
+                    #                        '/' + '/'.join(item[1][8:].split('/')[1:]))
 
                 # URL.
                 elif item[0] == 'url':
