@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import gettext, os, re, subprocess, sys, time
+import datetime, gettext, os, re, subprocess, sys, time
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -15,9 +15,12 @@ from PyKDE4.soprano import *
 #from PyKDE4.kdeui import *
 
 #_BUG: carácter ' de Singin' in the Rain
-#BUG: sample rate se visualiza en notación científica
+#_BUG: fallan las búsquedas con el carácter ":"
+#_BUG: encoding incorrecto
+#_BUG: sample rate se visualiza en notación científica
+#_TODO: visualizar las fechas correctamente
 
-#TODO: visualizar las fechas correctamente
+#TODO: añadir soporte a nepomuk:/ en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: los links a visor deben funcionar con los discos desconectados
@@ -33,7 +36,7 @@ from PyKDE4.soprano import *
 
 #TODO: configuración externa
 #TODO: multilenguage
-#TODO: paréntesis y wildcards
+#TODO: paréntesis
 #TODO: editor: gestionar comentarios, rating y tags.
 #TODO: soporte para la modificación de comentarios
 #TODO: soporte para la modificación del rating
@@ -98,6 +101,23 @@ def fileExists(fileName = ''):
         return os.path.exists(fileName)
 
 
+def formatDate(string = '', pack = False):
+    result = datetime.datetime.strptime(string[:19], "%Y-%m-%dT%H:%M:%S")
+    result = datetime.datetime.strftime(result, '%x')
+    return result
+    
+
+def formatDateTime(string = '', pack = False):
+    result = datetime.datetime.strptime(string[:19], "%Y-%m-%dT%H:%M:%S")
+    if pack and result.day == 1 and result.month == 1 and (result.hour + result.minute + result.second) == 0:
+        result = datetime.datetime.strftime(result, '%Y')
+
+    else:
+        result = datetime.datetime.strftime(result, '%x %X')
+        
+    return result
+
+        
 def fromPercentEncoding(url = ''):
     qurl = QUrl()
     qurl.setEncodedUrl(toUtf8(url))
@@ -217,11 +237,7 @@ def QStringListToString(stringList = []):
 
 
 def toN3(url = ''):
-    url = Soprano.Node.resourceToN3(QUrl(url))
-    if url != '':
-        url = url[1:-1]
-
-    return url
+    return QUrl(url).toEncoded()
 
 
 def toPercentEncoding(url = ''):
@@ -319,8 +335,15 @@ class nsSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
+    # All in lowercase so search in lowercase.
     ontologyTypes = [ \
+                        ['nao:created', 'datetime'], \
+                        ['nao:lastmodified', 'datetime'], \
                         ['nao:numericrating', 'number'], \
+                        ['nfo:samplerate', 'number'], \
+                        ['nfo:averagebitrate', 'number'], \
+                        ['nie:contentcreated', 'datetimep'], \
+                        ['nie:lastmodified', 'datetime'], \
                         ['nmm:episodenumber', 'number'], \
                         ['nmm:season', 'number'], \
                         ['nuao:usagecount', 'number'] \
@@ -547,26 +570,30 @@ class nsSparqlBuilder():
                 filterExpression = '}\n'
 
             else:
+                # Sometimes " character must be removed.
+                if val[0] == val[-1] == '"':
+                    val = val[1:-1]
+                    
                 if valType == 'number':
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 else:
                     if operator == '==':
-                        filterExpression = "FILTER(?x%(v2)s %(op)s '%(val)s'^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
+                        filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
 
                     elif operator == '=':
-                        filterExpression = "FILTER(REGEX(?x%(v2)s, '%(val)s'^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val.replace('(', '\\\(').replace(')', '\\\)')}
+                        filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val.replace('(', '\\\(').replace(')', '\\\)')}
 
                     elif operator == '!=':
                         if optionalUsage:
-                            filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, '%(val)s'^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
+                            filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
                                                     % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val.replace('(', '\\\(').replace(')', '\\\)'), 'ontbase': ontologyElements[0][1:], 'ont': ontology}
 
                         else:
-                            filterExpression = "FILTER(!REGEX(?x%(v2)s, '%(val)s'^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val.replace('(', '\\\(').replace(')', '\\\)')}
+                            filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val.replace('(', '\\\(').replace(')', '\\\)')}
 
                     else:
-                        filterExpression = "FILTER(?x%(v2)s %(op)s '%(val)s'^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
+                        filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
 
             if optionalUsage:
                         #"      }\n" \
@@ -782,6 +809,7 @@ class nsSparqlBuilder():
             breakChar = ' '
             newItem = True
             for i in range(0, len(string)):
+                #print breakChar, string[i], result
                 if string[i] == breakChar:
                     if breakChar in ("'", '"'):
                         result[-1] += breakChar
@@ -790,21 +818,21 @@ class nsSparqlBuilder():
                     breakChar = ' '
                     continue
 
-                if string[i] == '"' or string[i] == "'":
+                if ((string[i] == '"' or string[i] == "'")):
                     if ((i == 0) or (string[i-1] not in specialChars)):
-                        newItem = True
+                        if string[i] == breakChar:
+                            newItem = True
 
-                    result[-1] += string[i]
-                    breakChar = string[i]
-                    continue
-
+                    if breakChar == ' ':
+                        breakChar = string[i]
+                    
                 if newItem and ((result == []) or (result[-1] != '')):
                     result += ['']
                     newItem = False
-
+                    
                 result[-1] += string[i]
-                #print newItem, breakChar, result[-1]
 
+        #print 'Result:', result
         return result
 
         
@@ -855,7 +883,7 @@ class nsSparqlBuilder():
                         break
 
                 if data == '':
-                    raise Exception("Syntax error, please check your search text.")
+                    raise Exception(_("Syntax error, please check your search text."))
 
                 if data == '':
                     operator = ''
@@ -894,6 +922,9 @@ class nsSparqlBuilder():
                 else:
                     operator = '='
 
+                if (data[0] == data[-1] == '"') or (data[0] == data[-1] == "'"):
+                    data = data[1:-1]
+                
                 oneFilter = [data, operator, ontology]
                 addAnd = True
 
@@ -917,7 +948,7 @@ class nsSparqlBuilder():
 
             else:
                 allFilters = []
-            
+
         return allFilters
 
         
@@ -1242,13 +1273,13 @@ class Nepoogle(QWidget):
             urlElements = url[7:].split("'")
             if len(urlElements) > 3:
                 tmpUrl = urlElements[0] + '"'
-                for i in range(1, len(urlElements) - 1):
-                    tmpUrl += "'" + urlElements[i]
-                tmpUrl += '"'
+                for i in range(1, len(urlElements) - 2):
+                    tmpUrl += urlElements[i] + "'"
+                tmpUrl += urlElements[-2] + '"'
 
             else:
                 tmpUrl = urlElements[0] + "'" + urlElements[1] + "'"
-
+                
             self.leSearch.setText(tmpUrl)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1514,7 +1545,7 @@ class Nepoogle(QWidget):
         return "<a %s %s>%s</a>" % (title, href, value)
 
 
-    def formatResourceInfo(self, uri, knownShortcuts = [], stdout = False):
+    def formatResourceInfo(self, uri, knownShortcuts = [], ontologyValueTypes = [], stdout = False):
         query = "select distinct ?x ?ont ?val\n" \
                 "where {\n" \
                     "\t<" + uri + "> ?ont ?val .\n"\
@@ -1535,6 +1566,22 @@ class Nepoogle(QWidget):
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
                 value = toUnicode(data["val"].toString())
+                valueType = lvalue(ontologyValueTypes, currOnt.lower().strip(), 0, 1)
+                if valueType == 'date':
+                    value = formatDate(value[:19])
+
+                elif valueType == 'datetime':
+                    value = formatDateTime(value[:19])
+                    
+                elif valueType == 'datetimep':
+                    value = formatDateTime(value[:19], True)
+
+                elif valueType == 'number':
+                    value = "%d" % int(float(value))
+                    
+                #else:
+                    #pass
+                
                 if value[:9] == 'nepomuk:/':
                     resource = Nepomuk.Resource(value)
                     value = ''
@@ -1979,6 +2026,7 @@ class Nepoogle(QWidget):
        
         self.sparql = nsSparqlBuilder()
         self.sparql.stdoutQuery = True
+        #self.sparql.stdoutQuery = False
         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
         if searchString == '':
@@ -1992,7 +2040,7 @@ class Nepoogle(QWidget):
         try:
           
             if searchString[:9] == 'nepomuk:/':
-                output = self.formatResourceInfo(searchString, self.sparql.shortcuts)
+                output = self.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
               
             elif searchString != '':
                 self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
