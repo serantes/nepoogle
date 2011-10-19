@@ -512,7 +512,7 @@ class nsSparqlBuilder():
                     ontology = ontology[1:]
                     val = QUrl.toPercentEncoding(val)
                     # Special characters handling.
-                    val.replace('%28', '(').replace('%29', ')')
+                    val.replace('%28', '(').replace('%29', ')').replace('%2F', '/').replace('%3A', ':')
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
@@ -769,6 +769,9 @@ class nsSparqlBuilder():
             newItem = True
             for i in range(0, len(string)):
                 if string[i] == breakChar:
+                    if breakChar in ("'", '"'):
+                        result[-1] += breakChar
+                        
                     newItem = True
                     breakChar = ' '
                     continue
@@ -777,6 +780,7 @@ class nsSparqlBuilder():
                     if ((i == 0) or (string[i-1] not in specialChars)):
                         newItem = True
 
+                    result[-1] += string[i]
                     breakChar = string[i]
                     continue
 
@@ -821,7 +825,12 @@ class nsSparqlBuilder():
 
                 ontology = ''
                 while True:
-                    parts = item.partition(':')
+                    if item[0] in ('"', "'") and item[-1] in ('"', "'"):
+                        parts = [item[1:-1], '', '']
+
+                    else:
+                        parts = item.partition(':')
+
                     if parts[1] == ':':
                         ontology += parts[0] + ':'
                         item = parts[2]
