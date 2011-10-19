@@ -21,6 +21,13 @@ from PyKDE4.soprano import *
 #TODO: los links a visor deben funcionar con los discos desconectados
 #TODO: añadir al resource viewer los siguientes links: . << < > >>
 #TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
+#TODO: count()
+#select count(?x0) as ?cuantos
+#where {
+#{
+#query a contar
+#}
+#}
 
 #TODO: configuración externa
 #TODO: multilenguage
@@ -132,10 +139,10 @@ def NOC(name = '', returnQUrl = False):
     ontology, property = name.strip().split(':')
     date = lvalue(knownOntologies, ontology, 0, 1)
     if date != None:
-        value = 'http://www.semanticdesktop.org/ontologies/' + date + '/' + ontology + '#' + property
+        value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
 
     else:
-        value = 'Soprano.Vocabulary.%(1)s.%(2)s().toString()' % {'1': ontology.upper(), '2': property}
+        value = 'Soprano.Vocabulary.%s.%s().toString()' % (ontology.upper(), property)
         try:
             value = eval(value)
 
@@ -267,6 +274,7 @@ class nsSparqlBuilder():
                 [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
                 [_('--audios'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
                 #[_('--connect'), ['', [], [], []]], \
+                [_('--composers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
                 [_('--contacts'), ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
                 [_('--creators'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
@@ -319,6 +327,7 @@ class nsSparqlBuilder():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
+                    ['_nmm:composer->nco:fullname', _('composer'), _('cm')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
