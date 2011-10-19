@@ -14,8 +14,10 @@ from PyKDE4.soprano import *
 #from PyKDE4.kdecore import *
 #from PyKDE4.kdeui import *
 
-#BUG: carácter ' de Singin' in the Rain
+#_BUG: carácter ' de Singin' in the Rain
+#BUG: sample rate se visualiza en notación científica
 
+#TODO: visualizar las fechas correctamente
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: los links a visor deben funcionar con los discos desconectados
@@ -2076,7 +2078,7 @@ def main(args):
     #license = KAboutData.License_GPL
     #copyright = ki18n("(C) 2011 Ignacio Serantes")
     #text = ki18n("A search engine for Nepomuk.")
-    #homePage = "http://www.kde-apps.org"
+    #homePage = "http://kde-apps.org/content/show.php/Nepoogle?content=145505"
     #bugEmail = "kde@aynoa.net"
 
     #aboutData = KAboutData(appName, catalog, programName, version,
