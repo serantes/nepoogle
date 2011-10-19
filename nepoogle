@@ -208,7 +208,7 @@ def QStringListToString(stringList = []):
 
 
 def toPercentEncoding(url = ''):
-    return QUrl.toPercentEncoding(url)
+    return QUrl.toPercentEncoding(url, ':()/')
     #return url.replace(' ', '%20')
     #return url
 
@@ -510,15 +510,12 @@ class nsSparqlBuilder():
                 valType = ""
                 if ontology[0] == '%':
                     ontology = ontology[1:]
-                    val = QUrl.toPercentEncoding(val)
-                    # Special characters handling.
-                    val.replace('%28', '(').replace('%29', ')').replace('%2F', '/').replace('%3A', ':')
+                    val = toPercentEncoding(val)
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
                     optionalUsage = optionalUsage or (operator == '!=')
 
-                #val = val.replace('(', '\\\(').replace(')', '\\\)')
                 valType = self.ontologyVarType(ontology)
                 #optionalUsage = (optionalUsage and (operator == '!='))
                 if not optionalUsage:
