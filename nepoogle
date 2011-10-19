@@ -207,10 +207,16 @@ def QStringListToString(stringList = []):
     return result
 
 
+def toN3(url = ''):
+    url = Soprano.Node.resourceToN3(QUrl(url))
+    if url != '':
+        url = url[1:-1]
+
+    return url
+
+
 def toPercentEncoding(url = ''):
-    return QUrl.toPercentEncoding(url, ':()/')
-    #return url.replace(' ', '%20')
-    #return url
+    return QUrl.toPercentEncoding(url)
 
 
 def toUtf8(string):
@@ -510,7 +516,7 @@ class nsSparqlBuilder():
                 valType = ""
                 if ontology[0] == '%':
                     ontology = ontology[1:]
-                    val = toPercentEncoding(val)
+                    val = toN3(val)
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
