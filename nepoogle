@@ -216,10 +216,16 @@ def QStringListToString(stringList = []):
     return result
 
 
+def toN3(url = ''):
+    url = Soprano.Node.resourceToN3(QUrl(url))
+    if url != '':
+        url = url[1:-1]
+
+    return url
+
+
 def toPercentEncoding(url = ''):
     return QUrl.toPercentEncoding(url)
-    #return url.replace(' ', '%20')
-    #return url
 
 
 def toUtf8(string):
@@ -521,15 +527,12 @@ class nsSparqlBuilder():
                 valType = ""
                 if ontology[0] == '%':
                     ontology = ontology[1:]
-                    val = QUrl.toPercentEncoding(val)
-                    # Special characters handling.
-                    val.replace('%28', '(').replace('%29', ')')
+                    val = toN3(val)
 
                 elif ontology[0] == '_':
                     ontology = ontology[1:]
                     optionalUsage = optionalUsage or (operator == '!=')
 
-                #val = val.replace('(', '\\\(').replace(')', '\\\)')
                 valType = self.ontologyVarType(ontology)
                 #optionalUsage = (optionalUsage and (operator == '!='))
                 if not optionalUsage:
@@ -780,6 +783,9 @@ class nsSparqlBuilder():
             newItem = True
             for i in range(0, len(string)):
                 if string[i] == breakChar:
+                    if breakChar in ("'", '"'):
+                        result[-1] += breakChar
+                        
                     newItem = True
                     breakChar = ' '
                     continue
@@ -788,6 +794,7 @@ class nsSparqlBuilder():
                     if ((i == 0) or (string[i-1] not in specialChars)):
                         newItem = True
 
+                    result[-1] += string[i]
                     breakChar = string[i]
                     continue
 
@@ -832,7 +839,12 @@ class nsSparqlBuilder():
 
                 ontology = ''
                 while True:
-                    parts = item.partition(':')
+                    if item[0] in ('"', "'") and item[-1] in ('"', "'"):
+                        parts = [item[1:-1], '', '']
+
+                    else:
+                        parts = item.partition(':')
+
                     if parts[1] == ':':
                         ontology += parts[0] + ':'
                         item = parts[2]
