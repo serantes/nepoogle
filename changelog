@@ -1,3 +1,14 @@
+v05 -- 2011/10/20
+-BUG: Fixed problem searching characters "'" and ":".
+-BUG: Fixed wrong encoding method, the correct is QUrl.toEncoded().
+-CHANGE: Creator shortcut now supports optional negation.
+-CHANGE: Date and date time values no longer displayed in iso format.
+-CHANGE: Numerical values are no longer displayed in exponential format.
+-NEW: Added composers shortcut and --composers command.
+-NEW: Added musicpieces shortcut and --musicpieces command.
+-NEW: Added search link to contacts.
+-NEW: Added to filex urls a link to resource viewer.
+
 v04 -- 2011/10/12
 -NEW: Added "Contact" shortcut.
 -NEW: Added "Producer" shorcut.

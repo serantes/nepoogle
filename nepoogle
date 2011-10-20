@@ -51,8 +51,8 @@ from PyKDE4.soprano import *
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.5git'
-PROGRAM_VERSION_DATE = '2011/??/??'
+PROGRAM_VERSION_VERSION = 'v0.5'
+PROGRAM_VERSION_DATE = '2011/10/20'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -299,7 +299,6 @@ class nsSparqlBuilder():
     columns = '?url ?title ?prefLabel ?fullname ?altLabel'
     command = ''
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
-    # mal:actors (filtro)
     commands = [ \
                 [_('--actors'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
                 [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
