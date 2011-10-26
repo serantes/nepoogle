@@ -18,9 +18,13 @@ from PyKDE4.soprano import *
 #_BUG: fallan las búsquedas con el carácter ":"
 #_BUG: encoding incorrecto
 #_BUG: sample rate se visualiza en notación científica
+#_BUG: error: [Errno 5] Input/output error la llamar al programa sin la consola
+#_BUG: uri incorrecta en el link al album de la pieza musical
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
 
+#TODO: sort case insensitive, columna lower(?x) AS ?sort
+#TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
 #TODO: añadir soporte a nepomuk:/ en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
@@ -351,7 +355,9 @@ class nsSparqlBuilder():
                         ['nie:contentcreated', 'datetimep'], \
                         ['nie:lastmodified', 'datetime'], \
                         ['nmm:episodenumber', 'number'], \
+                        ['nmm:tracknumber', 'number'], \
                         ['nmm:season', 'number'], \
+                        ['nmm:setnumber', 'number'], \
                         ['nuao:usagecount', 'number'] \
                     ]
     shortcuts = [ \
@@ -370,6 +376,7 @@ class nsSparqlBuilder():
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
+                    ['nmm:setNumber', _('discnumber'), _('dn')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['nmm:genre', _('genre'), _('ge')], \
@@ -385,8 +392,10 @@ class nsSparqlBuilder():
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
                     ['nao:numericRating', _('rating'), _('ra')], \
                     ['nmm:season', _('season'), _('se')], \
+                    ['nmm:setNumber', _('setnumber'), _('sn')], \
                     ['nao:identifier', _('tag'), _('ta')], \
                     ['nie:title', _('title'), _('ti')], \
+                    ['nmm:trackNumber', _('tracknumber'), _('tn')], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts')], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs')], \
                     ['nmm:series->nie:title', _('tvshow'), _('tv')], \
@@ -1986,11 +1995,12 @@ class Nepoogle(QWidget):
                         links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
                     elif itemTypeLower == 'musicpiece':
+                        albumUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
                         query = 'select distinct ?title\n' \
                             'where {\n' \
                                 '   <%s> nie:title ?title .\n' \
                             '}\n' \
-                            % nepomukResource.property(NOC('nmm:musicAlbum')).toString()
+                            % albumUri
                         albumTitle = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                         additionalData = ''
                         if albumTitle.isValid():
@@ -1999,7 +2009,7 @@ class Nepoogle(QWidget):
                                 if additionalData != '':
                                     additionalData += ', '
 
-                                additionalData += self.htmlRenderLink('uri', nepomukResource.uri(), albumTitle["title"].toString()) \
+                                additionalData += self.htmlRenderLink('uri', albumUri, albumTitle["title"].toString()) \
                                                     + ' ' + self.htmlRenderLink('album', albumTitle["title"].toString())
 
                         if additionalData != '':
@@ -2054,8 +2064,7 @@ class Nepoogle(QWidget):
         self.resultTime = None
        
         self.sparql = nsSparqlBuilder()
-        self.sparql.stdoutQuery = True
-        #self.sparql.stdoutQuery = False
+        self.sparql.stdoutQuery = sys.stdout.isatty()
         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
         if searchString == '':
@@ -2270,5 +2279,5 @@ def main(args):
         
 
 if __name__=="__main__":
+    os.putenv("DISPLAY", ":0")
     main(sys.argv)
-
