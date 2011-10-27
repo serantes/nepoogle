@@ -23,7 +23,7 @@ from PyKDE4.soprano import *
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
 
-#BUG: --contacts:[+-]alan falla
+#BUG: Modifiers "+" and "-" were not working filtering commands.
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
@@ -719,7 +719,6 @@ class nsSparqlBuilder():
         if sortText != "":
             sortText = "ORDER BY " + sortText + "\n"
 
-        print '<<>>' + sortColumns
         return sortText, sortColumns
 
 
@@ -864,7 +863,7 @@ class nsSparqlBuilder():
                     
                 result[-1] += string[i]
 
-        #print 'Result:', result
+       #print 'Result:', result
         return result
 
         
@@ -965,18 +964,25 @@ class nsSparqlBuilder():
         # Check basic errors.
         if allFilters[len(allFilters)-1][0] == 'and' or allFilters[len(allFilters)-1][0] == 'or':
             allFilters = []
-            raise Exception("Syntax error, please check your search text.")
+            raise Exception(_("Syntax error, please check your search text."))
           
         if (commandFound and (len(allFilters) > 1)):
             allFilters = []
-            raise Exception("Syntax error, commands and queryes are mutual exclude.")
+            raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
         if ((len(allFilters) == 1) and (allFilters[0][0][:2] == "--")):
             dummy = allFilters[0][0].split(':')
             self.command = dummy[0]
-            if (len(dummy) > 1):
-                allFilters = [[dummy[1], '=', '']]
+            if ((len(dummy) > 1) and (dummy[1] != "")):
+                if dummy[1][0] == '-':
+                    allFilters = [[dummy[1][1:], '!=', '']]
+
+                elif dummy[1][0] == '+':
+                    allFilters = [[dummy[1][1:], '==', '']]
+
+                else:
+                    allFilters = [[dummy[1], '=', '']]
 
             else:
                 allFilters = []
