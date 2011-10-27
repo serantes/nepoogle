@@ -23,6 +23,7 @@ from PyKDE4.soprano import *
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
 
+#BUG: Modifiers "+" and "-" were not working filtering commands.
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
@@ -55,8 +56,8 @@ from PyKDE4.soprano import *
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.5'
-PROGRAM_VERSION_DATE = '2011/10/20'
+PROGRAM_VERSION_VERSION = 'v0.6'
+PROGRAM_VERSION_DATE = '2011-10-??'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -297,6 +298,7 @@ class nsSparqlBuilder():
                             "WHERE {\n\n"
     _private_main_footer = "}\n"
 
+    caseInsensitiveSort = True
     #columns = '*'
     # ?x0+>prefLabel ?x0*>url + si * opcional
     #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
@@ -340,7 +342,7 @@ class nsSparqlBuilder():
                 [5, 'rdf:type', True, False] \
             ]
     filters = []
-    stdoutQuery = False
+    
     getAllFields = True
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
@@ -404,12 +406,17 @@ class nsSparqlBuilder():
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
+
+    tempData = ['', [], [], []]
+    
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
-    tempData = ['', [], [], []]
 
     resultsetLimit = 0
     resultsetOffset = 0
+
+    sortSuffix = '_sort'
+    stdoutQuery = False
     
 
     def __init__(self):
@@ -450,9 +457,15 @@ class nsSparqlBuilder():
 
         else:
             columns = self.tempData[0]
-            
+
+        footer = self._private_main_footer
+        having = self.bsHaving()
+        sort, sortColumns = self.bsSort()
+        limits = self.bsResulsetLimits()
+
+        columns += sortColumns
         header = self._private_main_header % columns
-        
+
         typeFilter = self.bsTypeFilter() + '\n'
         if self.getAllFields:
             fields = self.bsFields() + '\n'
@@ -461,11 +474,6 @@ class nsSparqlBuilder():
             fields = ''
 
         searchFilter = self.bsFilter() + '\n'
-
-        footer = self._private_main_footer
-        having = self.bsHaving()
-        sort = self.bsSort()
-        limits = self.bsResulsetLimits()
 
         query = header \
                 + typeFilter \
@@ -691,19 +699,27 @@ class nsSparqlBuilder():
         else:
             fields = self.tempData[1]
 
-        text = ""
+        sortText = ""
+        sortColumns = ""
         for item in fields:
             if item[2]:
                 try:
-                    text += "?" + item[1].split(":")[1] + " "
+                    columnName = "?" + item[1].split(":")[1] 
+                    sortText += columnName
+                    if self.caseInsensitiveSort:
+                        sortColumns += " bif:lower(%s) AS %s%s " % (columnName, columnName, self.sortSuffix)
+                        sortText += self.sortSuffix + ' '
+
+                    else:
+                        sortText += ' '
 
                 except:
                     pass
 
-        if text != "":
-            text = "ORDER BY " + text + "\n"
+        if sortText != "":
+            sortText = "ORDER BY " + sortText + "\n"
 
-        return text
+        return sortText, sortColumns
 
 
     def bsTypeFilter(self):
@@ -847,7 +863,7 @@ class nsSparqlBuilder():
                     
                 result[-1] += string[i]
 
-        #print 'Result:', result
+       #print 'Result:', result
         return result
 
         
@@ -948,18 +964,25 @@ class nsSparqlBuilder():
         # Check basic errors.
         if allFilters[len(allFilters)-1][0] == 'and' or allFilters[len(allFilters)-1][0] == 'or':
             allFilters = []
-            raise Exception("Syntax error, please check your search text.")
+            raise Exception(_("Syntax error, please check your search text."))
           
         if (commandFound and (len(allFilters) > 1)):
             allFilters = []
-            raise Exception("Syntax error, commands and queryes are mutual exclude.")
+            raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
         if ((len(allFilters) == 1) and (allFilters[0][0][:2] == "--")):
             dummy = allFilters[0][0].split(':')
             self.command = dummy[0]
-            if (len(dummy) > 1):
-                allFilters = [[dummy[1], '=', '']]
+            if ((len(dummy) > 1) and (dummy[1] != "")):
+                if dummy[1][0] == '-':
+                    allFilters = [[dummy[1][1:], '!=', '']]
+
+                elif dummy[1][0] == '+':
+                    allFilters = [[dummy[1][1:], '==', '']]
+
+                else:
+                    allFilters = [[dummy[1], '=', '']]
 
             else:
                 allFilters = []
@@ -989,7 +1012,11 @@ class nsSparqlBuilder():
                     value = toUnicode(bindings[bindingName].toString())
 
                     if value != '':
-                        if bindingName == 'type':
+                        # Fields to case insensitive sort must be ignored.
+                        if bindingName[-len(self.sortSuffix):] == self.sortSuffix:
+                            continue
+                            
+                        elif bindingName == 'type':
                             value = os.path.basename(toUnicode(value))
                             value = value.split("#")
                             try:
@@ -1923,7 +1950,7 @@ class Nepoogle(QWidget):
 
                     textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
                         
-                # Expecial, to control properties.
+                # Special, to control properties.
                 elif item[0][:6] == 'ont://':
                     itemType = ontologyToHuman(item[0][6:])
                     if textData != '':
@@ -2010,25 +2037,64 @@ class Nepoogle(QWidget):
                         links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
                     elif itemTypeLower == 'musicpiece':
-                        albumUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
+                        # Title:, disc and track before title.
+                        trackNumber = nepomukResource.property(NOC('nmm:trackNumber')).toString()
+                        if len(trackNumber) < 2:
+                            trackNumber = '0' + trackNumber
+                            
+                        discNumber = nepomukResource.property(NOC('nmm:setNumber')).toString()
+                        if discNumber != '':
+                            discNumber += 'x'
+                            
+                        textData = textData.replace('<br /><em>', '<br />%s: <em>%s%s - ' % (_('Title'), discNumber, trackNumber))
+                        
+                        # Album title.
+                        tmpUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
                         query = 'select distinct ?title\n' \
                             'where {\n' \
                                 '   <%s> nie:title ?title .\n' \
                             '}\n' \
-                            % albumUri
-                        albumTitle = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                            % tmpUri
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                         additionalData = ''
-                        if albumTitle.isValid():
+                        if queryResultSet.isValid():
                             # I known, there is only one possible record but...
-                            while albumTitle.next():
+                            while queryResultSet.next():
                                 if additionalData != '':
                                     additionalData += ', '
 
-                                additionalData += self.htmlRenderLink('uri', albumUri, albumTitle["title"].toString()) \
-                                                    + ' ' + self.htmlRenderLink('album', albumTitle["title"].toString())
+                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["title"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('album', queryResultSet["title"].toString())
 
                         if additionalData != '':
-                            textData += '<br />%s: ' % _('Album') + additionalData
+                            #trackNumber = nepomukResource.property(NOC('nmm:trackNumber')).toString()
+                            #textData += '<br />%s: %s, %s %s' % \
+                            #                (_('Album'), additionalData, _('track'), trackNumber)
+                            textData += '<br />%s: ' % (_('Album')) + additionalData
+                            #discNumber = nepomukResource.property(NOC('nmm:setNumber')).toString()
+                            #if discNumber != '':
+                            #    textData += ', %s %s' % (_('disc'), discNumber)
+
+                        # Performer.
+                        tmpUri = nepomukResource.property(NOC('nmm:performer')).toString()
+                        query = 'select distinct ?fullname\n' \
+                            'where {\n' \
+                                '   <%s> nco:fullname ?fullname .\n' \
+                            '}\n' \
+                            % tmpUri
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        additionalData = ''
+                        if queryResultSet.isValid():
+                            # I known, there is only one possible record but...
+                            while queryResultSet.next():
+                                if additionalData != '':
+                                    additionalData += ', '
+
+                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["fullname"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('contact', queryResultSet["fullname"].toString())
+
+                        if additionalData != '':
+                            textData += '<br />%s: ' % _('Performer') + additionalData
 
                     elif itemTypeLower == 'tvshow':
                         additionalData = "<br />Episode: <em>%sx%02d</em> " \
