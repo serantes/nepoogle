@@ -22,8 +22,9 @@ from PyKDE4.soprano import *
 #_BUG: uri incorrecta en el link al album de la pieza musical
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
+#_BUG: Modifiers "+" and "-" were not working filtering commands.
+#_BUG: Duplicate entries, one for rdf:type of resourcer, when self.caseInsensitiveSort = True
 
-#BUG: Modifiers "+" and "-" were not working filtering commands.
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
@@ -298,7 +299,7 @@ class nsSparqlBuilder():
                             "WHERE {\n\n"
     _private_main_footer = "}\n"
 
-    caseInsensitiveSort = True
+    caseInsensitiveSort = False
     #columns = '*'
     # ?x0+>prefLabel ?x0*>url + si * opcional
     #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
@@ -338,8 +339,7 @@ class nsSparqlBuilder():
                 [1, 'nie:title', True, True], \
                 [2, 'nao:prefLabel', True, True], \
                 [3, 'nco:fullname', True, True], \
-                [4, 'nao:altLabel', True, True], \
-                [5, 'rdf:type', True, False] \
+                [4, 'nao:altLabel', True, True] \
             ]
     filters = []
     
@@ -1004,19 +1004,22 @@ class nsSparqlBuilder():
             for bindings in result.allBindings():
                 if structure == []:
                     for bindingName in bindings.bindingNames():
+                        if bindingName[-len(self.sortSuffix):] == self.sortSuffix:
+                            continue
+
                         structure += [toUnicode(bindingName.toUtf8())]
                 
                 aRow = []
                 for bindingName in bindings.bindingNames():
+                    # Fields to case insensitive sort must be ignored.
+                    if bindingName[-len(self.sortSuffix):] == self.sortSuffix:
+                        continue
+
                     #value = toUnicode(toPercentEncoding(bindings[bindingName].toString()))
                     value = toUnicode(bindings[bindingName].toString())
 
                     if value != '':
-                        # Fields to case insensitive sort must be ignored.
-                        if bindingName[-len(self.sortSuffix):] == self.sortSuffix:
-                            continue
-                            
-                        elif bindingName == 'type':
+                        if bindingName == 'type':
                             value = os.path.basename(toUnicode(value))
                             value = value.split("#")
                             try:
