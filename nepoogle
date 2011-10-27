@@ -1908,7 +1908,7 @@ class Nepoogle(QWidget):
 
                     textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
                         
-                # Expecial, to control properties.
+                # Special, to control properties.
                 elif item[0][:6] == 'ont://':
                     itemType = ontologyToHuman(item[0][6:])
                     if textData != '':
@@ -1995,6 +1995,44 @@ class Nepoogle(QWidget):
                         links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
                     elif itemTypeLower == 'musicpiece':
+                        # Title:, disc and track before title.
+                        trackNumber = nepomukResource.property(NOC('nmm:trackNumber')).toString()
+                        if len(trackNumber) < 2:
+                            trackNumber = '0' + trackNumber
+                            
+                        discNumber = nepomukResource.property(NOC('nmm:setNumber')).toString()
+                        if discNumber != '':
+                            discNumber += 'x'
+                            
+                        textData = textData.replace('<br /><em>', '<br />%s: <em>%s%s - ' % (_('Title'), discNumber, trackNumber))
+                        
+                        # Album title.
+                        tmpUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
+                        query = 'select distinct ?title\n' \
+                            'where {\n' \
+                                '   <%s> nie:title ?title .\n' \
+                            '}\n' \
+                            % tmpUri
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        additionalData = ''
+                        if queryResultSet.isValid():
+                            # I known, there is only one possible record but...
+                            while queryResultSet.next():
+                                if additionalData != '':
+                                    additionalData += ', '
+
+                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["title"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('album', queryResultSet["title"].toString())
+
+                        if additionalData != '':
+                            #trackNumber = nepomukResource.property(NOC('nmm:trackNumber')).toString()
+                            #textData += '<br />%s: %s, %s %s' % \
+                            #                (_('Album'), additionalData, _('track'), trackNumber)
+                            textData += '<br />%s: ' % (_('Album')) + additionalData
+                            #discNumber = nepomukResource.property(NOC('nmm:setNumber')).toString()
+                            #if discNumber != '':
+                            #    textData += ', %s %s' % (_('disc'), discNumber)
+
                         # Performer.
                         tmpUri = nepomukResource.property(NOC('nmm:performer')).toString()
                         query = 'select distinct ?fullname\n' \
@@ -2015,28 +2053,6 @@ class Nepoogle(QWidget):
 
                         if additionalData != '':
                             textData += '<br />%s: ' % _('Performer') + additionalData
-                        
-
-                        # Album title.
-                        tmpUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
-                        query = 'select distinct ?title\n' \
-                            'where {\n' \
-                                '   <%s> nie:title ?title .\n' \
-                            '}\n' \
-                            % tmpUri
-                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-                        additionalData = ''
-                        if queryResultSet.isValid():
-                            # I known, there is only one possible record but...
-                            while queryResultSet.next():
-                                if additionalData != '':
-                                    additionalData += ', '
-
-                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["title"].toString()) \
-                                                    + ' ' + self.htmlRenderLink('album', queryResultSet["title"].toString())
-
-                        if additionalData != '':
-                            textData += '<br />%s: ' % _('Album') + additionalData
 
                     elif itemTypeLower == 'tvshow':
                         additionalData = "<br />Episode: <em>%sx%02d</em> " \
