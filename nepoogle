@@ -23,6 +23,7 @@ from PyKDE4.soprano import *
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
 
+#BUG: --contacts:[+-]alan falla
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
@@ -297,6 +298,7 @@ class nsSparqlBuilder():
                             "WHERE {\n\n"
     _private_main_footer = "}\n"
 
+    caseInsensitiveSort = True
     #columns = '*'
     # ?x0+>prefLabel ?x0*>url + si * opcional
     #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
@@ -340,7 +342,7 @@ class nsSparqlBuilder():
                 [5, 'rdf:type', True, False] \
             ]
     filters = []
-    stdoutQuery = False
+    
     getAllFields = True
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
@@ -404,12 +406,17 @@ class nsSparqlBuilder():
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
+
+    tempData = ['', [], [], []]
+    
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
-    tempData = ['', [], [], []]
 
     resultsetLimit = 0
     resultsetOffset = 0
+
+    sortSuffix = '_sort'
+    stdoutQuery = False
     
 
     def __init__(self):
@@ -450,9 +457,15 @@ class nsSparqlBuilder():
 
         else:
             columns = self.tempData[0]
-            
+
+        footer = self._private_main_footer
+        having = self.bsHaving()
+        sort, sortColumns = self.bsSort()
+        limits = self.bsResulsetLimits()
+
+        columns += sortColumns
         header = self._private_main_header % columns
-        
+
         typeFilter = self.bsTypeFilter() + '\n'
         if self.getAllFields:
             fields = self.bsFields() + '\n'
@@ -461,11 +474,6 @@ class nsSparqlBuilder():
             fields = ''
 
         searchFilter = self.bsFilter() + '\n'
-
-        footer = self._private_main_footer
-        having = self.bsHaving()
-        sort = self.bsSort()
-        limits = self.bsResulsetLimits()
 
         query = header \
                 + typeFilter \
@@ -691,19 +699,28 @@ class nsSparqlBuilder():
         else:
             fields = self.tempData[1]
 
-        text = ""
+        sortText = ""
+        sortColumns = ""
         for item in fields:
             if item[2]:
                 try:
-                    text += "?" + item[1].split(":")[1] + " "
+                    columnName = "?" + item[1].split(":")[1] 
+                    sortText += columnName
+                    if self.caseInsensitiveSort:
+                        sortColumns += " bif:lower(%s) AS %s%s " % (columnName, columnName, self.sortSuffix)
+                        sortText += self.sortSuffix + ' '
+
+                    else:
+                        sortText += ' '
 
                 except:
                     pass
 
-        if text != "":
-            text = "ORDER BY " + text + "\n"
+        if sortText != "":
+            sortText = "ORDER BY " + sortText + "\n"
 
-        return text
+        print '<<>>' + sortColumns
+        return sortText, sortColumns
 
 
     def bsTypeFilter(self):
@@ -989,7 +1006,11 @@ class nsSparqlBuilder():
                     value = toUnicode(bindings[bindingName].toString())
 
                     if value != '':
-                        if bindingName == 'type':
+                        # Fields to case insensitive sort must be ignored.
+                        if bindingName[-len(self.sortSuffix):] == self.sortSuffix:
+                            continue
+                            
+                        elif bindingName == 'type':
                             value = os.path.basename(toUnicode(value))
                             value = value.split("#")
                             try:
