@@ -56,7 +56,7 @@ PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROGRAM_VERSION_VERSION = 'v0.6'
-PROGRAM_VERSION_DATE = '2011-10/??'
+PROGRAM_VERSION_DATE = '2011-10-??'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -1995,22 +1995,45 @@ class Nepoogle(QWidget):
                         links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
                     
                     elif itemTypeLower == 'musicpiece':
-                        albumUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
+                        # Performer.
+                        tmpUri = nepomukResource.property(NOC('nmm:performer')).toString()
+                        query = 'select distinct ?fullname\n' \
+                            'where {\n' \
+                                '   <%s> nco:fullname ?fullname .\n' \
+                            '}\n' \
+                            % tmpUri
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        additionalData = ''
+                        if queryResultSet.isValid():
+                            # I known, there is only one possible record but...
+                            while queryResultSet.next():
+                                if additionalData != '':
+                                    additionalData += ', '
+
+                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["fullname"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('contact', queryResultSet["fullname"].toString())
+
+                        if additionalData != '':
+                            textData += '<br />%s: ' % _('Performer') + additionalData
+                        
+
+                        # Album title.
+                        tmpUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
                         query = 'select distinct ?title\n' \
                             'where {\n' \
                                 '   <%s> nie:title ?title .\n' \
                             '}\n' \
-                            % albumUri
-                        albumTitle = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                            % tmpUri
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                         additionalData = ''
-                        if albumTitle.isValid():
+                        if queryResultSet.isValid():
                             # I known, there is only one possible record but...
-                            while albumTitle.next():
+                            while queryResultSet.next():
                                 if additionalData != '':
                                     additionalData += ', '
 
-                                additionalData += self.htmlRenderLink('uri', albumUri, albumTitle["title"].toString()) \
-                                                    + ' ' + self.htmlRenderLink('album', albumTitle["title"].toString())
+                                additionalData += self.htmlRenderLink('uri', tmpUri, queryResultSet["title"].toString()) \
+                                                    + ' ' + self.htmlRenderLink('album', queryResultSet["title"].toString())
 
                         if additionalData != '':
                             textData += '<br />%s: ' % _('Album') + additionalData
