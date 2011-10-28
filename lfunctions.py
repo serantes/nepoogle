@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import datetime, re
+import datetime, os, re
 
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
