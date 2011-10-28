@@ -13,7 +13,7 @@ gettext.bindtextdomain("nepoogle", '') #'/path/to/my/language/directory')
 gettext.textdomain("nepoogle")
 _ = gettext.gettext
 
-#BEGIN csparql.py
+#BEGIN clsparql.py
 #
 # cSparqlBuilder class
 #
@@ -777,4 +777,4 @@ class cSparqlBuilder():
 
         return data, structure, queryTime
 
-#END csparql.py
+#END clsparql.py

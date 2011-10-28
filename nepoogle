@@ -81,7 +81,7 @@ from lfunctions import *
 #ENDIF
 
 #IF BUILD
-#INCLUDE lfunctions.py
+#INCLUDE clsparql.py
 #ELSE
 from clsparql import *
 #ENDIF

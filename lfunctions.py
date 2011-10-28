@@ -6,6 +6,9 @@ import datetime, re
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
 
+#BEGIN lfunctions.py
+# Program functions.
+
 RDF_SCHEMA_RESOURCE = 'http://www.w3.org/2000/01/rdf-schema#Resource'
 
 knownOntologies = [ \
@@ -19,7 +22,6 @@ knownOntologies = [ \
 
 gSysEncoding = 'utf-8' # Change this for a detection system.
 
-#BEGIN lfunctions.py
 
 def addLinksToText(text = ''):
     patter1 = re.compile(r"(^|[\n ])(([\w]+?://[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
