@@ -158,6 +158,7 @@ class cWebView(QWebView):
         #self.setContextMenuPolicy(Qt.PreventContextMenu)
         #self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+        self.page().setForwardUnsupportedContent(True)
 
 
     def acceptNavigationRequest(frame, request, navigationType):
@@ -295,14 +296,27 @@ class Nepoogle(QWidget):
         self.connect(self.wvOutput, SIGNAL("loadProgress(int)"), self.loadProgress)
         #self.connect(self.wvOutput.page(), SIGNAL("customContextMenuRequested(const QPoint&)"), self.customContextMenuRequested)
 
+        # This action has no changes.
         self.actionOpenLink = self.wvOutput.pageAction(QWebPage.OpenLink)
         self.connect(self.actionOpenLink, SIGNAL("triggered(bool)"), self.openLink)
-        self.actionOpenLinkInNewWindow = self.wvOutput.pageAction(QWebPage.OpenLinkInNewWindow)
-        self.connect(self.actionOpenLinkInNewWindow, SIGNAL("triggered(bool)"), self.openLinkInNewWindow)
+
+        # DownloadLinkToDisk renamed and used as OpenLinkInNewWindow
         self.actionDownloadLinkToDisk = self.wvOutput.pageAction(QWebPage.DownloadLinkToDisk)
-        self.connect(self.actionDownloadLinkToDisk, SIGNAL("triggered(bool)"), self.downloadLinkToDisk)
+        self.actionDownloadLinkToDisk.setText(_("Open in New Window"))
+        #self.connect(self.actionDownloadLinkToDisk, SIGNAL("triggered(bool)"), self.downloadLinkToDisk)
+
+        # Invisible OpenLinkInNewWindow.
+        self.actionOpenLinkInNewWindow = self.wvOutput.pageAction(QWebPage.OpenLinkInNewWindow)
+        self.actionOpenLinkInNewWindow.setVisible(False)
+        #self.connect(self.actionOpenLinkInNewWindow, SIGNAL("triggered(bool)"), self.openLinkInNewWindow)
+
+        # Invisible OpenImageInNewWindow.
+        self.actionOpenImageInNewWindow = self.wvOutput.pageAction(QWebPage.OpenImageInNewWindow)
+        self.actionOpenImageInNewWindow.setVisible(False)
 
         self.connect(self.wvOutput.page(), SIGNAL("downloadRequested(const QNetworkRequest&)"), self.downloadRequested)
+        self.connect(self.wvOutput.page(), SIGNAL("unsupportedContent(QNetworkReply*)"), self.unsupportedContent)
+        self.wvOutput.page().setForwardUnsupportedContent(True)
         
         self.grid = QGridLayout()
         self.grid.setSpacing(10)
@@ -326,39 +340,50 @@ class Nepoogle(QWidget):
             self.execQuery('--help')
             
 
-    def downloadLinkToDisk(self, checked):
-        #print "downloadLinkToDisk", checked
-        pass
+    #def downloadLinkToDisk(self, checked):
+    #    print "downloadLinkToDisk", checked
+    #    pass
 
 
     def downloadRequested(self, request):
         #print "downloadRequested", request.url().toString()
-        QMessageBox.warning(self, '%s - Warning' % PROGRAM_NAME, "Option not available yet.")
-    
-
-    def openLink(self, checked):
-        #print "openLink", checked, toUtf8(self.wvOutput.page().mainFrame().requestedUrl().toString())
-        url = toUnicode(self.wvOutput.page().mainFrame().requestedUrl().toString())
+        url = toUnicode(request.url().toString())
         if url != "":
-            if url[:7] == "query:/":
+            if url[:9] == 'nepomuk:/':
+                pass
+
+            elif url[:7] == 'query:/':
                 url = url[7:]
 
-            if url[:6] == "file:/":
+            elif url[:6] == "file:/":
                 subprocess.Popen(["kioclient", "exec", url])
+                url = ''
 
-            else:                
-                self.leSearch.setText(url)
-                self.pendingQuery = True
-                self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
-                                        % self.iconProcessIdle)
-                self.execQuery()
-                self.pendingQuery = False
+            else:
+                url = ''
+
+            if url != '':
+                print toUtf8(url)
+                subprocess.Popen([PROGRAM_URL, "--gui", toUtf8(url)])
+
+        
+    def unsupportedContent(self, request):
+        #print "downloadRequested", request.url().toString()
+        QMessageBox.warning(self, '%s - Warning' % PROGRAM_NAME, "Option not available yet.")
+
+
+    def openLink(self, checked):
+        #print "openLink", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl())
+        url = toUnicode(self.wvOutput.page().currentFrame().requestedUrl())
+        if url.toString() != "":
+            self.linkClicked(url, True)
 
         
     def openLinkInNewWindow(self, checked):
-        print "openLinkInNewWindow", checked, toUtf8(self.wvOutput.page().mainFrame().requestedUrl().toString())
-        url = toUnicode(self.wvOutput.page().mainFrame().requestedUrl().toString())
+        #print "openLinkInNewWindow", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl())
+        url = toUnicode(self.wvOutput.page().currentFrame().requestedUrl().toString())
         if url != "":
+            print toUtf8(url)
             if url[:9] == 'nepomuk:/':
                 pass
 
@@ -406,7 +431,7 @@ class Nepoogle(QWidget):
         #    self.leSearch.keyPressEvent(self, event)
 
     
-    def linkClicked(self, url):
+    def linkClicked(self, url, forceExec = False):
         url = toUnicode(url.toString())
         print toUtf8(url)
         
@@ -422,6 +447,9 @@ class Nepoogle(QWidget):
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
+            if forceExec:
+                self.execQuery()
+                self.pendingQuery = False
 
         elif url[:6] == 'prop:/':
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
@@ -441,6 +469,9 @@ class Nepoogle(QWidget):
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
+            if forceExec:
+                self.execQuery()
+                self.pendingQuery = False
 
         elif url[:8] == 'remove:/':
             reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -450,7 +481,9 @@ class Nepoogle(QWidget):
                 self.pendingQuery = True
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                         % self.iconProcessIdle)
-            
+                if forceExec:
+                    self.execQuery()
+                    self.pendingQuery = False
 
         elif url[:8] == 'render:/':
             if url[8:] == 'more':
