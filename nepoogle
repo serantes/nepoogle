@@ -48,6 +48,7 @@ from PyKDE4.kdeui import *
 #_BUG: Modifiers "+" and "-" were not working filtering commands.
 #_BUG: Duplicate entries, one for rdf:type of resourcer, when self.caseInsensitiveSort = True
 
+#BUG: BUG001 -> negation without a shorcut is failing.
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
@@ -260,7 +261,7 @@ class Nepoogle(QWidget):
                         "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
                         "<tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
-    htmlTime = "<br />\n%(records)s records found in %(seconds)s seconds. \
+    htmlTime = "<br />\n%(records)s records found in %(seconds)f seconds. \
                 HTML visualization builded in %(sechtml)s seconds."
                 
 
@@ -392,7 +393,7 @@ class Nepoogle(QWidget):
         
     def unsupportedContent(self, request):
         #print "downloadRequested", request.url().toString()
-        QMessageBox.warning(self, '%s - Warning' % PROGRAM_NAME, "Option not available yet.")
+        QMessageBox.warning(self, '%s - %s' % (PROGRAM_NAME, _("warning")), "Option not available yet.")
 
 
     def openLink(self, checked):
@@ -651,7 +652,7 @@ class Nepoogle(QWidget):
                     + self.htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
                     "<tr><td><b>query</b></td>\n" \
                         "<td><b>result</b></td></tr>\n" \
-                    "<tr><td><em><a title=\"movie\" href=\"query:/movie\">movie</a></em></td>\n" \
+                    "<tr><td><em>movie</em></td>\n" \
                         "<td>contains word 'movie'</td></tr>\n" \
                     "<tr><td><em>+movie</em></td>\n" \
                         "<td>equals word 'movie'</td></tr>\n" \
@@ -1370,7 +1371,28 @@ class Nepoogle(QWidget):
         self.setCursor(Qt.ArrowCursor)
         self.leSearch.readOnly = False
         self.repaint()
-        
+
+        # Handle possible warnings.
+        warningMsg = ""
+        for warning in self.sparql.warningsList:
+            if warningMsg != "":
+                warningMsg += "\n\n"
+
+            if warning[0] == "BUG001":
+                warningMsg += "There is a know bug using negation without a shortcut.\n" \
+                        "Please notice that the results may be inaccurate.\n\n"
+                for i in range(1, len(warning)):
+                    warningMsg += "Change \"%s\" for something like \"title:%s\" to solve this issue.\n" \
+                    % (warning[i], warning[i])
+
+            #else:
+                #pass
+
+        self.sparql.warningList = []
+
+        if warningMsg != "":
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
+            
   
 def buildHelp():
     print "%(name)s %(version)s (%(date)s)\n" \
@@ -1487,16 +1509,49 @@ def main(args):
 
     else:
 
-        o = cSparqlBuilder()
-        o.stdoutQuery = stdout
-        o.columns = '?x0 AS ?id ' + o.columns
+        oSparql = cSparqlBuilder()
+        oSparql.stdoutQuery = stdout
+        oSparql.columns = '?x0 AS ?id ' + oSparql.columns
 
         #if True:
         try:
             if parameters != '':
-                data, structure, time = o.executeQuery(o.buildQuery(parameters))
-                output = formatResultData(data, structure, time)
+                data, structure, time = oSparql.executeQuery(oSparql.buildQuery(parameters))
+                output = "%(title)s\n" \
+                            "\n%(values)s\n" \
+                            "%(records)s records found in %(seconds)f seconds.\n" \
+                            "--\n" \
+                            "Powered by %(name)s %(version)s (%(date)s)" \
+                            % {'title': 'Querying Nepomuk', \
+                                'values': formatResultData(data, structure, time), \
+                                'records': len(data), \
+                                'seconds': time, \
+                                'name': PROGRAM_NAME, \
+                                'version': PROGRAM_VERSION_VERSION, \
+                                'date': PROGRAM_VERSION_DATE \
+                                }
 
+                # Handle possible warnings.
+                warningMsg = ""
+                for warning in oSparql.warningsList:
+                    if warningMsg != "":
+                        warningMsg += "\n\n"
+
+                    if warning[0] == "BUG001":
+                        warningMsg += "There is a know bug using negation without a shortcut.\n" \
+                                "Please notice that the results may be inaccurate.\n\n"
+                        for i in range(1, len(warning)):
+                            warningMsg += "Change \"%s\" for something like \"title:%s\" to solve this issue.\n" \
+                            % (warning[i], warning[i])
+
+                    #else:
+                        #pass
+
+                oSparql.warningList = []
+
+                if warningMsg != "":
+                    output += '\n\nWARNING: ' + toUtf8(warningMsg)
+                    
             else:
                 raise Exception('Please, type something.')
 
@@ -1511,7 +1566,8 @@ def main(args):
             else:
                 output = "%(title)s\n" \
                             "\nerror: %(error)s\n" \
-                            "\nPowered by %(name)s %(version)s (%(date)s)" \
+                            "\n--\n" \
+                            "Powered by %(name)s %(version)s (%(date)s)" \
                             % {'title': 'Querying Nepomuk', \
                                 'error': sys.exc_info()[1], \
                                 'name': PROGRAM_NAME, \
