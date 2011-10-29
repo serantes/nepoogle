@@ -73,6 +73,7 @@ class cSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     # All in lowercase so search in lowercase.
+    #TODO: esta información tiene que estar en la base de datos.
     ontologyTypes = [ \
                         ['nao:created', 'datetime'], \
                         ['nao:lastmodified', 'datetime'], \
