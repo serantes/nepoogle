@@ -7,6 +7,8 @@ from PyQt4.QtCore import *
 from PyKDE4.nepomuk import *
 from PyKDE4.soprano import *
 
+from PyQt4.QtGui import *
+
 from lfunctions import *
 
 gettext.bindtextdomain("nepoogle", '') #'/path/to/my/language/directory')
@@ -145,6 +147,8 @@ class cSparqlBuilder():
     stdoutQuery = False
 
     visibilityFilter = "nao:userVisible 1 ."
+
+    warningsList = []
     
 
     def __init__(self):
@@ -156,7 +160,6 @@ class cSparqlBuilder():
 
 
     def buildQuery(self, searchString = ''):
-
         if ((self.command == '') and (self.filters == []) and (searchString != '')):
             self.filters = self.stringQueryConversion(searchString)
 
@@ -475,7 +478,6 @@ class cSparqlBuilder():
                         else:
                             varName = 'x%s' % (i+1)
 
-                        print item, items[-1], varName
                         text += "  ?x%(oldVarName)s %(ontology)s ?%(varName)s .\n" \
                                 % {'oldVarName': i, 'varName': varName, 'ontology': item}
                         #oldVarName = varName
@@ -587,15 +589,15 @@ class cSparqlBuilder():
     def split(self, string = ''):
         #print string
         specialChars = [":", "+", "-", ">", "<", "="]
-        result = []
+        results = []
         if string != '':
             breakChar = ' '
             newItem = True
             for i in range(0, len(string)):
-                #print breakChar, string[i], result
+                #print breakChar, string[i], results
                 if string[i] == breakChar:
                     if breakChar in ("'", '"'):
-                        result[-1] += breakChar
+                        results[-1] += breakChar
 
                     newItem = True
                     breakChar = ' '
@@ -609,14 +611,24 @@ class cSparqlBuilder():
                     if breakChar == ' ':
                         breakChar = string[i]
 
-                if newItem and ((result == []) or (result[-1] != '')):
-                    result += ['']
+                if newItem and ((results == []) or (results[-1] != '')):
+                    results += ['']
                     newItem = False
 
-                result[-1] += string[i]
+                results[-1] += string[i]
 
-       #print 'Result:', result
-        return result
+        for result in results:
+            if result != "" and result[0] == "-":
+                i = lindex(self.warningsList, "BUG001", 0)
+
+                if i != None:
+                    self.warningsList[i] += [result]
+
+                else:
+                    self.warningsList = [["BUG001", result]]
+
+        #print 'Results:', results
+        return results
 
 
     def stringQueryConversion(self, string = ''):
