@@ -479,14 +479,21 @@ class Nepoogle(QWidget):
 
         elif url[:7] == 'query:/':
             urlElements = url[7:].split("'")
-            if len(urlElements) > 3:
+            if len(urlElements) >= 3:
                 tmpUrl = urlElements[0] + '"'
                 for i in range(1, len(urlElements) - 2):
                     tmpUrl += urlElements[i] + "'"
                 tmpUrl += urlElements[-2] + '"'
 
-            else:
+            elif len(urlElements) == 2:
                 tmpUrl = urlElements[0] + "'" + urlElements[1] + "'"
+
+            elif len(urlElements) == 1:
+                tmpUrl = "'" + urlElements[0] + "'"
+                
+            else:
+                pass
+                
                 
             self.leSearch.setText(tmpUrl)
             self.pendingQuery = True
@@ -644,7 +651,7 @@ class Nepoogle(QWidget):
                     + self.htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
                     "<tr><td><b>query</b></td>\n" \
                         "<td><b>result</b></td></tr>\n" \
-                    "<tr><td><em>movie</em></td>\n" \
+                    "<tr><td><em><a title=\"movie\" href=\"query:/movie\">movie</a></em></td>\n" \
                         "<td>contains word 'movie'</td></tr>\n" \
                     "<tr><td><em>+movie</em></td>\n" \
                         "<td>equals word 'movie'</td></tr>\n" \
