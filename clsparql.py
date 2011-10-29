@@ -618,7 +618,7 @@ class cSparqlBuilder():
                 results[-1] += string[i]
 
         for result in results:
-            if result != "" and result[0] == "-":
+            if result != "" and result[0] == "-" and result[1] != "-":
                 i = lindex(self.warningsList, "BUG001", 0)
 
                 if i != None:
