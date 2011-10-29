@@ -143,6 +143,8 @@ class cSparqlBuilder():
     sortSuffix = '_sort'
     stdoutQuery = False
 
+    visibilityNTriples = "?x0 nao:userVisible 1 ."
+    
 
     def __init__(self):
         pass
@@ -191,7 +193,7 @@ class cSparqlBuilder():
         columns += sortColumns
         header = self._private_main_header % columns
 
-        typeFilter = self.bsTypeFilter() + '\n'
+        mainFilter = self.bsMainFilter() + '\n'
         if self.getAllFields:
             fields = self.bsFields() + '\n'
 
@@ -201,7 +203,7 @@ class cSparqlBuilder():
         searchFilter = self.bsFilter() + '\n'
 
         query = header \
-                + typeFilter \
+                + mainFilter \
                 + fields \
                 + searchFilter \
                 + footer \
@@ -447,7 +449,7 @@ class cSparqlBuilder():
         return sortText, sortColumns
 
 
-    def bsTypeFilter(self):
+    def bsMainFilter(self):
         text = ""
         if self.tempData[2] == []:
             typeFilters = self.typeFilters
@@ -464,12 +466,18 @@ class cSparqlBuilder():
                 for item in items:
                     if item != '':
                         #varName = items[i].split(':')[-1]
+                        if self.visibilityNTriples != '':
+                            text += "  " + self.visibilityNTriples +  "\n"
+
                         text += "  ?x%(oldVarName)s %(ontology)s ?x%(varName)s .\n" \
                                 % {'oldVarName': i, 'varName': i+1, 'ontology': item}
                         #oldVarName = varName
                         i += 1
 
             else:
+                if self.visibilityNTriples != '':
+                    text += "  " + self.visibilityNTriples +  "\n"
+                
                 items = typeFilters[0].split("=")
                 if len(items) > 1:
                     text += "  ?x0 %(ontology1)s %(ontology2)s .\n" \
@@ -487,7 +495,13 @@ class cSparqlBuilder():
                 text += '        { ?x0 rdf:type %s . }\n' % item
 
             if text != "":
-                text = \
+                if self.visibilityNTriples != '':
+                    text = "  " + self.visibilityNTriples +  "\n"
+
+                else:
+                    text = ""
+
+                text += \
                         "  ?x0 rdf:type ?type .\n" \
                         "  FILTER(\n" \
                             "    bif:exists ((\n" \
@@ -500,7 +514,13 @@ class cSparqlBuilder():
                         % text
 
             else:
-                text = \
+                if self.visibilityNTriples != '':
+                    text = "  " + self.visibilityNTriples +  "\n"
+
+                else:
+                    text = ""
+
+                text += \
                         "  ?x0 rdf:type ?type .\n" \
 
         return text
