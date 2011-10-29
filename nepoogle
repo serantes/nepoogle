@@ -29,6 +29,7 @@ from PyKDE4.kdeui import *
 #TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
+#TODO: añadir más información al contacto en la vista de resultados
 #TODO: añadir soporte a nepomuk:/ en consola
 #TODO: añadir totales y tiempos en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
@@ -61,7 +62,7 @@ PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROGRAM_VERSION_VERSION = 'v0.6'
-PROGRAM_VERSION_DATE = '2011-10-??'
+PROGRAM_VERSION_DATE = '2011-10-29'
 PROGRAM_AUTHOR_NAME = 'Ig'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -622,13 +623,13 @@ class Nepoogle(QWidget):
                     "<tr><td><b>query</b></td>\n" \
                         "<td><b>result</b></td></tr>\n" \
                     "<tr><td><em>movie</em></td>\n" \
-                        "<td>contains 'movie'</td></tr>\n" \
+                        "<td>contains word 'movie'</td></tr>\n" \
                     "<tr><td><em>+movie</em></td>\n" \
-                        "<td>equals 'movie'</td></tr>\n" \
+                        "<td>equals word 'movie'</td></tr>\n" \
                     "<tr><td><em>-movie</em></td>\n" \
-                        "<td>not contains 'movie'</td></tr>\n" \
+                        "<td>not contains word 'movie'</td></tr>\n" \
                     "<tr><td><em>-dorama +'takeuchi yuuko' 'hiroshi'</em></td>\n" \
-                        "<td>not contains 'dorama' and equals 'takeuchi yuuko' and contains 'hiroshi'</td></tr>\n" \
+                        "<td>not contains word 'dorama' and equals 'takeuchi yuuko' and contains word 'hiroshi'</td></tr>\n" \
                     "<tr><td><em>movie or hasTag:'takeuchi yuuko'</em></td>\n" \
                         "<td>contains movie or contains tag 'takeuchi yuuko'</td></tr>\n" \
                     "<tr><td><em>hasTag:+movie rating:>=5</em></td>\n" \
