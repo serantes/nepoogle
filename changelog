@@ -1,14 +1,16 @@
-v06 -- 2011/10/31
--BUG: Fixed wrong Album link URI in music piece entry in results view.
+v06 -- 2011/10/29
 -BUG: Fixed [Errno 5] Input/output error calling sometimes program without console.
 -BUG: Fixed not working prefixes "+" and "-" in commands.
+-BUG: Fixed wrong Album link URI in music piece entry in results view.
+-CHANGE: Human data display of nfo:duration, nie:contentSize and nmm:releaseDate.
 -CHANGE: Sort is now case insensitive.
 -NEW: Added discNumber, and trackNumber shorcuts.
+-NEW: Added disc number and track number to music piece in results view.
 -NEW: Added DISPLAY=:0 to avoid Soprano d-bus errors using nepoogle over ssh.
 -NEW: Added performer to music piece entry in results view.
--NEW: Added disc number and track number to music piece in results view.
 -NEW: Added support to nao:userVisible son only visible resources are displayed in results.
 -NEW: Added support to link's context menu: "Open Link", "Open in New Window" and "Copy link" are supported.
+-NEW: Added warnings support.
 
 v05 -- 2011/10/20
 -BUG: Fixed problem searching characters "'" and ":".
