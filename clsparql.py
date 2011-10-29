@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import datetime, gettext, time
+import gettext, time
 
 from PyQt4.QtCore import *
 from PyKDE4.nepomuk import *
@@ -82,12 +82,15 @@ class cSparqlBuilder():
                         ['nao:numericrating', 'number'], \
                         ['nfo:samplerate', 'number'], \
                         ['nfo:averagebitrate', 'number'], \
+                        ['nfo:duration', 'seconds'], \
                         ['nie:contentcreated', 'datetimep'], \
+                        ['nie:contentsize', 'size'], \
                         ['nie:lastmodified', 'datetime'], \
                         ['nmm:episodenumber', 'number'], \
-                        ['nmm:tracknumber', 'number'], \
+                        ['nmm:releasedate', 'datep'], \
                         ['nmm:season', 'number'], \
                         ['nmm:setnumber', 'number'], \
+                        ['nmm:tracknumber', 'number'], \
                         ['nuao:usagecount', 'number'] \
                     ]
     shortcuts = [ \

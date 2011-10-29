@@ -807,14 +807,35 @@ class Nepoogle(QWidget):
                 if valueType == 'date':
                     value = formatDate(value[:19])
 
+                elif valueType == 'datep':
+                    print value, value[-6:]
+                    if value[-6:] ==  "-01-01":
+                        value = value.replace('-01-01', '')
+
                 elif valueType == 'datetime':
                     value = formatDateTime(value[:19])
                     
                 elif valueType == 'datetimep':
                     value = formatDateTime(value[:19], True)
-
+                    
                 elif valueType == 'number':
                     value = "%d" % int(float(value))
+                    
+                elif valueType == 'seconds':
+                    value = "%s" % datetime.timedelta(0,int(value),0)
+                    #i = 0
+                    #while True:
+                    #    if not value[i] in ("0", ":"):
+                    #        break
+                    #        
+                    #    else:
+                    #        i += 1
+
+                    #value = value[i:]
+
+                elif valueType == 'size':
+                    print value
+                    value = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
                     
                 #else:
                     #pass
