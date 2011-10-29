@@ -32,29 +32,29 @@ class cSparqlBuilder():
     command = ''
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
     commands = [ \
-                [_('--actors'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
+                [_('--actors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
                 [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
                 [_('--audios'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
                 #[_('--connect'), ['', [], [], []]], \
-                [_('--composers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
+                [_('--composers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nco:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
                 [_('--contacts'), ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
-                [_('--creators'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
+                [_('--creators'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
-                [_('--directors'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
+                [_('--directors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
                 [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
                 [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
-                [_('--performers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
-                [_('--producers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
+                [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 [_('--quit'), ['quit', [], [], []]], \
                 [_('--tags'), ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
                 [_('--tvseries'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
                 [_('--tvshows'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
                 [_('--videos'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
-                [_('--writers'), ['?x1 AS ?id ?x2 AS ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
+                [_('--writers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
     #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
@@ -143,7 +143,7 @@ class cSparqlBuilder():
     sortSuffix = '_sort'
     stdoutQuery = False
 
-    visibilityNTriples = "?x0 nao:userVisible 1 ."
+    visibilityFilter = "nao:userVisible 1 ."
     
 
     def __init__(self):
@@ -465,19 +465,25 @@ class cSparqlBuilder():
                 #oldVarName = 'x0'
                 for item in items:
                     if item != '':
-                        #varName = items[i].split(':')[-1]
-                        if self.visibilityNTriples != '':
-                            text += "  " + self.visibilityNTriples +  "\n"
+                        if self.visibilityFilter != '':
+                            text += "  ?x%s %s\n" % (i, self.visibilityFilter)
 
-                        text += "  ?x%(oldVarName)s %(ontology)s ?x%(varName)s .\n" \
-                                % {'oldVarName': i, 'varName': i+1, 'ontology': item}
+                        if item == items[-1]:
+                            varName = '%s' % (item.split(':')[-1])
+
+                        else:
+                            varName = 'x%s' % (i+1)
+
+                        print item, items[-1], varName
+                        text += "  ?x%(oldVarName)s %(ontology)s ?%(varName)s .\n" \
+                                % {'oldVarName': i, 'varName': varName, 'ontology': item}
                         #oldVarName = varName
                         i += 1
 
             else:
-                if self.visibilityNTriples != '':
-                    text += "  " + self.visibilityNTriples +  "\n"
-                
+                if self.visibilityFilter != '':
+                    text += "  ?x0 %s\n" % (self.visibilityFilter)
+                                    
                 items = typeFilters[0].split("=")
                 if len(items) > 1:
                     text += "  ?x0 %(ontology1)s %(ontology2)s .\n" \
@@ -495,9 +501,9 @@ class cSparqlBuilder():
                 text += '        { ?x0 rdf:type %s . }\n' % item
 
             if text != "":
-                if self.visibilityNTriples != '':
-                    text = "  " + self.visibilityNTriples +  "\n"
-
+                if self.visibilityFilter != '':
+                    text += "  ?x0 %s\n" % (self.visibilityFilter)
+                    
                 else:
                     text = ""
 
@@ -514,8 +520,8 @@ class cSparqlBuilder():
                         % text
 
             else:
-                if self.visibilityNTriples != '':
-                    text = "  " + self.visibilityNTriples +  "\n"
+                if self.visibilityFilter != '':
+                    text = "  ?x0 %s\n" % (self.visibilityFilter)
 
                 else:
                     text = ""
