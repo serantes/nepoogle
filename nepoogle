@@ -35,7 +35,6 @@ from PyKDE4.kdeui import *
 #from PyKDE4.kdecore import ki18n, i18n, KCmdLineArgs, KAboutData
 #from PyKDE4.kdeui import KApplication, KXmlGuiWindow, KStandardAction, KAction, KIcon
 #from PyKDE4.kdecore import *
-#from PyKDE4.kdeui import *
 
 #_BUG: carácter ' de Singin' in the Rain
 #_BUG: fallan las búsquedas con el carácter ":"
@@ -47,9 +46,9 @@ from PyKDE4.kdeui import *
 #_TODO: los links a visor deben funcionar con los discos desconectados
 #_BUG: Modifiers "+" and "-" were not working filtering commands.
 #_BUG: Duplicate entries, one for rdf:type of resourcer, when self.caseInsensitiveSort = True
+#_TODO: sort case insensitive, columna lower(?x) AS ?sort
 
 #BUG: BUG001 -> negation without a shorcut is failing.
-#TODO: sort case insensitive, columna lower(?x) AS ?sort
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
 #TODO: añadir más información al contacto en la vista de resultados
@@ -217,6 +216,19 @@ class cWebView(QWebView):
 # Nepoogle class
 #
 class Nepoogle(QWidget):
+    model = None
+    pendingQuery = False
+    queries = []
+    queriesIndex = -1
+    renderedCache = ''
+    renderedRows = 0
+    renderSize = 50
+    resultData = []
+    resultStructure = []
+    resultTime = None
+    sparql = None
+    verboseMode = False
+
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.NoGroup)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.NoGroup)
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.NoGroup)
@@ -225,21 +237,6 @@ class Nepoogle(QWidget):
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.NoGroup)
-
-    model = None
-    queries = []
-    queriesIndex = -1
-    sparql = None
-    
-    pendingQuery = False
-
-    renderedCache = ''
-    renderedRows = 0
-    renderSize = 50
-
-    resultData = []
-    resultStructure = []
-    resultTime = None
 
     htmlFooter = "%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
     htmlHeader = "<html>\n" \
@@ -282,8 +279,10 @@ class Nepoogle(QWidget):
                             % ('%s', htmlImgStyle, 'system run', iconSystemRun)
 
 
-    def __init__(self, parent = None, string = ''):
+    def __init__(self, parent = None, searchString = '', verboseMode = False):
         super(Nepoogle, self).__init__(parent)
+
+        self.verboseMode = verboseMode
 
         self.model = Nepomuk.ResourceManager.instance().mainModel()
 
@@ -351,18 +350,18 @@ class Nepoogle(QWidget):
         self.setLayout(self.grid)
 
         self.resize(680, 510)
-        if string == '':
+        if searchString == '':
             self.leSearch.setText(toUnicode('Type search here'))
 
         else:
-            self.leSearch.setText(string)
+            self.leSearch.setText(searchString)
 
         self.leSearch.setSelection(0,999)
         self.leSearch.setFocus()
         
-        if string == '':
+        if searchString == '':
             self.execQuery('--help')
-            
+
 
     #def downloadLinkToDisk(self, checked):
     #    print "downloadLinkToDisk", checked
@@ -1330,7 +1329,7 @@ class Nepoogle(QWidget):
         self.resultTime = None
        
         self.sparql = cSparqlBuilder()
-        self.sparql.stdoutQuery = sys.stdout.isatty()
+        self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
         if searchString == '':
@@ -1422,9 +1421,9 @@ def buildHelp():
     print "Usage: %s command | query\n" \
           "\n" \
           "commands:\n" \
-          "  --help\t--  Shows this help\n" \
-          "  --gui\t\t--  Force gui mode in console mode\n" \
-          "  --stdout\t--  Prints SPARQL query to stdout (default with --gui parameter)\n" \
+          "  --help\t\t--\tShows this help\n" \
+          "  --gui\t\t\t--\tForce gui mode in console mode\n" \
+          "  --verbose=MODE\t--\tMode: ON, OFF (defaults ON with --gui parameter)\n" \
           "\n" \
           "query:\n" \
           "  Consult the help in gui mode\n" \
@@ -1480,10 +1479,12 @@ def main(args):
     #KCmdLineArgs.addCmdLineOptions(options)
     
     gui = not sys.stdout.isatty()
-    stdout = None
+    verboseMode = None
     parameters = toUnicode('')
+    paramOption = ""
     for i in range(1, len(args)):
         parameter = toUnicode(args[i].strip())
+
         if parameter.lower() == '--help':
             buildHelp()
             quit()
@@ -1492,9 +1493,18 @@ def main(args):
             gui = True
             continue
         
-        elif parameter.lower() == '--stdout':
-            if stdout == None:
-                stdout = True
+        elif parameter.lower()[:9] == '--verbose':
+            paramValue = parameter.lower()[9:]
+            if paramValue == '':
+                if verboseMode == None:
+                    verboseMode = True
+                    
+            elif paramValue == '=on':
+                verboseMode = True
+                
+            elif paramValue == '=off':
+                verboseMode = False
+                
             continue
         
         elif parameter.find(' ') >= 0:
@@ -1507,10 +1517,10 @@ def main(args):
             
         parameters += parameter + ' '
         
-    if stdout == None:
-        stdout == gui
-
     if gui:
+        if verboseMode == None:
+            verboseMode = gui
+
         #app = KApplication()
         #window = Nepoogle(parameters.strip())
         #window.show()
@@ -1519,7 +1529,7 @@ def main(args):
         #    window.execQuery()
         
         app = QApplication(args)
-        nepoogle = Nepoogle(None, parameters.strip())
+        nepoogle = Nepoogle(None, parameters.strip(), verboseMode)
         nepoogle.show()
         nepoogle.repaint()
 
@@ -1529,9 +1539,11 @@ def main(args):
         sys.exit(app.exec_())
 
     else:
+        if verboseMode == None:
+            verboseMode == False
 
         oSparql = cSparqlBuilder()
-        oSparql.stdoutQuery = stdout
+        oSparql.stdoutQuery = verboseMode
         oSparql.columns = '?x0 AS ?id ' + oSparql.columns
 
         #if True:
