@@ -1,6 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#***************************************************************************
+#*   cSparqlBuilder - a SPARQL query builder                               *
+#*                                                                         *
+#*   Copyright                                                             *
+#*   (C) 2011 Ignacio Serantes <kde@aynoa.net>                             *
+#*                                                                         *
+#*   This program is free software; you can redistribute it and/or modify  *
+#*   it under the terms of the GNU General Public License as published by  *
+#*   the Free Software Foundation; either version 2 of the License, or     *
+#*   (at your option) any later version.                                   *
+#*                                                                         *
+#*   This program is distributed in the hope that it will be useful,       *
+#*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+#*   GNU General Public License for more details.                          *
+#*                                                                         *
+#*   You should have received a copy of the GNU General Public License     *
+#*   along with this program; if not, write to the                         *
+#*   Free Software Foundation, Inc.,                                       *
+#*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
+#***************************************************************************
+
 import gettext, time
 
 from PyQt4.QtCore import *
@@ -19,6 +41,94 @@ _ = gettext.gettext
 #
 # cSparqlBuilder class
 #
+RDF_SCHEMA_RESOURCE = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+
+knownOntologies = [ \
+                    ['nao', '2007/08/15'], ['ncal', '2007/04/02'], \
+                    ['nco', '2007/03/22'], ['nexif', '2007/05/10'], \
+                    ['nfo', '2007/03/22'], ['nid3', '2007/05/10'], \
+                    ['nie', '2007/01/19'], ['nmm', '2009/02/19'], \
+                    ['nmo', '2007/03/22'], ['nrl', '2007/08/15'], \
+                    ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
+                ]
+
+def NOC(name = '', returnQUrl = False):
+    ontology, property = name.strip().split(':')
+    date = lvalue(knownOntologies, ontology, 0, 1)
+    if date != None:
+        value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
+
+    else:
+        value = 'Soprano.Vocabulary.%s.%s().toString()' % (ontology.upper(), property)
+        try:
+            value = eval(value)
+
+        except:
+            value = ''
+
+    if returnQUrl:
+        return QUrl(value)
+
+    else:
+        return value
+
+
+def NOCR(ontology = ''):
+    result = ''
+    if ontology == '':
+        return result
+
+    return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('rdf-schema:', 'rdfs:')
+
+
+def ontologyToHuman(ontology = '', reverse = False):
+    result = ''
+    if ontology == '':
+        return result
+
+    try:
+        ontology = ontology.split(':')[1]
+
+    except:
+        pass
+
+    if ontology == '':
+        return result
+
+    result += ontology[0].upper()
+    for i in range(1, len(ontology)):
+        if ontology[i] == ontology[i].upper():
+            result += ' ' + ontology[i].lower()
+
+        else:
+            result += ontology[i]
+
+    if reverse:
+        if result == 'Creator':
+            result = 'Is creator of'
+
+        elif result == 'Has tag':
+            result = 'Is tag of'
+
+        elif result == 'Performer':
+            result = 'Is performer of'
+
+        elif result == 'Series':
+            result = 'Episodes'
+
+    return result
+
+
+def toN3(url = ''):
+    if url[0] == '^':
+        result = '^' + QUrl(url[1:]).toEncoded()
+
+    else:
+        result = QUrl(url).toEncoded()
+
+    return result
+
+
 class cSparqlBuilder():
 
     _private_main_header = \
