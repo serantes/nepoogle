@@ -168,6 +168,9 @@ class cSparqlBuilder():
                 [_('--videos'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
                 [_('--writers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
+
+    engine = 0 # 0- Nepomuk.QueryParse(), 1- v1, 2- v2
+    
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
     #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
     # 'nmm:genre', 'nmm:releaseDate', ''
@@ -226,7 +229,7 @@ class cSparqlBuilder():
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
                     ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
-                    ['rdf:type=nmm:Movie->nie:title', _('movie'), _('mo')], \
+                    ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
