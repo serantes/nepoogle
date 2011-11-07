@@ -47,13 +47,13 @@ from PyKDE4.kdeui import *
 #_BUG: Modifiers "+" and "-" were not working filtering commands.
 #_BUG: Duplicate entries, one for rdf:type of resourcer, when self.caseInsensitiveSort = True
 #_TODO: sort case insensitive, columna lower(?x) AS ?sort
+#_TODO: añadir totales y tiempos en consola
 
 #BUG: BUG001 -> negation without a shorcut is failing.
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
 #TODO: añadir más información al contacto en la vista de resultados
 #TODO: añadir soporte a nepomuk:/ en consola
-#TODO: añadir totales y tiempos en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
 #TODO: añadir al resource viewer los siguientes links: . << < > >>
@@ -65,7 +65,6 @@ from PyKDE4.kdeui import *
 #query a contar
 #}
 #}
-
 #TODO: configuración externa
 #TODO: multilenguage
 #TODO: paréntesis
@@ -228,6 +227,7 @@ class Nepoogle(QWidget):
     resultTime = None
     sparql = None
     verboseMode = False
+    warningsList = []
 
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.NoGroup)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.NoGroup)
@@ -1011,14 +1011,18 @@ class Nepoogle(QWidget):
         htmlQueryTime = time.time()
 
         if data == []:
+            if self.resultData == []:
+                return ""
+                
             data = self.resultData
 
         if structure == []:
             structure = self.resultStructure
 
         if knownShortcuts == []:
-            knownShortcuts = self.sparql.shortcuts
-
+            if vartype(self.sparql) != "NoneType":
+                knownShortcuts = self.sparql.shortcuts
+        
         if queryTime == None:
             queryTime = self.resultTime
                 
@@ -1072,7 +1076,11 @@ class Nepoogle(QWidget):
                     break
 
                 else:
-                    resRow += [['', subItem]]
+                    if structure[1] == "_n_f_t_m_ex_":
+                        resRow += [['', subItem]]
+
+                    else:
+                        resRow += [['', subItem]]
 
             resources += [resRow]
             
@@ -1315,7 +1323,71 @@ class Nepoogle(QWidget):
     
         return result
 
-        
+
+    def runQuery(self, query):
+        model = Nepomuk.ResourceManager.instance().mainModel()
+
+        queryTime = time.time()
+        result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        queryTime = time.time() - queryTime
+
+        structure = []
+        data = []
+
+        sortSuffix = "_sort"
+        if result.isValid():
+            for bindings in result.allBindings():
+                if structure == []:
+                    for bindingName in bindings.bindingNames():
+                        if bindingName[-len(sortSuffix):] == sortSuffix:
+                            continue
+
+                        structure += [toUnicode(bindingName.toUtf8())]
+
+                aRow = []
+                for bindingName in bindings.bindingNames():
+                    # Fields to case insensitive sort must be ignored.
+                    if bindingName[-len(sortSuffix):] == sortSuffix:
+                        continue
+
+                    #value = toUnicode(toPercentEncoding(bindings[bindingName].toString()))
+                    value = toUnicode(bindings[bindingName].toString())
+
+                    if value != '':
+                        if bindingName == 'type':
+                            value = os.path.basename(toUnicode(value))
+                            value = value.split("#")
+                            try:
+                                value = '[' + value[1] + ']'
+
+                            except:
+                                value = value[0]
+
+                        elif value[:7] == 'file://' or value[:7] == 'http://' or value[:8] == 'https://':
+                            # Novedad en kde 4.7.0
+                            qurl = QUrl()
+                            qurl.setEncodedUrl(toUtf8(value))
+                            value = toUnicode(qurl.toString())
+                            # Novedad en kde 4.7.0
+
+                        aRow += [value]
+
+                if len(aRow) > 0:
+                    if len(aRow) < len(structure):
+                        for i in range(len(aRow), len(structure)):
+                            aRow += ['']
+
+                    data += [aRow]
+
+            result.close()
+
+        else:
+            result.close()
+            raise Exception('Can\'t execute query, check syntax and test if Nepomuk is running.')
+
+        return data, structure, queryTime
+
+
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
         self.setCursor(Qt.BusyCursor)
@@ -1328,25 +1400,43 @@ class Nepoogle(QWidget):
         self.resultStructure = []
         self.resultTime = None
        
-        self.sparql = cSparqlBuilder()
-        self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
-        self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
+        searchEngine = 1 # Default is v1 engine.
 
         if searchString == '':
             searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
+            if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+                searchEngine = int(searchString[1:2])
+                searchString = searchString[3:]
+                
             textTyped = True
 
         else:
             textTyped = False
 
-        #if True:
-        try:
+
+        if True:
+        #try:
           
             if searchString[:9] == 'nepomuk:/':
                 output = self.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
               
             elif searchString != '':
-                self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+
+                if searchEngine == 0:
+                    oNQP = Nepomuk.Query.QueryParser()
+                    self.resultData, self.resultStructure, self.resultTime = self.runQuery(oNQP.parse(searchString).toSparqlQuery())
+
+                elif searchEngine == 2:
+                    raise Exception('v2 engine not available.')
+
+                else:
+                    self.sparql = cSparqlBuilder()
+                    self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
+                    self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                    self.warningsList = self.sparql.warningsList
+                    self.sparql.warningsList = []
+
                 output = self.formatResultData()
 
             else:
@@ -1365,8 +1455,8 @@ class Nepoogle(QWidget):
                     self.queries = [searchString]
                     self.queriesIndex = 0
                 
-        #try:
-        #    pass
+        try:
+            pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
@@ -1394,7 +1484,7 @@ class Nepoogle(QWidget):
 
         # Handle possible warnings.
         warningMsg = ""
-        for warning in self.sparql.warningsList:
+        for warning in self.warningsList:
             if warningMsg != "":
                 warningMsg += "\n\n"
 
@@ -1408,7 +1498,7 @@ class Nepoogle(QWidget):
             #else:
                 #pass
 
-        self.sparql.warningList = []
+        self.warningsList = []
 
         if warningMsg != "":
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
