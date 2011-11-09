@@ -222,6 +222,8 @@ class cWebView(QWebView):
 #
 class Nepoogle(QWidget):
     model = None
+    navigationPosition = 0
+    navigationData = []
     pendingQuery = False
     queries = []
     queriesIndex = -1
@@ -240,6 +242,10 @@ class Nepoogle(QWidget):
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.NoGroup)
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
+    iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.NoGroup)
+    iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.NoGroup)
+    iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.NoGroup)
+    iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.NoGroup)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.NoGroup)
@@ -260,6 +266,7 @@ class Nepoogle(QWidget):
                         "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
                         "</head>\n<body>\n"
     htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
+    htmlNavigateStyle  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
     htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
                         "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
                         "<tbody>\n"
@@ -273,6 +280,14 @@ class Nepoogle(QWidget):
     htmlLinkInfo = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconDocumentInfo)
     htmlLinkKonqueror = "<a href=\"konq:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
                         % ('%s', htmlImgStyle, 'open with Konqueror', iconKonqueror)
+    htmlLinkNavigateFirst = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "first", "style": htmlNavigateStyle, "icon": iconNavigateFirst}
+    htmlLinkNavigateLast = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "last", "style": htmlNavigateStyle, "icon": iconNavigateLast}
+    htmlLinkNavigatePrevious = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "previous", "style": htmlNavigateStyle, "icon": iconNavigatePrevious}
+    htmlLinkNavigateNext = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "next", "style": htmlNavigateStyle, "icon": iconNavigateNext}
     htmlLinkOpenLocation = "<a href=\"%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
                             % ('%s', htmlImgStyle, 'open location', iconFileManager)
     htmlLinkProperties = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
@@ -460,7 +475,7 @@ class Nepoogle(QWidget):
         #    self.leSearch.keyPressEvent(self, event)
 
     
-    def linkClicked(self, url, forceExec = False):
+    def linkClicked(self, url, forceExec = False, overwriteQueriesList = False):
         url = toUnicode(url.toString())
         print toUtf8(url)
         
@@ -470,14 +485,40 @@ class Nepoogle(QWidget):
         elif url[:6] == 'konq:/':
             subprocess.Popen(['konqueror', url[6:]])
 
+        elif url[:10] == 'navigate:/':
+            if ((self.navigationData == []) or (len(self.navigationData) < 2)):
+                return True
+            
+            navigateTo = url[10:].lower()
+            if navigateTo == "first":
+                self.navigationPosition = 0
+                
+            elif navigateTo == "previous":
+                if self.navigationPosition > 0:
+                    self.navigationPosition -= 1
+
+            elif navigateTo == "next":
+                if self.navigationPosition < len(self.navigationData) - 1:
+                    self.navigationPosition += 1
+                
+            elif navigateTo == "last":
+                self.navigationPosition = len(self.navigationData) - 1
+
+            #else:
+                #pass
+
+            self.linkClicked(QUrl(self.navigationData[self.navigationPosition][0]), True, True)
+            
         elif url[:9] == 'nepomuk:/':
             #subprocess.Popen(['kioclient', 'exec', url])
             self.leSearch.setText(url)
-            self.pendingQuery = True
+            if not overwriteQueriesList:
+                self.pendingQuery = True
+                
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             if forceExec:
-                self.execQuery()
+                self.execQuery("", overwriteQueriesList)
                 self.pendingQuery = False
 
         elif url[:6] == 'prop:/':
@@ -499,7 +540,6 @@ class Nepoogle(QWidget):
                 
             else:
                 pass
-                
                 
             self.leSearch.setText(tmpUrl)
             self.pendingQuery = True
@@ -740,6 +780,12 @@ class Nepoogle(QWidget):
             href = "href=\"query:/contact:+\'%s\'\"" % par1
             value = self.htmlLinkSearch
 
+        elif id == 'navigator':
+            return "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
+                                    self.htmlLinkNavigatePrevious, \
+                                    self.htmlLinkNavigateNext, \
+                                    self.htmlLinkNavigateLast)
+
         elif id == 'ontology':
             title = "title=\"%s:+\'%s\'\"" % (par1, par2)
             href = "href=\"query:/%s:+\'%s\'\"" % (par1, par2)
@@ -797,7 +843,8 @@ class Nepoogle(QWidget):
             print toUtf8(query)
             
         output = self.htmlHeader % {'title': 'Resource viewer'} \
-                    + '<b title=\"%(uri)s\">Resource viewer</b><hr>' % {'uri': uri}
+                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;&nbsp;%(navigator)s</h2><hr>' \
+                        % {'uri': uri, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlTableHeader % {'border': 0, 'cellpadding': 3}
         
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
@@ -887,7 +934,7 @@ class Nepoogle(QWidget):
  
                 elif currOnt == 'nie:url':
                     url = fromPercentEncoding(value)
-                    ext = os.path.splitext(url)[1][1:]
+                    ext = os.path.splitext(url)[1][1:].lower()
                     if ext != '' and ext in QImageReader.supportedImageFormats():
                         if fileExists(value):
                             images += [value]
@@ -1329,7 +1376,7 @@ class Nepoogle(QWidget):
         return result
 
 
-    def execQuery(self, searchString = ''):
+    def execQuery(self, searchString = '', overwriteQueriesList = False):
         self.leSearch.readOnly = True
         self.setCursor(Qt.BusyCursor)
         self.repaint()
@@ -1340,7 +1387,7 @@ class Nepoogle(QWidget):
         self.resultData = []
         self.resultStructure = []
         self.resultTime = None
-       
+
         searchEngine = 1 # Default is v1 engine.
 
         if searchString == '':
@@ -1391,8 +1438,12 @@ class Nepoogle(QWidget):
 
                 if (self.queries != []):
                     if (self.queries[self.queriesIndex] != searchString):
-                        self.queries += [searchString]
-                        self.queriesIndex = len(self.queries) - 1
+                        if overwriteQueriesList:
+                            self.queries[self.queriesIndex] = searchString
+
+                        else:
+                            self.queries += [searchString]
+                            self.queriesIndex = len(self.queries) - 1
 
                 else:
                     self.queries = [searchString]
@@ -1445,7 +1496,12 @@ class Nepoogle(QWidget):
 
         if warningMsg != "":
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
-            
+
+
+        if len(self.resultData) > 1:
+            self.navigationData = self.resultData
+            self.navigationPositon = 0
+
   
 def buildHelp():
     print "%(name)s %(version)s (%(date)s)\n" \
