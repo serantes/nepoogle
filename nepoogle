@@ -109,6 +109,12 @@ from lfunctions import *
 from clsparql import *
 #ENDIF
 
+#IF BUILD
+#INCLUDE cldataformat.py
+#ELSE
+from cldataformat import *
+#ENDIF
+
 #class nCompleter(QCompleter):
 
     #separator = " "
@@ -183,8 +189,8 @@ class cWebView(QWebView):
         self.page().setForwardUnsupportedContent(True)
 
 
-    def acceptNavigationRequest(frame, request, navigationType):
-        print "acceptNavigationRequest", frame, request, navigationType
+    #def acceptNavigationRequest(frame, request, navigationType):
+        #print "acceptNavigationRequest", frame, request, navigationType
     
     
     #def createWindow(self, type):
@@ -807,7 +813,6 @@ class Nepoogle(QWidget):
                     value = formatDate(value[:19])
 
                 elif valueType == 'datep':
-                    print value, value[-6:]
                     if value[-6:] ==  "-01-01":
                         value = value.replace('-01-01', '')
 
@@ -833,7 +838,6 @@ class Nepoogle(QWidget):
                     #value = value[i:]
 
                 elif valueType == 'size':
-                    print value
                     value = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
                     
                 #else:
@@ -1076,11 +1080,7 @@ class Nepoogle(QWidget):
                     break
 
                 else:
-                    if structure[1] == "_n_f_t_m_ex_":
-                        resRow += [['', subItem]]
-
-                    else:
-                        resRow += [['', subItem]]
+                    resRow += [['', subItem]]
 
             resources += [resRow]
             
@@ -1167,6 +1167,9 @@ class Nepoogle(QWidget):
                             links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
                             links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
 
+                        elif structure[i] == '_n_f_t_m_ex_':
+                            textData = item[1]
+
                     elif itemTypeLower == 'tag':
                         # En las queries genéricas la columna se llama url.
                         #TODO: mal hack, esto es confuso, mirar de arreglarlo.
@@ -1178,6 +1181,9 @@ class Nepoogle(QWidget):
                             #TODO: mal hack, esto es confuso, mirar de arreglarlo.
                             if structure[i] == 'title':
                                 textData += '%s: %s' % (ontologyToHuman('nie:altLabel'), item[1])
+
+                            elif structure[i] == '_n_f_t_m_ex_':
+                                textData = item[1]
                                 
                             else:
                                 textData += '%s: %s' % (ontologyToHuman(structure[i]), item[1])
@@ -1294,7 +1300,6 @@ class Nepoogle(QWidget):
                                                 int(toUnicode(nepomukResource.property(NOC('nmm:episodeNumber')).toString())))
                         textData = textData.replace('<br />', additionalData)
 
-
             text += '<td>' + textData + '</td><td>' + itemType + '</td>'
             text += self.htmlLinks % links
             text += '</tr>\n'
@@ -1324,70 +1329,6 @@ class Nepoogle(QWidget):
         return result
 
 
-    def runQuery(self, query):
-        model = Nepomuk.ResourceManager.instance().mainModel()
-
-        queryTime = time.time()
-        result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        queryTime = time.time() - queryTime
-
-        structure = []
-        data = []
-
-        sortSuffix = "_sort"
-        if result.isValid():
-            for bindings in result.allBindings():
-                if structure == []:
-                    for bindingName in bindings.bindingNames():
-                        if bindingName[-len(sortSuffix):] == sortSuffix:
-                            continue
-
-                        structure += [toUnicode(bindingName.toUtf8())]
-
-                aRow = []
-                for bindingName in bindings.bindingNames():
-                    # Fields to case insensitive sort must be ignored.
-                    if bindingName[-len(sortSuffix):] == sortSuffix:
-                        continue
-
-                    #value = toUnicode(toPercentEncoding(bindings[bindingName].toString()))
-                    value = toUnicode(bindings[bindingName].toString())
-
-                    if value != '':
-                        if bindingName == 'type':
-                            value = os.path.basename(toUnicode(value))
-                            value = value.split("#")
-                            try:
-                                value = '[' + value[1] + ']'
-
-                            except:
-                                value = value[0]
-
-                        elif value[:7] == 'file://' or value[:7] == 'http://' or value[:8] == 'https://':
-                            # Novedad en kde 4.7.0
-                            qurl = QUrl()
-                            qurl.setEncodedUrl(toUtf8(value))
-                            value = toUnicode(qurl.toString())
-                            # Novedad en kde 4.7.0
-
-                        aRow += [value]
-
-                if len(aRow) > 0:
-                    if len(aRow) < len(structure):
-                        for i in range(len(aRow), len(structure)):
-                            aRow += ['']
-
-                    data += [aRow]
-
-            result.close()
-
-        else:
-            result.close()
-            raise Exception('Can\'t execute query, check syntax and test if Nepomuk is running.')
-
-        return data, structure, queryTime
-
-
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
         self.setCursor(Qt.BusyCursor)
@@ -1414,9 +1355,9 @@ class Nepoogle(QWidget):
             textTyped = False
 
 
-        if True:
-        #try:
-          
+        #if True:
+        try:
+            self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
                 output = self.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
               
@@ -1424,13 +1365,15 @@ class Nepoogle(QWidget):
 
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
-                    self.resultData, self.resultStructure, self.resultTime = self.runQuery(oNQP.parse(searchString).toSparqlQuery())
+                    query = oNQP.parse(searchString).toSparqlQuery()
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    if (self.verboseMode and sys.stdout.isatty()):
+                        print toUtf8(query)
 
                 elif searchEngine == 2:
                     raise Exception('v2 engine not available.')
 
                 else:
-                    self.sparql = cSparqlBuilder()
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
                     self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
@@ -1455,8 +1398,8 @@ class Nepoogle(QWidget):
                     self.queries = [searchString]
                     self.queriesIndex = 0
                 
-        try:
-            pass
+        #try:
+        #    pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
@@ -1519,29 +1462,7 @@ def buildHelp():
           "  Consult the help in gui mode\n" \
           % PROGRAM_NAME
   
-  
-def formatResultData(data = [], structure = [], queryTime = 0, stdout = False):
-    text = ''
-    for row in data:
-        line = ''
-        for column in row:
-            if column == '':
-                continue
 
-            if column[:9] == 'nepomuk:/':
-                continue
-            
-            if line != '':
-                line += ', '
-                
-            line += toUtf8(column)
-
-        if line != '':
-            text += line + '\n'
-
-    return text
-
-    
 def main(args):
 
     #appName = PROGRAM_NAME
@@ -1606,24 +1527,25 @@ def main(args):
                 parameter = '"' + parameter + '"'
             
         parameters += parameter + ' '
-        
+
+    searchString = parameters.strip()
     if gui:
         if verboseMode == None:
             verboseMode = gui
 
         #app = KApplication()
-        #window = Nepoogle(parameters.strip())
+        #window = Nepoogle(searchString)
         #window.show()
 
-        #if parameters != '':
+        #if searchString != '':
         #    window.execQuery()
         
         app = QApplication(args)
-        nepoogle = Nepoogle(None, parameters.strip(), verboseMode)
+        nepoogle = Nepoogle(None, searchString, verboseMode)
         nepoogle.show()
         nepoogle.repaint()
 
-        if parameters != '':
+        if searchString != '':
             nepoogle.execQuery()
 
         sys.exit(app.exec_())
@@ -1632,31 +1554,51 @@ def main(args):
         if verboseMode == None:
             verboseMode == False
 
-        oSparql = cSparqlBuilder()
-        oSparql.stdoutQuery = verboseMode
-        oSparql.columns = '?x0 AS ?id ' + oSparql.columns
+        searchEngine = 1 # Default is v1 engine.
 
+        if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+            searchEngine = int(searchString[1:2])
+            searchString = searchString[3:]
+
+        output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
+        print toUtf8(output)
+        
         #if True:
         try:
-            if parameters != '':
-                data, structure, time = oSparql.executeQuery(oSparql.buildQuery(parameters))
-                output = "%(title)s\n" \
-                            "\n%(values)s\n" \
-                            "%(records)s records found in %(seconds)f seconds.\n" \
+            warningsList = []
+            oSparql = cSparqlBuilder()
+            if searchString != '':
+
+                if searchEngine == 0:
+                    oNQP = Nepomuk.Query.QueryParser()
+                    data, structure, time = oSparql.executeQuery(oNQP.parse(searchString).toSparqlQuery())
+
+                elif searchEngine == 2:
+                    raise Exception('v2 engine not available.')
+
+                else:
+                    oSparql.stdoutQuery = verboseMode
+                    oSparql.columns = '?x0 AS ?id ' + oSparql.columns
+                    data, structure, time = oSparql.executeQuery(oSparql.buildQuery(searchString))
+                    warningsList =  oSparql.warningsList
+                    oSparql.warningsList = []
+
+                oDataFormat = cDataFormat()
+
+                oDataFormat.formatAsText(data, structure, time)
+                output = "\n%(records)s records found in %(seconds)f seconds.\n" \
                             "--\n" \
                             "Powered by %(name)s %(version)s (%(date)s)" \
-                            % {'title': 'Querying Nepomuk', \
-                                'values': formatResultData(data, structure, time), \
-                                'records': len(data), \
+                            % {'records': len(data), \
                                 'seconds': time, \
                                 'name': PROGRAM_NAME, \
                                 'version': PROGRAM_VERSION_VERSION, \
                                 'date': PROGRAM_VERSION_DATE \
                                 }
-
+                                
                 # Handle possible warnings.
                 warningMsg = ""
-                for warning in oSparql.warningsList:
+                for warning in warningsList:
                     if warningMsg != "":
                         warningMsg += "\n\n"
 
@@ -1670,7 +1612,7 @@ def main(args):
                     #else:
                         #pass
 
-                oSparql.warningList = []
+                warningsList = []
 
                 if warningMsg != "":
                     output += '\n\nWARNING: ' + toUtf8(warningMsg)
@@ -1687,8 +1629,7 @@ def main(args):
                 output = buildHelp()
 
             else:
-                output = "%(title)s\n" \
-                            "\nerror: %(error)s\n" \
+                output = "\nerror: %(error)s\n" \
                             "\n--\n" \
                             "Powered by %(name)s %(version)s (%(date)s)" \
                             % {'title': 'Querying Nepomuk', \
