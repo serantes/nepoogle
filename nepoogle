@@ -604,10 +604,14 @@ class Nepoogle(QWidget):
         #print "Go backward"
         if (self.queriesIndex > 0):
             self.queriesIndex -= 1
-            
+
         #print 'Going backward:', self.queriesIndex, self.queries[self.queriesIndex]
         self.leSearch.setText(self.queries[self.queriesIndex])
         self.execQuery(self.queries[self.queriesIndex])
+
+        if len(self.resultData) <= 1:
+            self.navigationData = []
+            self.navigationPositon = 0
 
         
     def goForward(self):
@@ -1496,7 +1500,6 @@ class Nepoogle(QWidget):
 
         if warningMsg != "":
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
-
 
         if len(self.resultData) > 1:
             self.navigationData = self.resultData
