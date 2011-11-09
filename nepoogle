@@ -708,16 +708,18 @@ class Nepoogle(QWidget):
                         "<td>equals word 'movie'</td></tr>\n" \
                     "<tr><td><em>-movie</em></td>\n" \
                         "<td>not contains word 'movie'</td></tr>\n" \
-                    "<tr><td><em>-dorama +'takeuchi yuuko' 'hiroshi'</em></td>\n" \
-                        "<td>not contains word 'dorama' and equals 'takeuchi yuuko' and contains word 'hiroshi'</td></tr>\n" \
+                    "<tr><td><em>hastag:-dorama +'takeuchi yuuko' 'hiroshi'</em></td>\n" \
+                        "<td>not tagged as 'dorama' and equals 'takeuchi yuuko' and contains 'hiroshi'</td></tr>\n" \
                     "<tr><td><em>movie or hasTag:'takeuchi yuuko'</em></td>\n" \
-                        "<td>contains movie or contains tag 'takeuchi yuuko'</td></tr>\n" \
+                        "<td>contains movie or tagged 'takeuchi yuuko'</td></tr>\n" \
                     "<tr><td><em>hasTag:+movie rating:>=5</em></td>\n" \
-                        "<td>tag equals 'movie' and rating >= 5</td></tr>\n" \
-                    "<tr><td><em>mimetype:video/x-matroska url:Tiger</em></td>\n" \
-                        "<td>mimetype matroska and contains 'Tiger' in url</td></tr>\n" \
+                        "<td>tagged exactly 'movie' and rating >= 5</td></tr>\n" \
+                    "<tr><td><em>url:\"^file:///media\" mimetype:image mimetype:-image/jpeg</em></td>\n" \
+                        "<td>all image files, except jpegs, located in /media</td></tr>\n" \
+                    "<tr><td><em>mimetype:image/png height:>=1200 width:>=1600</em></td>\n" \
+                        "<td>all pngs with a resolution great or equal to 1600x1200</td></tr>\n" \
                     "<tr><td><em>playcount:0 hastag:corea genre:drama actor:+'Yeong-ae Lee' director:Park</em></td>\n" \
-                        "<td>not played movie dramas tagged 'corean' with actress 'Yeong-ae Lee' and with director name contains 'Park'</td></tr>\n" \
+                        "<td>not played movie dramas tagged 'corea' with actress 'Yeong-ae Lee' and with director name contains 'Park'</td></tr>\n" \
                     "<tr><td><em>actor:'Zhang Ziyi' and actor:-'Bingbing Fan'</em></td>\n" \
                         "<td>movies with actress 'Zhang Ziyi' but without actress 'Bingbing Fan'</td></tr>\n" \
                     "<tr><td><em>tvshow:Coupling season:2 episode:4</em></td>\n" \
@@ -1414,8 +1416,8 @@ class Nepoogle(QWidget):
             textTyped = False
 
 
-        if True:
-        #try:
+        #if True:
+        try:
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
                 output = self.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
@@ -1429,6 +1431,9 @@ class Nepoogle(QWidget):
                     if (self.verboseMode and sys.stdout.isatty()):
                         print toUtf8(query)
 
+                    oDataFormat = cDataFormat()
+                    output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
+
                 elif searchEngine == 2:
                     raise Exception('v2 engine not available.')
 
@@ -1438,8 +1443,7 @@ class Nepoogle(QWidget):
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
-
-                output = self.formatResultData()
+                    output = self.formatResultData()
 
             else:
                 raise Exception('Please, type something.')
@@ -1461,8 +1465,8 @@ class Nepoogle(QWidget):
                     self.queries = [searchString]
                     self.queriesIndex = 0
                 
-        try:
-            pass
+        #try:
+        #    pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
@@ -1650,7 +1654,6 @@ def main(args):
                     oSparql.warningsList = []
 
                 oDataFormat = cDataFormat()
-
                 oDataFormat.formatAsText(data, structure, time)
                 output = "\n%(records)s records found in %(seconds)f seconds.\n" \
                             "--\n" \
