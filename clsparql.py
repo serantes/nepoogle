@@ -193,9 +193,11 @@ class cSparqlBuilder():
                         ['nao:created', 'datetime'], \
                         ['nao:lastmodified', 'datetime'], \
                         ['nao:numericrating', 'number'], \
-                        ['nfo:samplerate', 'number'], \
                         ['nfo:averagebitrate', 'number'], \
                         ['nfo:duration', 'seconds'], \
+                        ['nfo:height', 'number'], \
+                        ['nfo:samplerate', 'number'], \
+                        ['nfo:width', 'number'], \
                         ['nie:contentcreated', 'datetimep'], \
                         ['nie:contentsize', 'size'], \
                         ['nie:lastmodified', 'datetime'], \
@@ -227,6 +229,7 @@ class cSparqlBuilder():
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
+                    ['nfo:height', _('height'), _('height')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
                     ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
@@ -248,6 +251,7 @@ class cSparqlBuilder():
                     ['rdf:type', _('type'), _('ty')], \
                     ['%nie:url', _('url'), _('ur')], \
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
+                    ['nfo:width', _('width'), _('wi')], \
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
 
