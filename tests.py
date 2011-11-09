@@ -6,7 +6,7 @@ from clsparql import *
 class Test_cSparqlBuilder(unittest.TestCase):
 
     albumQueries = [\
-                        [unicode('album:heart', 'utf-8'), 89, 6], \
+                        [unicode('album:heart', 'utf-8'), 93, 6], \
                         [unicode('album:"heart station"', 'utf-8'), 13, 6], \
                         [unicode('album:+"HEART STATION"', 'utf-8'), 13, 6], \
                         [unicode('album:+"heart station"', 'utf-8'), 0, 0], \
@@ -26,10 +26,10 @@ class Test_cSparqlBuilder(unittest.TestCase):
                 ]
 
     basicQueries = [\
-                        [unicode('4minute', 'utf-8'), 220, 6], \
-                        [unicode('película', 'utf-8'), 130, 6], \
+                        [unicode('4minute', 'utf-8'), 270, 6], \
+                        [unicode('película', 'utf-8'), 128, 6], \
                         [unicode('+película', 'utf-8'), 118, 6], \
-                        [unicode('宇多田', 'utf-8'), 174, 6] \
+                        [unicode('宇多田', 'utf-8'), 176, 6] \
                     ]
 
     commandQueries = [\
@@ -38,7 +38,7 @@ class Test_cSparqlBuilder(unittest.TestCase):
                 ]
 
     orQueries = [\
-                    [unicode('película or hasTag:"takeuchi yuuko"', 'utf-8'), 136, 6] \
+                    [unicode('película or hasTag:"takeuchi yuuko"', 'utf-8'), 144, 6] \
                 ]
 
     def setUp(self):
