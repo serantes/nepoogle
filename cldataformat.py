@@ -33,16 +33,87 @@ from clsparql import *
 from lfunctions import *
 
 #BEGIN cldataformat.py
+# This must be outside class to avoid lost this information creating and releasing objects.
+ontologiesInfo = []
+    #['nao:created', 'datetime'], \
+    #['nao:lastmodified', 'datetime'], \
+    #['nao:numericrating', 'number'], \
+    #['nfo:averagebitrate', 'number'], \
+    #['nfo:duration', 'seconds'], \
+    #['nfo:height', 'number'], \
+    #['nfo:samplerate', 'number'], \
+    #['nfo:width', 'number'], \
+    #['nie:contentcreated', 'datetimep'], \
+    #['nie:contentsize', 'size'], \
+    #['nie:lastmodified', 'datetime'], \
+    #['nmm:episodenumber', 'number'], \
+    #['nmm:releasedate', 'datep'], \
+    #['nmm:season', 'number'], \
+    #['nmm:setnumber', 'number'], \
+    #['nmm:tracknumber', 'number'], \
+    #['nuao:usagecount', 'number'] \
+
 
 class cDataFormat():
 
     outFormat = 1  # 1- Text, 2- Html
+    model = None
+
     
+    def ontologyLabel(ontology = '', reverse = False):
+        if self.Model == None:
+            return "", "", "", ""
+            
+        i = lindex(ontologiesInfo, ontology, column = 0)
+
+        if i == None:
+            # Data tipes
+            #SELECT DISTINCT ?range
+            #WHERE {
+            #    [] rdfs:range ?range . FILTER(REGEX(?range, "^http://www.w3.org/2001/XMLSchema")) .
+            #}
+            #ORDER BY ?range
+            #Result: boolean, date, dateTime, duration, float, int, integer, nonNegativeInteger, string
+            #http://www.w3.org/2001XMLSchema#boolean
+            #SELECT DISTINCT ?range
+            #WHERE {
+            #    nao:userVisible rdfs:range ?range .
+            #}
+            #ORDER BY ?range
+            #SELECT DISTINCT *
+            #WHERE {
+            #    ?r nao:userVisible ?v . FILTER(?v != "false"^^xsd:boolean) .
+            #}
+
+            # Must search for ontology.
+            query = "SELECT ?label ?range\n" \
+                    "WHERE {\n" \
+                        "\t%s rdfs:range ?range\n" \
+                        "\tOPTIONAL { %s rdfs:label ?label . }\n" \
+                    "}" % (ontology, ontology)
+            data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            if data.isValid():
+                while data.next():
+                    label = toUnicode(data["?label"].toString())
+                    rlabel = label
+                    ontType = toUnicode(data["?range"].toString())
+                    displayType = ontType
+
+        else:
+            # Information is available.
+            label = ontologiesInfo[i, 0]
+            rlabel = ontologiesInfo[i, 1]
+            ontType = ontologiesInfo[i, 2]
+            displayType = ontologiesInfo[i, 3]
+
+        return label, rlabel, ontType, displayType
+
 
     def formatAsText(self, data = [], structure = [], queryTime = 0, stdout = False):
-        text = ''
+        #text = ""
         numColumns = len(structure)
         for row in data:
+            line = ""
             value = ""
             uri = ""
             for i in range(0, numColumns):
@@ -56,7 +127,7 @@ class cDataFormat():
                 else:
                     if value != "":
                         value += ', '
-                        
+                    
                     value += column
 
             if uri != "":
@@ -79,8 +150,14 @@ class cDataFormat():
                 except:
                     line = value
 
-                if line == "":
-                    line = "No data available"
+            else:
+                for i in range(0, numColumns):
+                    if line != "":
+                        line += ", "
+                        
+                    line += "%s" % row[i]
+
+                line += ", Unknown"
 
             if line != '':
                 print toUtf8(line)
@@ -93,8 +170,20 @@ class cDataFormat():
         htmlQueryTime = time.time()
         
         text = ''
-        text += '<html><head><title>Resouces available</title></head>\n' \
-                    "<body>\n"
+        text += "<html>\n" \
+                    "<head>\n" \
+                    "<title>Resouces available</title>\n" \
+                    "<style type=\"text/css\">" \
+                    "    body {%(body_style)s}\n" \
+                    "    tr {%(tr_style)s}\n" \
+                    "    p {%(p_style)s}\n" \
+                    "</style>\n" \
+                    "</head>\n" \
+                    "<body>\n" \
+                    % {"body_style": "font-size:small;", \
+                        "p_style": "font-size:small;", \
+                        "tr_style": "font-size:small;" \
+                        }
         text += "<table style=\"text-align:left; width: 100%;\" " \
                         "border=\"1\" cellpadding=\"2\" cellspacing=\"0\">" \
                     "<tbody>\n"
@@ -134,18 +223,27 @@ class cDataFormat():
                     if fullTitle == "":
                         fullTitle = identifier
 
+                    icons = ""
+                    
                     if url == "" and fullTitle == "" and itemType == "":
                         line = ""
                         
                     else:
-                        line = "<tr><td>%s</td><td>%s</td><td width=\"15px\">%s</td></tr>\n" % (url, fullTitle, itemType)
+                        line = "<tr><td>%s<br />%s</td><td>%s</td><td width=\"15px\">%s</td></tr>\n" % (url, fullTitle, itemType, icons)
 
                 except:
                 #else:
-                    line = "<tr><td>%s</td><td></td><td width=\"15px\"></td></tr>\n" % value
+                    line = "<tr><td>%s</td>Unknown<td></td><td width=\"15px\"></td></tr>\n" % value
 
-                if line == "":
-                    line = "<tr><td>%s</td><td></td><td width=\"15px\"></td></tr>\n" % "No data available"
+            else:
+                for i in range(0, numColumns):
+                    if line != "":
+                        line += "<br />\n"
+
+                    line += "%s" % row[i]
+
+                line = "<tr><td>%s</td><td>Unknown</td><td width=\"15px\"></td></tr>\n" % (line)
+
 
             if line != '':
                 text += line + '\n'
