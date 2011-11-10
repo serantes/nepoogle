@@ -82,6 +82,12 @@ def NOCR(ontology = ''):
 
 
 def ontologyToHuman(ontology = '', reverse = False):
+    #TODO: En la propia base de datos está esta información. Ejemplo:
+    #select *
+    #where {
+        #nao:lastModified rdfs:label ?v
+    #}
+    #Resultado: "last modified at"
     result = ''
     if ontology == '':
         return result
@@ -188,7 +194,12 @@ class cSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     # All in lowercase so search in lowercase.
-    #TODO: esta información tiene que estar en la base de datos.
+    #TODO: esta información, en forma básica, está en la base de datos. Ejemplo:
+    #select *
+    #where {
+    #    nao:lastModified rdfs:range ?v
+    #}
+    #resultado: <http://www.w3.org/2001/XMLSchema#dateTime>
     ontologyTypes = [ \
                         ['nao:created', 'datetime'], \
                         ['nao:lastmodified', 'datetime'], \

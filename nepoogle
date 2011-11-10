@@ -48,16 +48,24 @@ from PyKDE4.kdeui import *
 #_BUG: Duplicate entries, one for rdf:type of resourcer, when self.caseInsensitiveSort = True
 #_TODO: sort case insensitive, columna lower(?x) AS ?sort
 #_TODO: añadir totales y tiempos en consola
+#_TODO: añadir al resource viewer los siguientes links: . << < > >>
 
 #BUG: BUG001 -> negation without a shorcut is failing.
+#TODO: extraer tipo y label de la propia db. Esto está actualmente hardcoded y
+#repartido entre la función ontologyToHuman y la propiedad cSparqlBuilder.ontologyTypes.
+#Ejemplo:
+#SELECT *
+#WHERE {
+    #nao:altLabel rdfs:range ?range
+    #OPTIONAL { nao:altLabel rdfs:label ?label . }
+#}
+#Resultado: <http://www.w3.org/2000/01/rdf-schema#Literal>, "alternative label"
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: musicpiece debe de incluir el intérprete
 #TODO: añadir más información al contacto en la vista de resultados
 #TODO: añadir soporte a nepomuk:/ en consola
 #TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
 #TODO: mostrar estrellas en el rating por coherencia
-#TODO: añadir al resource viewer los siguientes links: . << < > >>
-#TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 #TODO: count()
 #select count(?x0) as ?cuantos
 #where {
@@ -65,6 +73,7 @@ from PyKDE4.kdeui import *
 #query a contar
 #}
 #}
+#TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 #TODO: configuración externa
 #TODO: multilenguage
 #TODO: paréntesis
