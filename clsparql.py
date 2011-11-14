@@ -292,7 +292,7 @@ class cSparqlBuilder():
 
     def buildQuery(self, searchString = ''):
         if ((self.command == '') and (self.filters == []) and (searchString != '')):
-            self.filters = self.stringQueryConversion(searchString)
+            self.filters = self.stringQueryConversion(searchString.strip())
 
         command = self.command.strip().lower()
         if command == '':
@@ -768,6 +768,10 @@ class cSparqlBuilder():
 
         allFilters = []
         oneFilter = []
+
+        if string[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+            string = string[3:]
+        
         items = self.split(string)
         #print toUtf8(string)
         #print toUtf8(items)
