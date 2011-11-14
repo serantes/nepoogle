@@ -277,10 +277,10 @@ class Nepoogle(QWidget):
                         #"</head>\n<body>\n"
     #htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
     #htmlNavigateStyle  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
-    #htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
-                        #"border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
-                        #"<tbody>\n"
-    #htmlTableFooter = "</tbody></table>\n"
+    htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
+                        "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
+                        "<tbody>\n"
+    htmlTableFooter = "</tbody></table>\n"
     #htmlTime = "<br />\n%(records)s records found in %(seconds)f seconds. \
                 #HTML visualization builded in %(sechtml)s seconds."
                 
