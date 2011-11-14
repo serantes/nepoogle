@@ -1459,8 +1459,8 @@ class Nepoogle(QWidget):
                 
             textTyped = False
 
-        if True:
-        #try:
+        #if True:
+        try:
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
                 oDataFormat = cDataFormat(searchString, self.model)
@@ -1557,8 +1557,8 @@ class Nepoogle(QWidget):
                     #self.queries = [searchString]
                     #self.queriesIndex = 0
                 
-        try:
-            pass
+        #try:
+        #    pass
         
         except:
             msgError = "%s" % sys.exc_info()[1]
@@ -1745,7 +1745,7 @@ def main(args):
                     warningsList =  oSparql.warningsList
                     oSparql.warningsList = []
 
-                oDataFormat = cDataFormat(searchString, self.model)
+                oDataFormat = cDataFormat(searchString)
                 oDataFormat.formatAsText(data, structure, time)
                 output = "\n%(records)s records found in %(seconds)f seconds.\n" \
                             "--\n" \
