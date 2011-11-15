@@ -729,7 +729,6 @@ class cDataFormat():
                         value = '<!--' + toUnicode(resource.genericLabel()) + '-->' \
                                     + self.htmlRenderLink('uri', resource.uri(), resource.genericLabel())
                         if ontLabel != '':
-                            print shorcut, resource.genericLabel()
                             value += ' ' + self.htmlRenderLink('ontology', shorcut, resource.genericLabel())
 
                 elif currOnt == '22-rdf-syntax-ns:type':
@@ -860,7 +859,7 @@ class cDataFormat():
         if stdout:
             print toUtf8(output)
 
-        self.renderedDataText == output
+        self.renderedDataText = output
 
         return output
 
@@ -939,7 +938,7 @@ class cDataFormat():
 
         text += self.renderedDataText
         if self.renderedDataRows < len(self.data):
-            text += '<tr><td><a href="render2:/more">%s more</a>, <a href="render2:/all">all records</a></td>' \
+            text += '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
                     '<td>%s of %s records</td><td></td><tr>' \
                         % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data))
         
