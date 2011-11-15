@@ -638,7 +638,6 @@ class Nepoogle(QWidget):
             self.setCursor(Qt.BusyCursor)
             self.leSearch.setText(self.cache[self.queriesIndex].searchString)
             self.pendingQuery = False
-            print self.cache[self.queriesIndex].formatAsHtml()
             self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
