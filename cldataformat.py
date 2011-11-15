@@ -151,7 +151,7 @@ class cDataFormat():
                             % {"to": "previous", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
     htmlLinkNavigateNext = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "next", "style": htmlStyleNavigate, "icon": iconNavigateNext}
-    htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"file://%(uri)s\">" \
+    htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
                                 + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconFileManager) \
                                 + "</a>"
     htmlLinkProperties = "<a title=\"Properties\" href=\"prop:/%(uri)s\">" \
@@ -166,16 +166,20 @@ class cDataFormat():
     htmlLinkSearchRender = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" " \
                                 "style=\"width: 14px; height: 14px;\" " \
                                 " src=\"file://%s\">" % (iconSystemSearch)
-    htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/file://%(uri)s\">" \
+    htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
     ontologyFormat = [ \
+                        ["nmm:MusicAlbum", \
+                            "{nie:title|l|s:album}<br />" \
+                            "Performers: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
                             "Title: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
                             "Album: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                            "Performers: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(nmm:musicAlbum)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "Performer: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
@@ -208,8 +212,8 @@ class cDataFormat():
                             "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE] \
                     ]
-                        
-                        
+
+
     def __init__(self, searchString = "", model = None):
         self.searchString = searchString
         if model == None:
@@ -403,7 +407,11 @@ class cDataFormat():
             query = valuesName[7:]
             variables = re.findall('\%\((.*?)\)s', query)
             for var in variables:
-                query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
+                if var == "uri":
+                    query = query.replace("%(" + var + ")s", toUnicode(resource.uri()))
+
+                else:
+                    query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
                 
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
@@ -433,13 +441,17 @@ class cDataFormat():
 
             elif len(elements) == 1:
                 # A property.
-                propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
-                #TODO: Some special formats, this must be improved.
-                if elements[0] == "nmm:trackNumber":
-                    if len(propertyValue) < 2:
-                        propertyValue = "0" + propertyValue
+                if elements[0] == "uri":
+                    values += [[toUnicode(resource.uri()), toUnicode(resource.uri())]]
+
+                else:
+                    propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
+                    #TODO: Some special formats, this must be improved.
+                    if elements[0] == "nmm:trackNumber":
+                        if len(propertyValue) < 2:
+                            propertyValue = "0" + propertyValue
                         
-                values += [[toUnicode(resource.uri()), propertyValue]]
+                    values += [[toUnicode(resource.uri()), propertyValue]]
 
             #else:
                 #values = []
@@ -509,6 +521,9 @@ class cDataFormat():
             for value in values:
                 if formatValue != "":
                     formatValue += ", "
+
+                if len(value) == 1:
+                    displayValue += [""]
                     
                 if addLink:
                     if value[1] == "":
@@ -523,7 +538,6 @@ class cDataFormat():
                     formatValue += value[1]
 
                 if addSearch:
-                    
                     formatValue += " " + self.htmlLinkSearch % {"uri": "%s:+'%s'" % (searchTerm, value[1])}
 
                 if addOpenFile:
@@ -590,7 +604,7 @@ class cDataFormat():
         
         i = lindex(self.ontologyFormat, itemType, column = 0)
         if (i == None):
-            formatPattern = "{uri}{of}"
+            formatPattern = "{uri|l|of}"
             iconsAssociated = _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE
 
         else:

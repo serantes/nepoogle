@@ -614,6 +614,9 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
 
+        elif url[:5] == 'run:/':
+            subprocess.Popen(["kioclient", "exec", url[5:]])
+
         #elif url[:6] == 'view:/':
             #self.leSearch.setText(url[6:])
             #self.pendingQuery = True
@@ -1490,7 +1493,9 @@ class Nepoogle(QWidget):
 
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
-                    query = oNQP.parse(searchString[3:]).toSparqlQuery()
+                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
+                    query = "SELECT DISTINCT ?r\n" + query[query.find("where"):]
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     if (self.verboseMode and sys.stdout.isatty()):
                         print toUtf8(query)
@@ -1736,7 +1741,10 @@ def main(args):
 
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
-                    data, structure, time = oSparql.executeQuery(oNQP.parse(searchString).toSparqlQuery())
+                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
+                    query = "SELECT DISTINCT ?r\n" + query[query.find("where"):]
+                    data, structure, time = oSparql.executeQuery(query)
 
                 elif searchEngine == 2:
                     raise Exception('v2 engine not available.')
