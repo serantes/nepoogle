@@ -620,6 +620,9 @@ class Nepoogle(QWidget):
             #self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     #% self.iconProcessIdle)
 
+        elif url[:5] == 'run:/':
+            subprocess.Popen(["kioclient", "exec", url[5:]])
+            
         else:
             # In KDE we trust.
             subprocess.Popen(["kioclient", "exec", url])
