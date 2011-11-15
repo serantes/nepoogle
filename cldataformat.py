@@ -151,7 +151,7 @@ class cDataFormat():
                             % {"to": "previous", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
     htmlLinkNavigateNext = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "next", "style": htmlStyleNavigate, "icon": iconNavigateNext}
-    htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"file://%(uri)s\">" \
+    htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
                                 + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconFileManager) \
                                 + "</a>"
     htmlLinkProperties = "<a title=\"Properties\" href=\"prop:/%(uri)s\">" \
@@ -166,7 +166,7 @@ class cDataFormat():
     htmlLinkSearchRender = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" " \
                                 "style=\"width: 14px; height: 14px;\" " \
                                 " src=\"file://%s\">" % (iconSystemSearch)
-    htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/file://%(uri)s\">" \
+    htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
