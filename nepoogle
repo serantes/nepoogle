@@ -614,6 +614,9 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
 
+        elif url[:5] == 'run:/':
+            subprocess.Popen(["kioclient", "exec", url[5:]])
+
         #elif url[:6] == 'view:/':
             #self.leSearch.setText(url[6:])
             #self.pendingQuery = True
