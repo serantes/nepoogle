@@ -172,13 +172,14 @@ class cDataFormat():
 
     ontologyFormat = [ \
                         ["nmm:MusicAlbum", \
-                            "{nie:title|l|s:album}", \
+                            "{nie:title|l|s:album}<br />" \
+                            "Performers: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
                             "Title: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
                             "Album: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                            "Performers: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(nmm:musicAlbum)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "Performer: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
@@ -406,7 +407,11 @@ class cDataFormat():
             query = valuesName[7:]
             variables = re.findall('\%\((.*?)\)s', query)
             for var in variables:
-                query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
+                if var == "uri":
+                    query = query.replace("%(" + var + ")s", toUnicode(resource.uri()))
+
+                else:
+                    query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
                 
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
