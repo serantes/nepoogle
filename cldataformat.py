@@ -35,6 +35,7 @@ from lfunctions import *
 
 #BEGIN cldataformat.py
 # This must be outside class to avoid lost this information creating and releasing objects.
+global ontologiesInfo
 ontologiesInfo = []
     #['nao:created', 'datetime'], \
     #['nao:lastmodified', 'datetime'], \
@@ -171,15 +172,21 @@ class cDataFormat():
                         + "</a>"
 
     ontologyFormat = [ \
+                        ["nmm:Movie", \
+                            "<b>Title</b>: {nie:title|l|of|ol}" \
+                            "[<br /><b>Rating</b>: {nao:numericRating}]" \
+                            "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
+                            "[<br /><b>Description</b>: {nie:description}]", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
                             "{nie:title|l|s:album}<br />" \
-                            "Performers: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
-                            "Title: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
-                            "Album: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                            "Performer: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "<b>Title</b>: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
+                            "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
+                            "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
@@ -223,12 +230,14 @@ class cDataFormat():
             self.model = model
 
     
-    def ontologyLabel(ontology = '', reverse = False):
-        if self.Model == None:
-            return "", "", "", ""
-            
-        i = lindex(ontologiesInfo, ontology, column = 0)
+    def ontologyInfo(self, ontology = ''):
+        global ontologiesInfo
+        
+        if ((self.model == None) or (ontology == "")):
+            return ["", "", ""]
 
+        shortOnt = NOCR(ontology)
+        i = lindex(ontologiesInfo, shortOnt, column = 0)
         if i == None:
             # Data tipes
             #SELECT DISTINCT ?range
@@ -251,25 +260,25 @@ class cDataFormat():
             # Must search for ontology.
             query = "SELECT ?label ?range\n" \
                     "WHERE {\n" \
-                        "\t%s rdfs:range ?range\n" \
-                        "\tOPTIONAL { %s rdfs:label ?label . }\n" \
-                    "}" % (ontology, ontology)
+                        "\t<%(ont)s> rdfs:range ?range\n" \
+                        "\tOPTIONAL { <%(ont)s> rdfs:label ?label . }\n" \
+                    "}" % {"ont": ontology}
             data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if data.isValid():
                 while data.next():
-                    label = toUnicode(data["?label"].toString())
-                    rlabel = label
-                    ontType = toUnicode(data["?range"].toString())
-                    displayType = ontType
+                    if shortOnt == "nie:contentSize":
+                        ontType = "size"
 
-        else:
-            # Information is available.
-            label = ontologiesInfo[i, 0]
-            rlabel = ontologiesInfo[i, 1]
-            ontType = ontologiesInfo[i, 2]
-            displayType = ontologiesInfo[i, 3]
+                    else:
+                        ontType = toUnicode(data["range"].toString()).split("#")[1]
 
-        return label, rlabel, ontType, displayType
+                    ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
+
+                print ontologiesInfo[-1]
+                    
+            i = -1
+
+        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
 
 
     def formatAsText(self, data = [], structure = [], queryTime = 0, stdout = False):
@@ -294,7 +303,7 @@ class cDataFormat():
                     value += column
 
             if uri != "":
-                #try:
+                try:
                     nepomukResource = Nepomuk.Resource(uri)
                     altLabel = nepomukResource.property(NOC('nao:altLabel')).toString()
                     fullName = nepomukResource.property(NOC('nco:fullname')).toString()
@@ -310,8 +319,8 @@ class cDataFormat():
                     if line[:2] == ", ":
                         line = line[2:]
 
-                #except:
-                #    line = value
+                except:
+                    line = value
 
             else:
                 for i in range(0, numColumns):
@@ -398,6 +407,51 @@ class cDataFormat():
 
         return "<a %s %s>%s</a>" % (title, href, value)
 
+
+    def fmtValue(self, value, valueType):
+        try:
+            if valueType == 'boolean':
+                result = value
+
+            elif valueType == 'date':
+                result = formatDate(value[:19])
+
+            #elif valueType == 'datep':
+            #    if value[-6:] ==  "-01-01":
+            #        result = value.replace('-01-01', '')
+
+            elif valueType == 'dateTime':
+                result = formatDateTime(value[:19])
+
+            #elif valueType == 'datetimep':
+            #    result = formatDateTime(value[:19], True)
+
+            elif valueType == 'int' or valueType == 'integer' or valueType == 'nonNegativeInteger':
+                result = "%d" % int(float(value))
+
+            elif valueType == 'float':
+                result = "%d" % float(value)
+
+            elif valueType == 'duration':
+                result = "%s" % datetime.timedelta(0, int(value), 0)
+
+            elif valueType == 'size':
+                result = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
+
+            elif valueType == 'string':
+                result = value
+
+            else:
+                result = value
+
+        except:
+            result = value
+            if valueType == "dateTime":
+                if result[-6:] ==  "-01-01":
+                    result = value.replace('-01-01', '')
+
+        return result
+        
 
     def readValues(self, resource, valuesName):
         values = []
@@ -637,7 +691,6 @@ class cDataFormat():
                 "WHERE {\n" \
                     "\t<" + uri + "> ?ont ?val .\n"\
                 "}\n"
-
         if stdout:
             print toUtf8(query)
 
@@ -658,42 +711,9 @@ class cDataFormat():
             defaultType = NOCR(Nepomuk.Resource(uri).type())
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
-                value = toUnicode(data["val"].toString())
-                valueType = lvalue(ontologyValueTypes, currOnt.lower().strip(), 0, 1)
-                if valueType == 'date':
-                    value = formatDate(value[:19])
-
-                elif valueType == 'datep':
-                    if value[-6:] ==  "-01-01":
-                        value = value.replace('-01-01', '')
-
-                elif valueType == 'datetime':
-                    value = formatDateTime(value[:19])
-
-                elif valueType == 'datetimep':
-                    value = formatDateTime(value[:19], True)
-
-                elif valueType == 'number':
-                    value = "%d" % int(float(value))
-
-                elif valueType == 'seconds':
-                    value = "%s" % datetime.timedelta(0,int(value),0)
-                    #i = 0
-                    #while True:
-                    #    if not value[i] in ("0", ":"):
-                    #        break
-                    #
-                    #    else:
-                    #        i += 1
-
-                    #value = value[i:]
-
-                elif valueType == 'size':
-                    value = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
-
-                #else:
-                    #pass
-
+                ontInfo = self.ontologyInfo(data["ont"].toString())
+                value = self.fmtValue(toUnicode(data["val"].toString()), \
+                            ontInfo[2])
                 if value[:9] == 'nepomuk:/':
                     resource = Nepomuk.Resource(value)
                     value = ''
@@ -778,7 +798,8 @@ class cDataFormat():
                         value = addLinksToText(value)
 
                 if value != '':
-                    processedData += [[currOnt, ontologyToHuman(currOnt), value]]
+                    #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
+                    processedData += [[currOnt, ontologyToHuman(ontInfo[1]), value]]
 
         text = ''
         if len(processedData) > 0:
@@ -914,12 +935,12 @@ class cDataFormat():
                         value += column
 
                 if uri != "":
-                    #try:
-                    if True:
+                    try:
+                    #if True:
                         line = self.formatHtmlLine(Nepomuk.Resource(uri))
 
-                    #except:
-                    else:
+                    except:
+                    #else:
                         line = self.htmlTableRow % (value, "", "")
 
                 else:
