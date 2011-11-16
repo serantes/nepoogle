@@ -338,7 +338,7 @@ class cDataFormat():
 
         # This is an exception.
         elif id == 'unplugged':
-            htmlLinkInfo = "<img %s src=\"file://%s\">" % (self.htmlImgStyle, iconDocumentInfo)
+            htmlLinkInfo = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\" src=\"file://%s\">" % (self.iconDocumentInfo)
             if par1 == '':
                 return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
                         % (par2[8:].split('/')[0], \
@@ -469,6 +469,15 @@ class cDataFormat():
                         if len(propertyValue) < 2:
                             propertyValue = "0" + propertyValue
 
+                    elif elements[0] == "nie:url":
+                        propertyValue = fromPercentEncoding(propertyValue)
+                        if propertyValue[:8] == "filex://":
+                            uuid = propertyValue[8:].split('/')[0]
+                            htmlLinkInfo = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\" src=\"file://%s\">" % (self.iconDocumentInfo)
+                            unpluggedLink = "[<b>Unplugged</b><a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]/" \
+                                                % (uuid, uuid, htmlLinkInfo)
+                            propertyValue = unpluggedLink + '/'.join(propertyValue[8:].split('/')[1:])
+
                     values += [[toUnicode(resource.uri()), propertyValue]]
 
             #else:
@@ -548,8 +557,14 @@ class cDataFormat():
                         displayValue = value[0]
                         
                     else:
-                        displayValue = value[1]
-                        
+                        if value[1][:17] == "[<b>Unplugged</b>":
+                            tmpSplit = value[1].split("]")
+                            formatValue += tmpSplit[0] + "]"
+                            displayValue = tmpSplit[1]
+
+                        else:
+                            displayValue = value[1]
+
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
                 else:
@@ -561,13 +576,15 @@ class cDataFormat():
                 if addOpenFile:
                     valuesTmp = self.readValues(resource, 'nie:url')
                     if valuesTmp != [] and valuesTmp[0] != [] and valuesTmp[0][1] != "":
-                        formatValue += " " + self.htmlLinkSystemRun % {"uri": valuesTmp[0][1]}
+                        if valuesTmp[0][1][0] != "[":
+                            formatValue += " " + self.htmlLinkSystemRun % {"uri": valuesTmp[0][1]}
 
                 if addOpenLocation:
                     valuesTmp = self.readValues(resource, 'nie:url')
                     if valuesTmp != [] and valuesTmp[0] != [] and valuesTmp[0][1] != "":
-                        url = os.path.dirname(valuesTmp[0][1])
-                        formatValue += " " + self.htmlLinkOpenLocation % {"uri": url}
+                        if valuesTmp[0][1][0] != "[":
+                            url = os.path.dirname(valuesTmp[0][1])
+                            formatValue += " " + self.htmlLinkOpenLocation % {"uri": url}
 
             if variable[:7].lower() == "sparql:":
                 data = data.replace("{SPARQL}" + variable[7:] + "{/SPARQL}", formatValue)
@@ -613,6 +630,7 @@ class cDataFormat():
                 #pass
 
         return icons
+        
 
     def formatHtmlLine(self, uri):
         nepomukResource = Nepomuk.Resource(uri)
@@ -643,6 +661,95 @@ class cDataFormat():
             line = ""
 
         return line
+
+
+    def formatAsHtml(self, param1 = None, structure = [], queryTime = 0, stdout = False):
+        if self.searchString[:9] == "nepomuk:/":
+            return self.formatResourceInfo()
+
+        htmlQueryTime = time.time()
+
+        text = self.htmlPageHeader % ("Query results")
+        text += self.htmlTableHeader
+        if vartype(param1) == "list":
+            #self.renderedDataText = ""
+            #self.renderedDataRows = 0
+            if self.data == []:
+                self.data = list(param1)
+                self.structure = list(structure)
+
+            rowsToRender = self.renderSize
+
+        else:
+            if param1 == "all":
+                rowsToRender = len(self.data)
+
+            elif param1 == "more":
+                rowsToRender = self.renderSize
+
+            else:
+                rowsToRender = 0
+
+        if self.renderedDataRows < len(self.data):
+            numColumns = len(self.structure)
+            for i in range(self.renderedDataRows, min(len(self.data), rowsToRender + self.renderedDataRows)):
+                row = self.data[i]
+                icons = ""
+                line = ""
+                value = ""
+                uri = ""
+                for i in range(0, numColumns):
+                    column = row[i]
+                    if column == '':
+                        pass
+
+                    elif column[:9] == 'nepomuk:/':
+                        uri = column
+
+                    else:
+                        if value != "":
+                            value += ', '
+
+                        value += column
+
+                if uri != "":
+                    try:
+                    #if True:
+                        line = self.formatHtmlLine(Nepomuk.Resource(uri))
+
+                    except:
+                    #else:
+                        line = self.htmlTableRow % (value, "", "")
+
+                else:
+                    for i in range(0, numColumns):
+                        if line != "":
+                            line += "<br />\n"
+
+                        line += "%s" % row[i]
+
+                    line = self.htmlTableRow % (line, "", "")
+
+                if line != '':
+                    self.renderedDataText += line + "\n"
+
+                self.renderedDataRows += 1
+
+        text += self.renderedDataText
+        if self.renderedDataRows < len(self.data):
+            text += '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
+                    '<td>%s of %s records</td><td></td><tr>' \
+                        % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data))
+
+        text += self.htmlTableFooter
+        text += "<br />\n" + self.htmlStadistics \
+                    % {'records': len(self.data), \
+                        'seconds': queryTime, \
+                        'sechtml': time.time() - htmlQueryTime}
+        text += self.htmlProgramInfo
+        text += self.htmlPageFooter
+
+        return text
 
 
     def formatResourceInfo(self, uri = "", knownShortcuts = [], ontologyValueTypes = [], stdout = False):
@@ -847,95 +954,6 @@ class cDataFormat():
         return output
 
         
-    def formatAsHtml(self, param1 = None, structure = [], queryTime = 0, stdout = False):
-        if self.searchString[:9] == "nepomuk:/":
-            return self.formatResourceInfo()
-        
-        htmlQueryTime = time.time()
-
-        text = self.htmlPageHeader % ("Query results")
-        text += self.htmlTableHeader
-        if vartype(param1) == "list":
-            #self.renderedDataText = ""
-            #self.renderedDataRows = 0
-            if self.data == []:
-                self.data = list(param1)
-                self.structure = list(structure)
-                
-            rowsToRender = self.renderSize
-
-        else:
-            if param1 == "all":
-                rowsToRender = len(self.data)
-
-            elif param1 == "more":
-                rowsToRender = self.renderSize
-
-            else:
-                rowsToRender = 0
-
-        if self.renderedDataRows < len(self.data):
-            numColumns = len(self.structure)
-            for i in range(self.renderedDataRows, min(len(self.data), rowsToRender + self.renderedDataRows)):
-                row = self.data[i]
-                icons = ""
-                line = ""
-                value = ""
-                uri = ""
-                for i in range(0, numColumns):
-                    column = row[i]
-                    if column == '':
-                        pass
-
-                    elif column[:9] == 'nepomuk:/':
-                        uri = column
-
-                    else:
-                        if value != "":
-                            value += ', '
-
-                        value += column
-
-                if uri != "":
-                    try:
-                    #if True:
-                        line = self.formatHtmlLine(Nepomuk.Resource(uri))
-
-                    except:
-                    #else:
-                        line = self.htmlTableRow % (value, "", "")
-
-                else:
-                    for i in range(0, numColumns):
-                        if line != "":
-                            line += "<br />\n"
-
-                        line += "%s" % row[i]
-
-                    line = self.htmlTableRow % (line, "", "")
-
-                if line != '':
-                    self.renderedDataText += line + "\n"
-
-                self.renderedDataRows += 1
-
-        text += self.renderedDataText
-        if self.renderedDataRows < len(self.data):
-            text += '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
-                    '<td>%s of %s records</td><td></td><tr>' \
-                        % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data))
-        
-        text += self.htmlTableFooter
-        text += "<br />\n" + self.htmlStadistics \
-                    % {'records': len(self.data), \
-                        'seconds': queryTime, \
-                        'sechtml': time.time() - htmlQueryTime}
-        text += self.htmlProgramInfo
-        text += self.htmlPageFooter
-
-        return text
-    
-    
     def formatData(self, data = [], structure = [], queryTime = 0, stdout = False):
         if self.outFormat == 1:
             return self.formatAsText(data = [], structure = [], queryTime = 0, stdout = False)
