@@ -632,9 +632,9 @@ class Nepoogle(QWidget):
     def goBackward(self):
         #print "Go backward"
         if (self.queriesIndex > 0):
-            self.queriesIndex -= 1
+            if self.leSearch.text() == self.cache[self.queriesIndex].searchString:
+                self.queriesIndex -= 1
 
-        if self.leSearch.setText != self.cache[self.queriesIndex].searchString:
             self.setCursor(Qt.BusyCursor)
             self.leSearch.setText(self.cache[self.queriesIndex].searchString)
             self.pendingQuery = False
