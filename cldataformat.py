@@ -470,7 +470,7 @@ class cDataFormat():
                             propertyValue = "0" + propertyValue
 
                     elif elements[0] == "nie:url":
-                        propertyValue = fromPercentEncoding(propertyValue)
+                        #propertyValue = fromPercentEncoding(propertyValue)
                         if propertyValue[:8] == "filex://":
                             uuid = propertyValue[8:].split('/')[0]
                             htmlLinkInfo = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\" src=\"file://%s\">" % (self.iconDocumentInfo)
@@ -561,7 +561,7 @@ class cDataFormat():
                             tmpSplit = value[1].split("]")
                             formatValue += tmpSplit[0] + "]"
                             displayValue = tmpSplit[1]
-
+                            
                         else:
                             displayValue = value[1]
 
@@ -576,13 +576,13 @@ class cDataFormat():
                 if addOpenFile:
                     valuesTmp = self.readValues(resource, 'nie:url')
                     if valuesTmp != [] and valuesTmp[0] != [] and valuesTmp[0][1] != "":
-                        if valuesTmp[0][1][0] != "[":
+                        if valuesTmp[0][1][:17] != "[<b>Unplugged</b>":
                             formatValue += " " + self.htmlLinkSystemRun % {"uri": valuesTmp[0][1]}
 
                 if addOpenLocation:
                     valuesTmp = self.readValues(resource, 'nie:url')
                     if valuesTmp != [] and valuesTmp[0] != [] and valuesTmp[0][1] != "":
-                        if valuesTmp[0][1][0] != "[":
+                        if valuesTmp[0][1][:17] != "[<b>Unplugged</b>":
                             url = os.path.dirname(valuesTmp[0][1])
                             formatValue += " " + self.htmlLinkOpenLocation % {"uri": url}
 
