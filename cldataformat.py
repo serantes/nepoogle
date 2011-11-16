@@ -34,27 +34,6 @@ from clsparql import *
 from lfunctions import *
 
 #BEGIN cldataformat.py
-# This must be outside class to avoid lost this information creating and releasing objects.
-global ontologiesInfo
-ontologiesInfo = []
-    #['nao:created', 'datetime'], \
-    #['nao:lastmodified', 'datetime'], \
-    #['nao:numericrating', 'number'], \
-    #['nfo:averagebitrate', 'number'], \
-    #['nfo:duration', 'seconds'], \
-    #['nfo:height', 'number'], \
-    #['nfo:samplerate', 'number'], \
-    #['nfo:width', 'number'], \
-    #['nie:contentcreated', 'datetimep'], \
-    #['nie:contentsize', 'size'], \
-    #['nie:lastmodified', 'datetime'], \
-    #['nmm:episodenumber', 'number'], \
-    #['nmm:releasedate', 'datep'], \
-    #['nmm:season', 'number'], \
-    #['nmm:setnumber', 'number'], \
-    #['nmm:tracknumber', 'number'], \
-    #['nuao:usagecount', 'number'] \
-
 _CONST_ICON_DOLPHIN = 1
 _CONST_ICON_KONQUEROR = 2
 _CONST_ICON_PROPERTIES = 4
@@ -171,6 +150,7 @@ class cDataFormat():
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
+    defaultOntologyFormat = "{uri|l|of}[<br /><b>Full name</b>: {nco:fullname}][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]"
     ontologyFormat = [ \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
@@ -188,6 +168,12 @@ class cDataFormat():
                             "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
                             "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nmm:TVSeries", \
+                            "{nie:title|l|s:tvserie}<br />", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmm:TVShow", \
+                            "[S{nmm:season}E{nmm:episodeNumber} - ]{nie:title|l|of|ol}<br />", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
@@ -219,6 +205,7 @@ class cDataFormat():
                             "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE] \
                     ]
+                    #tvshow
 
 
     def __init__(self, searchString = "", model = None):
@@ -230,57 +217,6 @@ class cDataFormat():
             self.model = model
 
     
-    def ontologyInfo(self, ontology = ''):
-        global ontologiesInfo
-        
-        if ((self.model == None) or (ontology == "")):
-            return ["", "", ""]
-
-        shortOnt = NOCR(ontology)
-        i = lindex(ontologiesInfo, shortOnt, column = 0)
-        if i == None:
-            # Data tipes
-            #SELECT DISTINCT ?range
-            #WHERE {
-            #    [] rdfs:range ?range . FILTER(REGEX(?range, "^http://www.w3.org/2001/XMLSchema")) .
-            #}
-            #ORDER BY ?range
-            #Result: boolean, date, dateTime, duration, float, int, integer, nonNegativeInteger, string
-            #http://www.w3.org/2001XMLSchema#boolean
-            #SELECT DISTINCT ?range
-            #WHERE {
-            #    nao:userVisible rdfs:range ?range .
-            #}
-            #ORDER BY ?range
-            #SELECT DISTINCT *
-            #WHERE {
-            #    ?r nao:userVisible ?v . FILTER(?v != "false"^^xsd:boolean) .
-            #}
-
-            # Must search for ontology.
-            query = "SELECT ?label ?range\n" \
-                    "WHERE {\n" \
-                        "\t<%(ont)s> rdfs:range ?range\n" \
-                        "\tOPTIONAL { <%(ont)s> rdfs:label ?label . }\n" \
-                    "}" % {"ont": ontology}
-            data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-            if data.isValid():
-                while data.next():
-                    if shortOnt == "nie:contentSize":
-                        ontType = "size"
-
-                    else:
-                        ontType = toUnicode(data["range"].toString()).split("#")[1]
-
-                    ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
-
-                print ontologiesInfo[-1]
-                    
-            i = -1
-
-        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
-
-
     def formatAsText(self, data = [], structure = [], queryTime = 0, stdout = False):
         text = ""
         numColumns = len(structure)
@@ -501,10 +437,10 @@ class cDataFormat():
                 else:
                     propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
                     #TODO: Some special formats, this must be improved.
-                    if elements[0] == "nmm:trackNumber":
+                    if elements[0] in ("nmm:trackNumber", "nmm:season", "nmm:episodeNumber"):
                         if len(propertyValue) < 2:
                             propertyValue = "0" + propertyValue
-                        
+
                     values += [[toUnicode(resource.uri()), propertyValue]]
 
             #else:
@@ -658,7 +594,7 @@ class cDataFormat():
         
         i = lindex(self.ontologyFormat, itemType, column = 0)
         if (i == None):
-            formatPattern = "{uri|l|of}"
+            formatPattern = self.defaultOntologyFormat
             iconsAssociated = _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE
 
         else:
@@ -687,7 +623,7 @@ class cDataFormat():
         if uri == "":
             return self.renderedDataText
 
-        query = "SELECT DISTINCT ?x ?ont ?val\n" \
+        query = "SELECT DISTINCT ?ont ?val\n" \
                 "WHERE {\n" \
                     "\t<" + uri + "> ?ont ?val .\n"\
                 "}\n"
@@ -711,7 +647,7 @@ class cDataFormat():
             defaultType = NOCR(Nepomuk.Resource(uri).type())
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
-                ontInfo = self.ontologyInfo(data["ont"].toString())
+                ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), \
                             ontInfo[2])
                 if value[:9] == 'nepomuk:/':

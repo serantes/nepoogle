@@ -52,6 +52,8 @@ knownOntologies = [ \
                     ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
                 ]
 
+ontologiesInfo = []
+
 def NOC(name = '', returnQUrl = False):
     ontology, property = name.strip().split(':')
     date = lvalue(knownOntologies, ontology, 0, 1)
@@ -76,7 +78,7 @@ def NOC(name = '', returnQUrl = False):
 def NOCR(ontology = ''):
     if ontology == '':
         return ""
-
+        
     return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('rdf-schema:', 'rdfs:')
 
 
@@ -122,6 +124,60 @@ def ontologyToHuman(ontology = '', reverse = False):
             result = 'Episodes'
 
     return result
+
+
+def ontologyInfo(ontology = '', model = None):
+    global ontologiesInfo
+    
+    if (ontology == ""):
+        return ["", "", ""]
+
+    if (model == None):
+        model = Nepomuk.ResourceManager.instance().mainModel()
+
+    shortOnt = NOCR(ontology)
+    i = lindex(ontologiesInfo, shortOnt, column = 0)
+    if i == None:
+        # Data tipes
+        #SELECT DISTINCT ?range
+        #WHERE {
+        #    [] rdfs:range ?range . FILTER(REGEX(?range, "^http://www.w3.org/2001/XMLSchema")) .
+        #}
+        #ORDER BY ?range
+        #Result: boolean, date, dateTime, duration, float, int, integer, nonNegativeInteger, string
+        #http://www.w3.org/2001XMLSchema#boolean
+        #SELECT DISTINCT ?range
+        #WHERE {
+        #    nao:userVisible rdfs:range ?range .
+        #}
+        #ORDER BY ?range
+        #SELECT DISTINCT *
+        #WHERE {
+        #    ?r nao:userVisible ?v . FILTER(?v != "false"^^xsd:boolean) .
+        #}
+
+        # Must search for ontology.
+        query = "SELECT ?label ?range\n" \
+                "WHERE {\n" \
+                    "\t<%(ont)s> rdfs:range ?range\n" \
+                    "\tOPTIONAL { <%(ont)s> rdfs:label ?label . }\n" \
+                "}" % {"ont": ontology}
+        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        if data.isValid():
+            while data.next():
+                if shortOnt == "nie:contentSize":
+                    ontType = "size"
+
+                else:
+                    ontType = toUnicode(data["range"].toString()).split("#")[1]
+
+                ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
+
+        i = -1
+
+    return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
+
+
 
 
 def toN3(url = ''):
