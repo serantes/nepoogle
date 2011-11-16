@@ -636,7 +636,7 @@ class cDataFormat():
         #imageViewer = "<img title=\"%(url)s\" src=\"%(url)s\" style=\"width:400px;\" "\
         #                "onLoad=\"new viewer({image: this, frame: ['400px','250px']});\"/>"
         output = self.htmlPageHeader % {'title': 'Resource viewer', 'script': script} \
-                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;&nbsp;%(navigator)s</h2><hr>' \
+                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;&nbsp;%(navigator)s<cached /></h2><hr>' \
                         % {'uri': uri, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlViewerTableHeader
 

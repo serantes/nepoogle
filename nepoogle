@@ -225,10 +225,12 @@ class cWebView(QWebView):
 #
 class Nepoogle(QWidget):
     cache = []
+    cacheViewer = []
     model = None
     navigationData = []
     pendingQuery = False
     queriesIndex = -1
+    queryMethod = None
     renderedCache = ''
     renderedRows = 0
     renderSize = 50
@@ -236,7 +238,6 @@ class Nepoogle(QWidget):
     resultStructure = []
     resultTime = None
     sparql = None
-    typedQuery = True
     verboseMode = False
     warningsList = []
 
@@ -469,7 +470,13 @@ class Nepoogle(QWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             self.pendingQuery = True
-            self.typedQuery = True
+            self.queryMethod = "manual"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
+        elif event.key() == Qt.Key_F5:
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
                 
@@ -514,7 +521,7 @@ class Nepoogle(QWidget):
                 #else:
                     #pass
 
-                self.linkClicked(QUrl(self.navigationData[idx][0]), True)
+                self.linkClicked(QUrl(self.navigationData[idx][0]), False)
             
         elif url[:9] == 'nepomuk:/':
             self.leSearch.setText(url)
@@ -1220,9 +1227,20 @@ class Nepoogle(QWidget):
         try:
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
-                oDataFormat = cDataFormat(searchString, self.model)
-                output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
-                if self.typedQuery:
+                if self.queryMethod in ("manual", "refresh"):
+                    cachedData = None
+
+                else:
+                    cachedData = lvalue(self.cacheViewer, searchString, 0, 1)
+
+                if cachedData == None:
+                    oDataFormat = cDataFormat(searchString, self.model)
+                    output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
+
+                else:
+                    output = cachedData
+                    
+                if self.queryMethod == "manual":
                     # Cache must be trunked in current position if query changed.
                     if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
                         if self.cache[self.queriesIndex].searchString != searchString:
@@ -1236,6 +1254,14 @@ class Nepoogle(QWidget):
                         self.cache[self.queriesIndex] = oDataFormat
 
                     self.navigationData = []
+
+                if cachedData == None:
+                    i = lindex(self.cacheViewer, searchString, 0)
+                    if i == None:
+                        self.cacheViewer += [[searchString, output.replace("<cached />", " (cached)")]]
+
+                    else:
+                        self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
               
             elif searchString != '':
                 if searchEngine == 0:
@@ -1301,7 +1327,7 @@ class Nepoogle(QWidget):
                                 }
 
         self.pendingQuery = False
-        self.typedQuery = False
+        self.queryMethod = None
         self.wvOutput.setHtml(output)
         self.setCursor(Qt.ArrowCursor)
         self.leSearch.readOnly = False
