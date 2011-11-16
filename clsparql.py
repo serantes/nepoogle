@@ -74,9 +74,8 @@ def NOC(name = '', returnQUrl = False):
 
 
 def NOCR(ontology = ''):
-    result = ''
     if ontology == '':
-        return result
+        return ""
 
     return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('rdf-schema:', 'rdfs:')
 
