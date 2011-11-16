@@ -46,8 +46,7 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
                         _CONST_ICON_SYSTEM_RUN)
 
 class cDataFormat():
-
-    columnCount = 3
+    columnsCount = 3
     data = []
     model = None
     outFormat = 1  # 1- Text, 2- Html
@@ -98,8 +97,13 @@ class cDataFormat():
                             "border=\"1\" cellpadding=\"1\" cellspacing=\"0\">" \
                         "<tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
+
+    #TODO: This must be automatic.
+    # This is not automatically generated and is linked to self.columnsCount.
+    # To add a column self.columnsCount must be changed and this properties too.
+    # Search form columnsformat for more changes.
     htmlTableColumn1 = "<td>%s</td>"
-    htmlTableColumn2 = "<td width=\"40px\">%s</td>"
+    htmlTableColumn2 = "<td>%s</td>"
     htmlTableColumn3 = "<td width=\"65px\">%s</td>"
     htmlTableRow = "<tr>" + htmlTableColumn1 + htmlTableColumn2 + htmlTableColumn3 + "</tr>"
 
@@ -150,62 +154,83 @@ class cDataFormat():
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
-    defaultOntologyFormat = "{uri|l|of}[<br /><b>Full name</b>: {nco:fullname}][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]"
+    #TODO: columnsformat. This is linked to self.columnsCount.
     ontologyFormat = [ \
+                        [None, \
+                            "{uri|l|of}[<br /><b>Full name</b>: {nco:fullname}][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]" \
+                            "[<br /><b>Rating</b>: {nao:numericRating}]" \
+                            "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
+                            "[<br /><b>Description</b>: {nie:description}]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
                             "[<br /><b>Rating</b>: {nao:numericRating}]" \
                             "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
                             "[<br /><b>Description</b>: {nie:description}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
                             "{nie:title|l|s:album}<br />" \
                             "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
                             "<b>Title</b>: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
                             "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
                             "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
                             "{nie:title|l|s:tvserie}<br />", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
                             "[S{nmm:season}E{nmm:episodeNumber} - ]{nie:title|l|of|ol}<br />", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileDataObject", \
                             "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
                             "{nfo:fileName|l|of|ol}[<br />url: {nie:url}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:RasterImage", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Video", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
                         ["nao:Tag", \
                             "{nao:prefLabel|l|of|ol|s:hasTag}[<br />Other labels: {nao:altLabel}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:Contact", \
                             "{nco:fullname|l|s:contact}[<br />Other labels: {nao:altLabel}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nexif:Photo", \
                             "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nie:InformationElement", \
                             "{nfo:fileName|l|of|ol}[<br />Other labels: {nao:altLabel}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["rdfs:Resource", \
                             "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE] \
                     ]
-                    #tvshow
 
 
     def __init__(self, searchString = "", model = None):
@@ -434,6 +459,9 @@ class cDataFormat():
                 if elements[0] == "uri":
                     values += [[toUnicode(resource.uri()), toUnicode(resource.uri())]]
 
+                elif elements[0] == "type":
+                    values += [[toUnicode(resource.uri()), NOCR(nepomukResource.resourceType().toString())]]
+
                 else:
                     propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
                     #TODO: Some special formats, this must be improved.
@@ -478,7 +506,7 @@ class cDataFormat():
         return data, variables, optionals, optionalsEmpty
 
         
-    def formatResource(self, resource, itemType, pattern):
+    def formatResource(self, resource, pattern):
         # Variables substitution.
         data, variables, optionals, optionalsEmpty = self.processFormatPattern(pattern)
         for variable in variables:
@@ -562,7 +590,7 @@ class cDataFormat():
         return data.strip()
         
         
-    def getResourceIcons(self, resource, itemType, iconsAssociated):
+    def getResourceIcons(self, resource, iconsAssociated):
         icons = ""
         for i in _CONST_ICONS_LIST:
             if (i & iconsAssociated):
@@ -588,33 +616,31 @@ class cDataFormat():
 
     def formatHtmlLine(self, uri):
         nepomukResource = Nepomuk.Resource(uri)
-        uri = toUnicode(nepomukResource.uri())
         itemType = NOCR(nepomukResource.resourceType().toString())
-        #itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
+        idx = lindex(self.ontologyFormat, itemType, column = 0)
+        if (idx == None):
+            idx = 0
         
-        i = lindex(self.ontologyFormat, itemType, column = 0)
-        if (i == None):
-            formatPattern = self.defaultOntologyFormat
-            iconsAssociated = _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE
+        isValid = False
+        for i in range(1, self.columnsCount + 1):
+            exec "pattern = self.ontologyFormat[%s][%s]" % (idx, i)
+            if vartype(pattern) == "int":
+                exec "column%s = self.getResourceIcons(nepomukResource, pattern)" % i
 
-        else:
-            formatPattern = self.ontologyFormat[i][1]
-            iconsAssociated = self.ontologyFormat[i][2]
+            else:
+                if pattern == "{type}":
+                    exec "column%s = ontologyToHuman(itemType)" % i
 
-        # formatPattern.
-        displayInfo = self.formatResource(nepomukResource, itemType, formatPattern)
-
-        if displayInfo == "":
-            line = ""
-
-        else:
-            # Icons
-            icons = self.getResourceIcons(nepomukResource, itemType, iconsAssociated)
-
-            column1 = displayInfo
-            column2 = itemType.split(":")[1]
-            column3 = icons
+                else:
+                    exec "column%s = self.formatResource(nepomukResource, pattern)" % i
+                    isValid = True
+                    
+        if isValid:
+            #TODO: columnsformat, this must be automatic.
             line = self.htmlTableRow % (column1, column2, column3)
+
+        else:
+            line = ""
 
         return line
 
