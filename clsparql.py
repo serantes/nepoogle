@@ -178,8 +178,6 @@ def ontologyInfo(ontology = '', model = None):
     return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
 
 
-
-
 def toN3(url = ''):
     if url[0] == '^':
         result = '^' + QUrl(url[1:]).toEncoded()
@@ -189,6 +187,125 @@ def toN3(url = ''):
 
     return result
 
+
+class cResource():
+
+    data = None
+    model = Nepomuk.ResourceManager.instance().mainModel()
+    ovPrefix = "_ov_"
+    ontologyType = None
+    stdout = False
+    uri = None
+    
+    
+    def __init__(self, uri = None):
+
+        if uri != None:
+            self.uri = uri
+            self.read()
+
+
+    def __del__(self):
+        pass
+
+
+    def read(self, uri = None):
+        if uri == self.uri == None:
+            return False
+
+        if uri == None:
+            uri = self.uri
+
+        query = "SELECT DISTINCT ?ont ?val\n" \
+                "WHERE {\n" \
+                    "\t<" + uri + "> ?ont ?val .\n"\
+                "}\n"
+        if self.stdout:
+            print toUtf8(query)
+
+        self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        if self.data.isValid():
+            while self.data.next():
+                ontology = self.data["ont"].toString()
+                name = self.ovPrefix + NOCR(ontology).replace(":", "_1_").replace("-", "_2_")
+                value = toUnicode(self.data["val"].toString())
+                if not self.__dict__.has_key(name):
+                    exec("self." + name + " = []")
+
+                valueType = ontologyInfo(ontology)[2]
+                if valueType == 'boolean':
+                    if value.lower() == "false" or value.lower() == "0":
+                        exec("self." + name + " += [False]")
+
+                    else:
+                        exec("self." + name + " += [True]")
+
+                elif valueType == 'date':
+                    exec("self." + name + " += ['" + value + "']")
+                    
+                elif valueType == 'dateTime':
+                    exec("self." + name + " += ['" + value + "']")
+                    
+                elif valueType == 'int' or valueType == 'integer' or valueType == 'nonNegativeInteger':
+                    exec("self." + name + " += [" + value + "]")
+                    
+                elif valueType == 'float':
+                    exec("self." + name + " += [" + value + "]")
+                    
+                elif valueType == 'duration':
+                    exec("self." + name + " += [" + value + "]")
+                    
+                elif valueType == 'size':
+                    exec("self." + name + " += [" + value + "]")
+                    
+                elif valueType == 'string':
+                    exec("self." + name + " += ['" + value + "']")
+                    
+                else:
+                    if ontology == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
+                        #SELECT DISTINCT ?v
+                        #WHERE {
+                        #    [] <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v
+                        #}
+                        #ORDER BY ?v
+                        if self.ontologyType == []:
+                            self.ontologyType = [value]
+
+                        else:
+                            if value.find("nmm#") >= 0:
+                                self.ontologyType = value
+                        
+                    exec("self." + name + " += ['" + value + "']")
+
+
+    def getValue(self, ontology = None):
+        if ontology == None:
+            result = None
+
+        else:
+            try:
+                exec("values = self." + self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_"))
+                result = values[0]
+                for value in range(1, len(values)):
+                    result += ", " + value
+                
+            except:
+                result = ""
+
+        return result
+
+
+    def getAllValues(self):
+        values = []
+        for name in self.__dict__.keys():
+            if name[0:len(self.ovPrefix)] == self.ovPrefix:
+                values += [[name.replace(self.ovPrefix, "").replace("_1_", ":").replace("_2_", "-"), self.__dict__[name]]]
+
+        return values
+
+
+    def resourceType(self):
+        return ""
 
 class cSparqlBuilder():
 

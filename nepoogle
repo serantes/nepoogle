@@ -1373,6 +1373,20 @@ def buildHelp():
 
 def main(args):
 
+    #uri = "nepomuk:/res/0302b256-2d67-482e-a290-5b87d2ceceab"
+    #oResource = cResource(uri)
+    #print "Alt label:", oResource.getValue('nao:altLabel')
+    #print "Fullname:", oResource.getValue('nco:fullname')
+    #print "Itendifier:", oResource.getValue('nao:identifier')
+    #print "Type:", oResource.ontologyType
+    #print "Pref label:", oResource.getValue('nao:prefLabel')
+    #print "Title:", oResource.getValue('nie:title')
+    #print "Url:", oResource.getValue('nie:url')
+    #values = oResource.getAllValues()
+    #for value in values:
+        #print value
+        
+    #return
     #appName = PROGRAM_NAME
     #catalog = PROGRAM_NAME
     #programName = ki18n(PROGRAM_NAME)
