@@ -78,9 +78,11 @@ class cDataFormat():
                         "    tr {%(tr_style)s}\n" \
                         "    p {%(p_style)s}\n" \
                         "</style>\n" \
+                        "%(scripts)s\n" \
                         "</head>\n" \
                         "<body>\n" \
                         % {"title": "%s", \
+                            "scripts": "%s", \
                             "body_style": "font-size:small;", \
                             "p_style": "font-size:small;", \
                             "tr_style": "font-size:small;" \
@@ -88,7 +90,7 @@ class cDataFormat():
     htmlPageFooter = "</body>\n" \
                         "</html>"
 
-    htmlProgramInfo =  "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
+    htmlProgramInfo =  "--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
                         % {'name': "nepoogle", \
                             'version': "0.7git", \
                             'date': "2011-11-xx" \
@@ -128,14 +130,14 @@ class cDataFormat():
     htmlLinkKonqueror = "<a title=\"Open with Konqueror\" href=\"konq:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconKonqueror) \
                             + "</a>"
-    htmlLinkNavigateFirst = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            % {"to": "first", "style": htmlStyleNavigate, "icon": iconNavigateFirst}
-    htmlLinkNavigateLast = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            % {"to": "last", "style": htmlStyleNavigate, "icon": iconNavigateLast}
-    htmlLinkNavigatePrevious = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            % {"to": "previous", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
-    htmlLinkNavigateNext = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            % {"to": "next", "style": htmlStyleNavigate, "icon": iconNavigateNext}
+    htmlLinkNavigateFirst = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "first", "hotkey": "Ctrl+PgUp", "style": htmlStyleNavigate, "icon": iconNavigateFirst}
+    htmlLinkNavigateLast = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "last", "hotkey": "Ctrl+PgDown", "style": htmlStyleNavigate, "icon": iconNavigateLast}
+    htmlLinkNavigatePrevious = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "previous", "hotkey": "Ctrl+Left", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
+    htmlLinkNavigateNext = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
+                            % {"to": "next", "hotkey": "Ctrl+Right", "style": htmlStyleNavigate, "icon": iconNavigateNext}
     htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
                                 + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconFileManager) \
                                 + "</a>"
@@ -670,7 +672,7 @@ class cDataFormat():
 
         htmlQueryTime = time.time()
 
-        text = self.htmlPageHeader % ("Query results")
+        text = self.htmlPageHeader % ("Query results", "")
         text += self.htmlTableHeader
         if vartype(param1) == "list":
             #self.renderedDataText = ""
@@ -747,7 +749,7 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        text += self.htmlProgramInfo
+        text += "<br />" + self.htmlProgramInfo
         text += self.htmlPageFooter
 
         return text
@@ -772,8 +774,7 @@ class cDataFormat():
         else:
             script = ""
             
-        output = self.htmlPageHeader % {'title': 'Resource viewer'} \
-                    + script \
+        output = self.htmlPageHeader % ('Resource viewer', script) \
                     + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;&nbsp;%(navigator)s<cached /></h2><hr>' \
                         % {'uri': uri, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlViewerTableHeader
@@ -976,6 +977,7 @@ class cDataFormat():
                 output += "<p><video src=\"" + video + "\" controls preload>" \
                             "No video support</video></p>"
 
+        output += self.htmlProgramInfo
         output += self.htmlPageFooter
 
         if stdout:
@@ -995,6 +997,5 @@ class cDataFormat():
 
         else:
             return ""
-        
         
 #END cldataformat.py
