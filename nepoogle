@@ -479,12 +479,31 @@ class Nepoogle(QWidget):
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
+
+        elif event.modifiers() == Qt.ControlModifier:
+            if event.key() == Qt.Key_PageUp:
+                self.linkClicked(QUrl("navigate:/first"))
+
+            elif event.key() == Qt.Key_PageDown:
+                self.linkClicked(QUrl("navigate:/last"))
+
+            elif event.key() == Qt.Key_Left:
+                self.linkClicked(QUrl("navigate:/previous"))
+
+            elif event.key() == Qt.Key_Right:
+                self.linkClicked(QUrl("navigate:/next"))
+
+            #else
+                #pass
                 
         elif event.key() == Qt.Key_Escape:
             self.close()
-            
+
         #elif event.key() == QKeySequence("Ctrl+E"):
         #    self.leSearch.keyPressEvent(self, event)
+
+        #else
+            #pass
 
     
     def linkClicked(self, url, forceExec = False):
