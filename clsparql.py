@@ -241,7 +241,7 @@ class cResource():
                         exec("self." + name + " += [True]")
 
                 elif valueType == 'date':
-                    exec("self." + name + " += ['" + value + "']")
+                    exec("self." + name + " += [\"" + value + "\"]")
                     
                 elif valueType == 'dateTime':
                     exec("self." + name + " += ['" + value + "']")
@@ -259,24 +259,19 @@ class cResource():
                     exec("self." + name + " += [" + value + "]")
                     
                 elif valueType == 'string':
-                    exec("self." + name + " += ['" + value + "']")
+                    exec("self." + name + " += [\"" + value + "\"]")
                     
                 else:
-                    if ontology == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
-                        #SELECT DISTINCT ?v
-                        #WHERE {
-                        #    [] <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v
-                        #}
-                        #ORDER BY ?v
-                        if self.ontologyType == []:
-                            self.ontologyType = [value]
+                    exec("self." + name + " += [\"" + value + "\"]")
 
-                        else:
-                            if value.find("nmm#") >= 0:
-                                self.ontologyType = value
-                        
-                    exec("self." + name + " += ['" + value + "']")
-
+        #TODO: try calculate this value.
+        ##SELECT DISTINCT ?v
+        ##WHERE {
+        ##    [] <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v
+        ##}
+        ##ORDER BY ?v
+        self.resourceType = Nepomuk.Resource(uri).resourceType().toString()
+        
 
     def getValue(self, ontology = None):
         if ontology == None:
@@ -284,15 +279,20 @@ class cResource():
 
         else:
             try:
+                #print ontology, "values = self." + self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
                 exec("values = self." + self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_"))
                 result = values[0]
-                for value in range(1, len(values)):
-                    result += ", " + value
+                for i in range(1, len(values)):
+                    result += ", " + values[i]
                 
             except:
                 result = ""
 
         return result
+
+
+    def property(self, ontology = None):
+        return toUnicode(str(self.getValue(NOCR(ontology))))
 
 
     def getAllValues(self):
