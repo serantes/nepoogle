@@ -1,3 +1,13 @@
+v07 -- 2011/11/19
+-BUG: Fixed image files with upper case extension was not displayed in the resource viewer.
+-CHANGE: Renamed shortcut "movie" to "movies" for coherence.
+-CHANGE: Html was totally rewrited and supports templates to display information.
+-NEW: Added a cache for queries and rendered results, use F5 to refresh.
+-NEW: Added "height" and "width" shorcuts for image and video search.
+-NEW: Added support to Nepomuk::Query:QueryParser() engine using "e0" prefix.
+-NEW: Added navigator icons in resource viewer.
+-NEW: Added preview to audio and video files in resource viewer using Qt's QWebView HTML5 capabilities.
+
 v06 -- 2011/10/29
 -BUG: Fixed [Errno 5] Input/output error calling sometimes program without console.
 -BUG: Fixed not working prefixes "+" and "-" in commands.
