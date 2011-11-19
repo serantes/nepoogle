@@ -79,26 +79,13 @@ from PyKDE4.kdeui import *
 #       Botón de eliminar todos.
 #TODO: añadir soporte a --connect, --disconnect, --daemonize y moverlos a Nepoogle
 
-PROGRAM_URL = sys.argv[0]
-PROGRAM_NAME = os.path.basename(sys.argv[0])
-PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
-PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
-PROGRAM_VERSION_VERSION = 'v0.7'
-PROGRAM_VERSION_DATE = '2011-11-19'
-PROGRAM_AUTHOR_NAME = 'Ignacio Serantes'
-PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
-PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
-                        % {'name': PROGRAM_NAME, \
-                            'version': PROGRAM_VERSION_VERSION, \
-                            'date': PROGRAM_VERSION_DATE \
-                            }
+#IF BUILD
+#INCLUDE lglobals.py
+#ELSE
+from lglobals import *
+#ENDIF
 
-gettext.bindtextdomain(PROGRAM_NAME, '') #'/path/to/my/language/directory')
-gettext.textdomain(PROGRAM_NAME)
 _ = gettext.gettext
-#gettext.translation(PROGRAM_NAME, languages=['es']).install()
-
-DEFAULT_ENGINE = 1
 
 #IF BUILD
 #INCLUDE lfunctions.py 
@@ -1390,15 +1377,15 @@ def buildHelp():
     print "%(name)s %(version)s (%(date)s)\n" \
               % {'name': PROGRAM_NAME, 'version': PROGRAM_VERSION_VERSION, 'date': PROGRAM_VERSION_DATE}
               
-    print "Usage: %s command | query\n" \
+    print "Usage: %s [command ] [query]\n" \
           "\n" \
           "commands:\n" \
-          "  --help\t\t--\tShows this help\n" \
-          "  --gui\t\t\t--\tForce gui mode in console mode\n" \
-          "  --verbose=MODE\t--\tMode: ON, OFF (defaults ON with --gui parameter)\n" \
+          "  --help           -- Shows this help\n" \
+          "  --gui[=MODE]     -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
+          "  --verbose[=MODE] -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
           "\n" \
           "query:\n" \
-          "  Consult the help in gui mode\n" \
+          "  Query syntax documentation is available in the gui mode help\n" \
           % PROGRAM_NAME
   
 
@@ -1438,8 +1425,19 @@ def main(args):
             buildHelp()
             quit()
         
-        elif parameter.lower() == '--gui':
-            gui = True
+        elif parameter.lower()[:5] == '--gui':
+            paramValue = parameter.lower()[5:]
+            if paramValue == "" or paramValue == "=on":
+                gui = True
+
+            elif paramValue == "=off":
+                gui = False
+
+            else:
+                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                buildHelp()
+                quit()
+                
             continue
         
         elif parameter.lower()[:9] == '--verbose':
@@ -1453,6 +1451,11 @@ def main(args):
                 
             elif paramValue == '=off':
                 verboseMode = False
+
+            else:
+                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                buildHelp()
+                quit()
                 
             continue
         

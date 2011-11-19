@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from clsparql import *
+from lglobals import *
 
 class Test_cSparqlBuilder(unittest.TestCase):
 
@@ -26,7 +27,7 @@ class Test_cSparqlBuilder(unittest.TestCase):
                 ]
 
     basicQueries = [\
-                        [unicode('4minute', 'utf-8'), 270, 6], \
+                        [unicode('4minute', 'utf-8'), 274, 6], \
                         [unicode('película', 'utf-8'), 128, 6], \
                         [unicode('+película', 'utf-8'), 118, 6], \
                         [unicode('宇多田', 'utf-8'), 176, 6] \

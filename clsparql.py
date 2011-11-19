@@ -32,9 +32,8 @@ from PyKDE4.soprano import *
 from PyQt4.QtGui import *
 
 from lfunctions import *
+from lglobals import *
 
-gettext.bindtextdomain("nepoogle", '') #'/path/to/my/language/directory')
-gettext.textdomain("nepoogle")
 _ = gettext.gettext
 
 #BEGIN clsparql.py

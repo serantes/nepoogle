@@ -32,6 +32,9 @@ from PyKDE4.soprano import *
 
 from clsparql import *
 from lfunctions import *
+from lglobals import *
+
+_ = gettext.gettext
 
 #BEGIN cldataformat.py
 _CONST_ICON_DOLPHIN = 1
@@ -46,6 +49,7 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
                         _CONST_ICON_SYSTEM_RUN)
 
 class cDataFormat():
+        
     columnsCount = 3
     enableImageViewer = True
     data = []
@@ -90,11 +94,7 @@ class cDataFormat():
     htmlPageFooter = "</body>\n" \
                         "</html>"
 
-    htmlProgramInfo =  "--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
-                        % {'name': "nepoogle", \
-                            'version': "0.7git", \
-                            'date': "2011-11-xx" \
-                            }
+    htmlProgramInfo =  PROGRAM_HTML_POWERED
                             
     htmlTableHeader = "<table style=\"text-align:left; width: 100%;\" " \
                             "border=\"1\" cellpadding=\"1\" cellspacing=\"0\">" \

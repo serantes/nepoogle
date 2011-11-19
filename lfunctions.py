@@ -28,6 +28,10 @@ import datetime, os, re
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
 
+from lglobals import *
+
+_ = gettext.gettext
+
 #BEGIN lfunctions.py
 # Program functions.
 gSysEncoding = 'utf-8' # Change this for a detection system.
