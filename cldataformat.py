@@ -270,27 +270,15 @@ class cDataFormat():
 
             if uri != "":
                 try:
-                    if False:
-                        resource = Nepomuk.Resource(uri)
-                        altLabel = resource.property(NOC('nao:altLabel')).toString()
-                        fullName = resource.property(NOC('nco:fullname')).toString()
-                        identifier = resource.property(NOC('nao:identifier')).toString()
-                        itemType = toUnicode(resource.resourceType().toString().split('#')[1])
-                        prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                        title = resource.property(NOC('nie:title')).toString()
-                        url = resource.property(NOC('nie:url')).toString()
-
-                    else:
-                        resource = cResource(uri)
-                        altLabel = resource.property(NOC('nao:altLabel'))
-                        fullName = resource.property(NOC('nco:fullname'))
-                        identifier = resource.property(NOC('nao:identifier'))
-                        #itemType = resource.resourceType.split('#')[1]
-                        itemType = resource.resourceType
-                        prefLabel = resource.property(NOC('nao:prefLabel'))
-                        title = resource.property(NOC('nie:title'))
-                        url = resource.property(NOC('nie:url'))
-
+                    resource = Nepomuk.Resource(uri)
+                    altLabel = resource.property(NOC('nao:altLabel')).toString()
+                    fullName = resource.property(NOC('nco:fullname')).toString()
+                    identifier = resource.property(NOC('nao:identifier')).toString()
+                    itemType = toUnicode(resource.resourceType().toString().split('#')[1])
+                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                    title = resource.property(NOC('nie:title')).toString()
+                    url = resource.property(NOC('nie:url')).toString()
+                    
                     fullTitle = "%s  %s  %s  %s" % (fullName, title, prefLabel, altLabel)
                     fullTitle = fullTitle.strip().replace("  ", " - ")
                     line = "%s, %s, %s" % (url, fullTitle, itemType)
