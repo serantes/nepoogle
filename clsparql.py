@@ -187,7 +187,7 @@ def toN3(url = ''):
 
     return result
 
-
+# A experimental, and not using, class.
 class cResource():
 
     data = None
@@ -1063,7 +1063,7 @@ class cSparqlBuilder():
 
     def executeQuery(self, query = []):
         model = Nepomuk.ResourceManager.instance().mainModel()
-
+        
         queryTime = time.time()
         result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         queryTime = time.time() - queryTime
