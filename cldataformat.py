@@ -949,9 +949,8 @@ class cDataFormat():
 
         output += self.htmlViewerTableFooter + "<hr>\n"
 
-
         if len(audios) + len(images) + len(videos) > 0:
-            output += "<h2>Preview</b><br />\n"
+            output += "<h3><b>Preview</b></h3>\n"
             
         # Resource audios.
         if len(audios) > 0:
@@ -959,8 +958,8 @@ class cDataFormat():
                 if audio[:7] != "file://":
                     audio = "file://" + audio
 
-                output += "<p><audio src=\"" + audio + "\" controls preload>" \
-                            "No audio support</audio></p>"
+                output += "<audio src=\"" + audio + "\" controls preload>" \
+                            "No audio support</audio>"
 
         # Resource images.
         if len(images) > 0:
@@ -983,8 +982,8 @@ class cDataFormat():
                 if video[:7] != "file://":
                     video = "file://" + video
 
-                output += "<p><video src=\"" + video + "\" %s controls preload>" \
-                            "No video support</video></p>" % (self.htmlVideoSize)
+                output += "<video src=\"" + video + "\" %s controls preload>" \
+                            "No video support</video>" % (self.htmlVideoSize)
 
         output += self.htmlProgramInfo
         output += self.htmlPageFooter
