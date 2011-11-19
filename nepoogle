@@ -52,6 +52,7 @@ from PyKDE4.kdeui import *
 #_TODO: extraer tipo y label de la propia db. Esto está actualmente hardcoded y
 #_TODO: musicpiece debe de incluir el intérprete
 #_TODO: añadir más información al contacto en la vista de resultados
+#_TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 
 #BUG: BUG001 -> negation without a shorcut is failing.
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
@@ -65,7 +66,6 @@ from PyKDE4.kdeui import *
 #query a contar
 #}
 #}
-#TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 #TODO: configuración externa
 #TODO: multilenguage
 #TODO: paréntesis
@@ -84,7 +84,7 @@ PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROGRAM_VERSION_VERSION = 'v0.7'
-PROGRAM_VERSION_DATE = '2011-11-xx'
+PROGRAM_VERSION_DATE = '2011-11-19'
 PROGRAM_AUTHOR_NAME = 'Ignacio Serantes'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -226,6 +226,7 @@ class cWebView(QWebView):
 class Nepoogle(QWidget):
     cache = []
     cacheViewer = []
+    clearResourceManagerCache = True
     model = None
     navigationData = []
     pendingQuery = False
@@ -375,7 +376,7 @@ class Nepoogle(QWidget):
 
         self.setLayout(self.grid)
 
-        self.resize(680, 510)
+        self.resize(700, 600)
         if searchString == '':
             self.leSearch.setText(toUnicode('Type search here'))
 
@@ -711,11 +712,14 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
+                    "<li>This program was tested on <b>KDE 4.7.3</b>" \
+                    "<li>Nepomuk search api is available using e0 as prefix</li>\n" \
+                    "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api</li>\n" \
                     "<li>Query syntax is inspired in Google's search syntax</li>\n" \
                     "<li>Nepoogle do a text search in identifiers, descriptions, tags, fullnames, titles and urls</li>\n" \
                     "<li>Dates and parenthesis are not supported</li>\n" \
                     "<li>You can use regular expressions searching strings</li>\n" \
-                    "<li>Nepoogle works with Soprano and don't uses Nepomuk to do queries</li>\n" \
+                    "<li>Nepoogle own engine works with Soprano and don't uses Nepomuk to do queries</li>\n" \
                     "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results</li>\n" \
                     "</ul></p>\n" \
 
@@ -736,6 +740,8 @@ class Nepoogle(QWidget):
                 shortcutsList += shortcut[1]
 
         syntax = "<p><b>The query syntax is</b>:<ul>\n" \
+                    "<em>query</em> :== e0 querystring<sup>*</sup><br />\n"\
+                    "<br />\n" \
                     "<em>query</em> :== item [[logop] item]... | command | uri<br />\n"\
                     "<br />\n" \
                     "<em>item</em> :== [ontology:][op]text<br />\n" \
@@ -755,8 +761,11 @@ class Nepoogle(QWidget):
                     "<em>chars</em> :== any number of utf-8 characters<br />\n" \
                     "<br />\n" \
                     "<em>command</em> :== instruction[:string]<br />\n" \
-                    "<em>instruction</em> :== %(instructions)s\n" \
-                    "</ul></p>\n" \
+                    "<em>instruction</em> :== %(instructions)s<br />\n" \
+                    "<br />\n" \
+                    "<sup>*</sup>e0 uses <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> and it has its own query syntax." \
+                    "</ul>" \
+                    "</p>\n" \
                     % {'shortcuts': shortcutsList, 'instructions': commandsList}
 
         examples = "<p><b>Examples</b>:\n" \
@@ -1244,6 +1253,9 @@ class Nepoogle(QWidget):
 
         #if True:
         try:
+            if self.clearResourceManagerCache:
+                Nepomuk.ResourceManager.instance().clearCache()
+                
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
                 if self.queryMethod in ("manual", "refresh"):
@@ -1391,21 +1403,6 @@ def buildHelp():
   
 
 def main(args):
-
-    #uri = "nepomuk:/res/0302b256-2d67-482e-a290-5b87d2ceceab"
-    #oResource = cResource(uri)
-    #print "Alt label:", oResource.getValue('nao:altLabel')
-    #print "Fullname:", oResource.getValue('nco:fullname')
-    #print "Itendifier:", oResource.getValue('nao:identifier')
-    #print "Type:", oResource.ontologyType
-    #print "Pref label:", oResource.getValue('nao:prefLabel')
-    #print "Title:", oResource.getValue('nie:title')
-    #print "Url:", oResource.getValue('nie:url')
-    #values = oResource.getAllValues()
-    #for value in values:
-        #print value
-        
-    #return
     #appName = PROGRAM_NAME
     #catalog = PROGRAM_NAME
     #programName = ki18n(PROGRAM_NAME)
@@ -1586,5 +1583,8 @@ def main(args):
         
 
 if __name__=="__main__":
-    os.putenv("DISPLAY", ":0")
+    display = os.getenv("DISPLAY")
+    if display == None:
+        os.putenv("DISPLAY", ":0")
+        
     main(sys.argv)
