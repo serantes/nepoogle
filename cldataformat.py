@@ -51,8 +51,9 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
 class cDataFormat():
         
     columnsCount = 3
-    enableImageViewer = True
     data = []
+    enableImageViewer = True
+    hiddenOntologies = ["nao:userVisible"]
     model = None
     outFormat = 1  # 1- Text, 2- Html
     queryString = ""
@@ -791,6 +792,9 @@ class cDataFormat():
             defaultType = NOCR(Nepomuk.Resource(uri).type())
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
+                if currOnt in self.hiddenOntologies:
+                    continue
+                
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), \
                             ontInfo[2])
