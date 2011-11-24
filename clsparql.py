@@ -44,10 +44,11 @@ RDF_SCHEMA_RESOURCE = 'http://www.w3.org/2000/01/rdf-schema#Resource'
 
 knownOntologies = [ \
                     ['nao', '2007/08/15'], ['ncal', '2007/04/02'], \
-                    ['nco', '2007/03/22'], ['nexif', '2007/05/10'], \
-                    ['nfo', '2007/03/22'], ['nid3', '2007/05/10'], \
-                    ['nie', '2007/01/19'], ['nmm', '2009/02/19'], \
-                    ['nmo', '2007/03/22'], ['nrl', '2007/08/15'], \
+                    ['nco', '2007/03/22'], ['ndo', '2010/04/30'], \
+                    ['nexif', '2007/05/10'], ['nfo', '2007/03/22'], \
+                    ['nid3', '2007/05/10'], ['nie', '2007/01/19'], \
+                    ['nmm', '2009/02/19'], ['nmo', '2007/03/22'], \
+                    ['nrl', '2007/08/15'], ['nuau', '2010/01/25'], \
                     ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
                 ]
 
@@ -317,7 +318,8 @@ class cSparqlBuilder():
     #columns = '*'
     # ?x0+>prefLabel ?x0*>url + si * opcional
     #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
-    columns = '?url ?title ?prefLabel ?fullname ?altLabel'
+    #columns = '?url ?title ?prefLabel ?fullname ?altLabel'
+    columns = ""
     command = ''
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
     commands = [ \
