@@ -913,6 +913,12 @@ class cSparqlBuilder():
                     if breakChar == ' ':
                         breakChar = string[i]
 
+                if breakChar == " ":
+                    if string[i] in ("(", ")"):
+                        results += [string[i]]
+                        newItem = True
+                        continue
+
                 if newItem and ((results == []) or (results[-1] != '')):
                     results += ['']
                     newItem = False
@@ -928,6 +934,9 @@ class cSparqlBuilder():
 
                 else:
                     self.warningsList = [["BUG001", result]]
+
+            elif result == "(" or result == ")":
+                raise Exception(_("Syntax error, parenthesis are not supported. Use quotes to search for parenthesis characters."))
 
         #print 'Results:', results
         return results
