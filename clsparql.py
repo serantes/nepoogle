@@ -333,6 +333,7 @@ class cSparqlBuilder():
                 #[_('--daemonize'), ['', [], [], []]], \
                 [_('--directors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
+                [_('--findduplicateimages'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?f1 a nexif:Photo .\n  ?f2 a nexif:Photo .\n  ?f1 nfo:hasHash ?hash .\n  ?f2 nfo:hasHash ?hash .\n  ?f1 nie:url ?url1 .\n  ?f2 nie:url ?url2 . FILTER(?f1 != ?f2) .\n}\nORDER BY ?hash', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
@@ -477,6 +478,14 @@ class cSparqlBuilder():
                 if self.commands[idx][1][0] == '':
                     raise Exception("Sorry, command \"%s\" not implemented yet." % self.command)
 
+                elif self.commands[idx][1][0].strip().upper()[:7] == "SELECT ":
+                    # It's a full query.
+                    query = self.commands[idx][1][0].strip()
+                    if self.stdoutQuery:
+                        print toUtf8(query)
+
+                    return query
+                    
                 else:
                     self.tempData = self.commands[idx][1]
 
