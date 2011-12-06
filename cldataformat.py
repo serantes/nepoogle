@@ -164,28 +164,27 @@ class cDataFormat():
     ontologyFormat = [ \
                         [None, \
                             "{uri|l|of}[<br /><b>Full name</b>: {nco:fullname}][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]" \
-                            "[<br /><b>Rating</b>: {nao:numericRating}]" \
-                            "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
-                            "[<br /><b>Description</b>: {nie:description}]", \
+                                "[<br /><b>Rating</b>: {nao:numericRating}]" \
+                                "[<br /><b>Description</b>: {nie:description}]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
-                            "[<br /><b>Rating</b>: {nao:numericRating}]" \
-                            "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
-                            "[<br /><b>Description</b>: {nie:description}]", \
+                                "[<br /><b>Rating</b>: {nao:numericRating}]" \
+                                "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
+                                "[<br /><b>Description</b>: {nie:description}]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
                             "{nie:title|l|s:album}<br />" \
-                            "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                                "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
-                            "<b>Title</b>: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
-                            "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                            "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                                "<b>Title</b>: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
+                                "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
+                                "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
@@ -202,6 +201,11 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileDataObject", \
                             "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:FileHash", \
+                            "<b>File hash</b>: {nie:url|l|of|ol}" \
+                                "<br /><b>Associated files</b>:<br />{SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?uri nfo:hasHash <%(uri)s> . optional { ?uri nie:url ?value } . } ORDER BY ?value|l|n{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
@@ -525,6 +529,7 @@ class cDataFormat():
     def formatResource(self, resource, pattern):
         # Variables substitution.
         data, variables, optionals, optionalsEmpty = self.processFormatPattern(pattern)
+        listSeparation = ", "
         for variable in variables:
             variable = toUnicode(variable)
             elements = variable.split("|")
@@ -548,13 +553,16 @@ class cDataFormat():
                     else:
                         searchTerm = elements[0]
 
+                elif item == "n":
+                    listSeparation = "<br />"
+
                 else:
                     values = self.readValues(resource, item)
 
             formatValue = ""
             for value in values:
                 if formatValue != "":
-                    formatValue += ", "
+                    formatValue += listSeparation
 
                 if len(value) == 1:
                     displayValue += [""]
