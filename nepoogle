@@ -1286,11 +1286,11 @@ class Nepoogle(QWidget):
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
                     # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
-                    query = "SELECT DISTINCT ?r\n" + query[query.find("where"):]
+                    query = "SELECT DISTINCT ?r\n" + query[query.find(" where "):]
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
-                        query = query.replace("where", "WHERE").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")
+                        query = query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")
                         print toUtf8(query)
 
                 elif searchEngine == 2:
