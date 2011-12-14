@@ -205,7 +205,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileHash", \
                             "<b>File hash</b>: {nie:url|l|of|ol}" \
-                                "<br /><b>Associated files</b>:<br />{SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?uri nfo:hasHash <%(uri)s> . optional { ?uri nie:url ?value } . } ORDER BY ?value|l|n{/SPARQL}", \
+                                "<br /><b>Associated files</b>:<br />{SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?uri nfo:hasHash <%(uri)s> . optional { ?uri nie:url ?value } . } ORDER BY ?value|lfl|n{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
@@ -533,10 +533,12 @@ class cDataFormat():
         for variable in variables:
             variable = toUnicode(variable)
             elements = variable.split("|")
-            addLink = addOpenFile = addOpenLocation = addSearch = False
+            addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addSearch = False
             for item in elements:
-                if item == "l":
+                if item == "l" or item[:1] == "l":
                     addLink = True
+                    addLinkOpenFile = (item[1:].find("f") >= 0)
+                    addLinkOpenLocation = (item[1:].find("l") >= 0)
 
                 elif item == "of":
                     addOpenFile = True
@@ -579,6 +581,12 @@ class cDataFormat():
                             
                         else:
                             displayValue = value[1]
+                            if addLinkOpenFile:
+                                displayValue += " " + self.htmlLinkSystemRun % {"uri": value[1]}
+
+                            if addLinkOpenLocation:
+                                displayValue += " " + self.htmlLinkOpenLocation % {"uri": os.path.dirname(value[1])}
+                            
 
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
