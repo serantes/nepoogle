@@ -163,16 +163,16 @@ class cDataFormat():
     #TODO: columnsformat. This is linked to self.columnsCount.
     ontologyFormat = [ \
                         [None, \
-                            "{uri|l|of}[<br /><b>Full name</b>: {nco:fullname}][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]" \
-                                "[<br /><b>Rating</b>: {nao:numericRating}]" \
-                                "[<br /><b>Description</b>: {nie:description}]", \
+                            "{uri|l|of}%[<br /><b>Full name</b>: {nco:fullname}%][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
+                                "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
-                                "[<br /><b>Rating</b>: {nao:numericRating}]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
                                 "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
-                                "[<br /><b>Description</b>: {nie:description}]", \
+                                "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
@@ -182,7 +182,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
-                                "<b>Title</b>: <em>[{nmm:setNumber}x]{nmm:trackNumber} - {nie:title}</em><br />" \
+                                "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber} - {nie:title}</em><br />" \
                                 "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
                                 "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
@@ -192,15 +192,15 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
-                            "[S{nmm:season}E{nmm:episodeNumber} - ]{nie:title|l|of|ol}<br />", \
+                            "%[S{nmm:season}E{nmm:episodeNumber} - %]{nie:title|l|of|ol}<br />", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
-                            "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}][<br />url: {nie:url}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]%[<br />url: {nie:url}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileDataObject", \
-                            "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileHash", \
@@ -209,35 +209,35 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
-                            "{nfo:fileName|l|of|ol}[<br />url: {nie:url}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />url: {nie:url}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:RasterImage", \
-                            "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Video", \
-                            "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
                         ["nao:Tag", \
-                            "{nao:prefLabel|l|of|ol|s:hasTag}[<br />Other labels: {nao:altLabel}]", \
+                            "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:Contact", \
-                            "{nco:fullname|l|s:contact}[<br />Other labels: {nao:altLabel}]", \
+                            "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nexif:Photo", \
-                            "{nfo:fileName|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nie:InformationElement", \
-                            "{nfo:fileName|l|of|ol}[<br />Other labels: {nao:altLabel}]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["rdfs:Resource", \
-                            "{nie:url|l|of|ol}[<br />Title: {nie:title}]", \
+                            "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE] \
                     ]
@@ -520,7 +520,7 @@ class cDataFormat():
             else:
                 variables += [var]
 
-        optionals = re.findall('\[(.*?)\]', pattern)
+        optionals = re.findall('%\[(.*?)%\]', pattern)
         optionalsEmpty = list(optionals)
 
         return data, variables, optionals, optionalsEmpty
@@ -577,7 +577,9 @@ class cDataFormat():
                         if value[1][:17] == "[<b>Unplugged</b>":
                             tmpSplit = value[1].split("]")
                             formatValue += tmpSplit[0] + "]"
-                            displayValue = tmpSplit[1]
+                            displayValue = ""
+                            for i in range(1, len(tmpSplit)):
+                                displayValue += tmpSplit[i]
                             
                         else:
                             displayValue = value[1]
@@ -621,11 +623,11 @@ class cDataFormat():
 
         # Empty optionals are eliminated.
         for i in range(0, len(optionalsEmpty)):
-            data = data.replace("[" + optionalsEmpty[i] + "]", "")
+            data = data.replace("%[" + optionalsEmpty[i] + "%]", "")
 
         # Remove brackets from not empty optionals.
         for i in range(0, len(optionals)):
-            data = data.replace("[" + optionals[i] + "]", optionals[i])
+            data = data.replace("%[" + optionals[i] + "%]", optionals[i])
 
         return data.strip()
         
@@ -866,7 +868,7 @@ class cDataFormat():
                         elif ext in ("flac", "mp3", "ogg", "wav"):
                             audios += [value]
 
-                        elif ext in ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg"):
+                        elif ext in ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts"):
                             videos += [value]
 
                     value = ''

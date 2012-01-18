@@ -42,6 +42,7 @@ from PyKDE4.kdeui import *
 #_BUG: sample rate se visualiza en notación científica
 #_BUG: error: [Errno 5] Input/output error la llamar al programa sin la consola
 #_BUG: uri incorrecta en el link al album de la pieza musical
+#_BUG: if file is unplugged and contains character "]" file is not displayed properly
 #_TODO: visualizar las fechas correctamente
 #_TODO: los links a visor deben funcionar con los discos desconectados
 #_BUG: Modifiers "+" and "-" were not working filtering commands.
