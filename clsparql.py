@@ -36,6 +36,32 @@ from lglobals import *
 
 _ = gettext.gettext
 
+
+# FECHAS
+#SELECT DISTINCT bif:year(?date) count(*) AS ?count
+#WHERE {
+#  ?r nie:lastModified ?date . FILTER(bif:year(?date) = 2012) .
+#  ?r nao:userVisible ?visible . FILTER(?visible > 0) .
+#}
+#GROUP BY bif:year(?date)
+#ORDER BY DESC(bif:year(?date))
+#
+# Filtro de año: FILTER(bif:year(?date) = 2012)
+# Filtro de mes: FILTER(bif:month(?date) = 1)
+# Filtro de día: FILTER(bif:dayofmonth(?date) = 1)
+# Filtro de fecha: FILTER(xsd:date(?date) = "20120101"^^xsd:date)
+# nao:created
+# nao:lastModified
+# nie:lastModified
+# nie:contentCreated --> album year
+# nmm:releaseDate --> movie year
+
+
+# time
+# nfo:duration
+
+
+
 #BEGIN clsparql.py
 #
 # cSparqlBuilder class
@@ -407,6 +433,8 @@ class cSparqlBuilder():
                     ['_nmm:composer->nco:fullname', _('composer'), _('cm')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
+                    ['nie:contentCreated', _('contentcreated'), _('cd')], \
+                    ['nie:contentCreated', _('created'), _('cd')], \
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
@@ -417,8 +445,8 @@ class cSparqlBuilder():
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('height')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
-                    ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
+                    ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
@@ -426,6 +454,7 @@ class cSparqlBuilder():
                     ['nuao:usageCount', _('playcount'), _('pc')], \
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
                     ['nao:numericRating', _('rating'), _('ra')], \
+                    ['nmm:releaseDate', _('releasedate'), _('rd')], \
                     ['nmm:season', _('season'), _('se')], \
                     ['nmm:setNumber', _('setnumber'), _('sn')], \
                     ['nao:identifier', _('tag'), _('ta')], \
@@ -642,8 +671,15 @@ class cSparqlBuilder():
                 if val[0] == val[-1] == '"':
                     val = val[1:-1]
 
+                # Caution: valType could be none.
                 if valType == 'number':
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+                elif ((valType == "date") or (valType == "datep")):
+                    filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
+                
+                elif ((valType == "datetime") or (valType == "datetimep")):
+                    filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 else:
                     if operator == '==':
