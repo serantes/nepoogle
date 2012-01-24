@@ -871,7 +871,7 @@ class cDataFormat():
                         elif ext in ("flac", "mp3", "ogg", "wav"):
                             audios += [value]
 
-                        elif ext in ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts"):
+                        elif ext in ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "wmv"):
                             videos += [value]
 
                     value = ''
