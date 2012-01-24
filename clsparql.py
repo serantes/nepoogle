@@ -56,10 +56,20 @@ _ = gettext.gettext
 # nie:contentCreated --> album year
 # nmm:releaseDate --> movie year
 
+# Date formats
+# fulldate :== yyyy[-]mm[-]dd
+# month :== 1..12[m]
+# day :== 13..31 | 1..31d
+# year :== 31..9999 | 1..9999y
 
 # time
 # nfo:duration
 
+# Time formats
+# fulltime :== hh:mm:ss
+# hour := 1..24[h]
+# minutes :== 24..60 | 1..60[m]
+# seconds :== 1..60[s]
 
 
 #BEGIN clsparql.py
