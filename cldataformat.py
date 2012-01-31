@@ -193,7 +193,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
-                            "%[S{nmm:season}E{nmm:episodeNumber} - %]{nie:title|l|of|ol}<br />", \
+                            "%[S{nmm:season}E{nmm:episodeNumber} - %]{nie:title|l|of|ol}%[<br \>Series: {nmm:series->nie:title|l|ol}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
