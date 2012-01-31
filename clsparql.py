@@ -114,8 +114,12 @@ def NOC(name = '', returnQUrl = False):
 def NOCR(ontology = ''):
     if ontology == '':
         return ""
-        
-    return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('rdf-schema:', 'rdfs:')
+
+    if ontology[:7] == "http://":
+        return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('22-rdf-syntax-ns:', 'rdf:').replace('rdf-schema:', 'rdfs:')
+
+    else:
+        return ontology
 
 
 def ontologyToHuman(ontology = '', reverse = False):
@@ -129,6 +133,11 @@ def ontologyToHuman(ontology = '', reverse = False):
     if ontology == '':
         return result
 
+    if ontology[:7] == "http://" or ontology.find(":") >= 0:
+        result = ontologyInfo(ontology)
+        if result != [] and result[1] != "":
+            return result[1]
+        
     try:
         ontology = ontology.split(':')[1]
 
@@ -193,11 +202,17 @@ def ontologyInfo(ontology = '', model = None):
         #}
 
         # Must search for ontology.
+        #query = "SELECT ?label ?range\n" \
+                #"WHERE {\n" \
+                    #"\t%(ont)s rdfs:range ?range\n" \
+                    #"\tOPTIONAL { %(ont)s rdfs:label ?label . }\n" \
+                #"}" % {"ont": ontology}
         query = "SELECT ?label ?range\n" \
                 "WHERE {\n" \
-                    "\t<%(ont)s> rdfs:range ?range\n" \
-                    "\tOPTIONAL { <%(ont)s> rdfs:label ?label . }\n" \
-                "}" % {"ont": ontology}
+                    "\t%(ont)s rdfs:label ?label .\n" \
+                    "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
+                "}" % {"ont": shortOnt}
+        
         data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
             while data.next():
@@ -205,13 +220,22 @@ def ontologyInfo(ontology = '', model = None):
                     ontType = "size"
 
                 else:
-                    ontType = toUnicode(data["range"].toString()).split("#")[1]
+                    ontologyRange = toUnicode(data["range"].toString())
+                    if ontologyRange.find("#") >= 0:
+                        ontType = toUnicode(ontologyRange.split("#")[1])
+
+                    else:
+                        ontType = ontologyRange
 
                 ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
 
-        i = -1
+                i = -1
 
-    return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
+    if i == None:
+        return []
+        
+    else:
+        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
 
 
 def toN3(url = ''):
