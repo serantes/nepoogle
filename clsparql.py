@@ -473,6 +473,7 @@ class cSparqlBuilder():
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
                     ['nmm:setNumber', _('discnumber'), _('dn')], \
+                    ['nfo:duration', _('duration'), _('du')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['nmm:genre', _('genre'), _('ge')], \
@@ -646,6 +647,107 @@ class cSparqlBuilder():
         return ontology
 
 
+    def buildDateFilter(self, val, var, op):
+        dateType = None
+        val = val.upper()
+        typeMark = val[-1]
+
+        if typeMark in ("Y", "M", "D"):
+            val = val[:-1]
+
+        else:
+            typeMark = None
+
+        try:
+            intVal = int(val)
+            if typeMark == None:
+                if ((intVal >= 1) and (intVal <= 12)):
+                    typeMark = "M"
+
+                elif ((intVal > 12) and (intVal <= 31)):
+                    typeMark = "D"
+
+                else:
+                    typeMark = "Y"
+
+            val = intVal
+
+            if typeMark == "Y":
+                dateFilter = "FILTER(bif:year(?x%s) %s %s) . }\n" % (var, op, val)
+
+            elif typeMark == "M":
+                dateFilter = "FILTER(bif:month(?x%s) %s %s) . }\n" % (var, op, val)
+
+            elif typeMark == "D":
+                dateFilter = "FILTER(bif:dayofmonth(?x%s) %s %s) . }\n" % (var, op, val)
+                
+            else:
+                raise Exception("Can't recognized \"%s\" as date format." % self.command)
+
+        except:
+            dateFilter =  "FILTER(xsd:date(?x%s) %s \"%s\"^^xsd:date) . }\n" % (var, op, val)
+        
+        return dateFilter
+        
+
+    def buildTimeFilter(self, val, var, op):
+        dateType = None
+        val = val.upper()
+        typeMark = val[-1]
+
+        if typeMark in ("H", "M", "S"):
+            val = val[:-1]
+
+        else:
+            typeMark = None
+
+        try:
+            print val
+            intVal = int(val)
+            if typeMark == None:
+                if ((intVal >= 1) and (intVal <= 24)):
+                    typeMark = "H"
+
+                elif ((intVal > 24) and (intVal <= 60)):
+                    typeMark = "M"
+
+                else:
+                    typeMark = "S"
+
+            if typeMark == "H":
+                intVal = intVal*60*60
+
+            elif typeMark == "M":
+                intVal = intVal*60
+
+            else:
+                pass
+
+            return "FILTER(?x%s %s %s) . }\n" % (var, op, intVal)
+
+        except:
+            pass
+
+        try:
+            splitTime = val.split(":")
+            if len(splitTime) == 3:
+                intVal = int(splitTime[0])*60*60 + int(splitTime[1])*60 + int(splitTime[2])
+
+            elif len(splitTime) == 2:
+                intVal = int(splitTime[0])*60 + int(splitTime[1])
+
+            elif len(splitTime) == 1:
+                intVal = int(splitTime[0])
+
+            else:
+                raise Exception("Can't recognized \"%s\" as time format." % self.command)
+
+        except:
+            raise Exception("Can't recognized \"%s\" as time format." % self.command)
+
+        return "FILTER(?x%s %s %s) . }\n" % (var, op, intVal)
+
+
     def bsIndividualFilter(self, value = ''):
         ontologies = [self.ontologyConversion(value[2])]
         if ontologies == ['']:
@@ -710,10 +812,14 @@ class cSparqlBuilder():
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif ((valType == "date") or (valType == "datep")):
-                    filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
+                    filterExpression = self.buildDateFilter(val, i, operator)
                 
                 elif ((valType == "datetime") or (valType == "datetimep")):
-                    filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
+                    filterExpression = self.buildDateFilter(val, i, operator)
+                    #filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+                elif ((valType == "seconds") or (valType == "time")):
+                    filterExpression = self.buildTimeFilter(val, i, operator)
 
                 else:
                     if operator == '==':
