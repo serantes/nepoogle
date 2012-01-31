@@ -210,7 +210,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
-                            "{nfo:fileName|l|of|ol}%[<br />url: {nie:url}%]", \
+                            "{nie:url|l|of|ol}%[<br />Filename: {nfo:fileName}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Image", \
