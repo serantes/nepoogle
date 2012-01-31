@@ -641,7 +641,7 @@ class Nepoogle(QWidget):
     def goBackward(self):
         #print "Go backward"
         refresh = False
-        if self.leSearch.text() != self.cache[self.queriesIndex].searchString:
+        if self.queriesIndex >= 0 and self.leSearch.text() != self.cache[self.queriesIndex].searchString:
             refresh = True
 
         else:
