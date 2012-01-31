@@ -164,7 +164,7 @@ class cDataFormat():
     #TODO: columnsformat. This is linked to self.columnsCount.
     ontologyFormat = [ \
                         [None, \
-                            "{uri|l|of}%[<br /><b>Full name</b>: {nco:fullname}%][<br /><b>Label</b>: {nao:prefLabel}][<br /><b>Title</b>: {nie:title}]" \
+                            "{uri|l|of}%[<br /><b>Full name</b>: {nco:fullname}%]%[<br /><b>Label</b>: {nao:prefLabel}%]%[<br /><b>Title</b>: {nie:title}%]" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
@@ -213,6 +213,10 @@ class cDataFormat():
                             "{nfo:fileName|l|of|ol}%[<br />url: {nie:url}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nfo:Image", \
+                            "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:RasterImage", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
@@ -673,7 +677,7 @@ class cDataFormat():
 
             else:
                 if pattern == "{type}":
-                    exec "column%s = ontologyToHuman(itemType)" % i
+                    exec "column%s = \"<b title='%s'>\" + ontologyToHuman(itemType) + \"</b>\"" % (i, itemType)
 
                 else:
                     exec "column%s = self.formatResource(resource, pattern)" % i
@@ -856,7 +860,7 @@ class cDataFormat():
                         if ontLabel != '':
                             value += ' ' + self.htmlRenderLink('ontology', shorcut, resource.genericLabel())
 
-                elif currOnt == '22-rdf-syntax-ns:type':
+                elif currOnt == 'rdf:type':
                     value = NOCR(value)
                     if value == defaultType:
                         value = '<em>' + value + '</em>'
