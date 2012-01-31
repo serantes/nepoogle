@@ -743,10 +743,18 @@ class Nepoogle(QWidget):
                     "<em>shortontology</em> :== prefix:name<br />\n" \
                     "<em>fullontology</em> :== http://url<br />\n" \
                     "<br />\n" \
-                    "<em>text</em> :== string | number<br />\n" \
-                    "<em>string</em> :== chars | \"chars\" | 'chars'<br />\n" \
+                    "<em>text</em> :== date | number | string | time<br />\n" \
+                    "<em>date</em> :== yyyy-mm-dd | month | day | year<br />\n" \
+                    "<em>month</em> :== 1..12[m]<br />\n" \
+                    "<em>day</em> :== 13..31 | 1..31d<br />\n" \
+                    "<em>year</em> :== 31..9999 | 1..9999y<br />\n" \
                     "<em>number</em> :== 0..9<br />\n" \
+                    "<em>string</em> :== chars | \"chars\" | 'chars'<br />\n" \
                     "<em>chars</em> :== any number of utf-8 characters<br />\n" \
+                    "<em>time</em> :== hh:mm:ss | hour | minute | seconds<br />\n" \
+                    "<em>hour</em> :== 1..24[h]<br />\n" \
+                    "<em>minute</em> :== 25..60 | 1..60m<br />\n" \
+                    "<em>seconds</em> :== 1..60s<br />\n" \
                     "<br />\n" \
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
