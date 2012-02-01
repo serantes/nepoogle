@@ -1,14 +1,14 @@
-v08 -- 2012/02/01
+v0.8 -- 2012/02/01
 -BUG: Fixed not displayed "nie:url in resource viewer when url was not a local file.
--BUG: Fixed the bug searchin for the word "where" using Nepomuk::Query::QueryParser().
--BUG: Fixed "vob" and "wmv" video extensions in movie previewer.
+-BUG: Fixed the bug searching for the word "where" using Nepomuk::Query::QueryParser().
+-BUG: Fixed "vob" and "wmv" video extensions in video player.
 -CHANGE: Parenthesis are now special characters.
--NEW: Added contentcreated, created, releasedate and duration shortcuts.
--NEW: Added experimental support to "video.js" but is disabled by default.
+-NEW: Added "contentcreated", "created", "releasedate" and "duration" shortcuts.
+-NEW: Added experimental support to "video.js" in video player.
 -NEW: Added support to date and time types in queries.
 -NEW: Added two new commands: --findduplicates and --findduplicatephotos.
 
-v07 -- 2011/11/19
+v0.7 -- 2011/11/19
 -BUG: Fixed failed start when DISPLAY was not :0.
 -BUG: Fixed image files with upper case extension was not displayed in the resource viewer.
 -CHANGE: Html render was totally rewriten and supports templates to display information.
@@ -19,7 +19,7 @@ v07 -- 2011/11/19
 -NEW: Added preview to audio and video files in resource viewer using Qt's QWebView HTML5 capabilities.
 -NEW: Added support to Nepomuk::Query:QueryParser() engine using "e0" prefix.
 
-v06 -- 2011/10/29
+v0.6 -- 2011/10/29
 -BUG: Fixed [Errno 5] Input/output error calling sometimes program without console.
 -BUG: Fixed not working prefixes "+" and "-" in commands.
 -BUG: Fixed wrong Album link URI in music piece entry in results view.
@@ -33,7 +33,7 @@ v06 -- 2011/10/29
 -NEW: Added support to link's context menu: "Open Link", "Open in New Window" and "Copy link" are supported.
 -NEW: Added warnings support.
 
-v05 -- 2011/10/20
+v0.5 -- 2011/10/20
 -BUG: Fixed problem searching characters "'" and ":".
 -BUG: Fixed wrong encoding method, the correct is QUrl.toEncoded().
 -CHANGE: Creator shortcut now supports optional negation.
@@ -44,7 +44,7 @@ v05 -- 2011/10/20
 -NEW: Added search link to contacts.
 -NEW: Added to filex urls a link to resource viewer.
 
-v04 -- 2011/10/12
+v0.4 -- 2011/10/12
 -NEW: Added "Contact" shortcut.
 -NEW: Added "Producer" shorcut.
 -NEW: Search link in results.
@@ -52,7 +52,7 @@ v04 -- 2011/10/12
 -CHANGE: Several changes in Html renderers to be more coherent displaying different data.
 -CHANGE: Several improvements in SPARQL query builder.
 
-v03 -- 2011/10/02
+v0.3 -- 2011/10/02
 -NEW: Added reverse resources in resource viewer.
 -NEW: Backward and fordward buttons.
 -NEW: Many improvements in results viewer and resource viewer.
@@ -62,12 +62,12 @@ v03 -- 2011/10/02
 -CHANGE: Removed "open with system" icon.
 -BUG: Fixed again the problem searching parenthesis.
 
-v02 -- 2011/09/29
+v0.2 -- 2011/09/29
 -NEW: Added support to URIs as search string.
 -NEW: Added support to html fragmented render to speed up data view.
 -NEW: Added a basic resource viewer.
 -BUG: Fixed problem searching parenthesis.
 -BUG: Removed "_" character from shorcuts help.
 
-v01 -- 2011/09/24
+v0.1 -- 2011/09/24
 -First public release.
