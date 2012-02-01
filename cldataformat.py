@@ -893,6 +893,9 @@ class cDataFormat():
 #                                            url[8:].split('/')[0], \
 #                                            '/' + '/'.join(url[8:].split('/')[1:]))
 
+                    else:
+                        value += self.htmlRenderLink('url', url, url)
+
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
 
