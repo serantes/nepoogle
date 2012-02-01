@@ -700,7 +700,7 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program was tested on <b>KDE 4.7.3</b>" \
+                    "<li>This program was tested on <b>KDE 4.8.0</b>" \
                     "<li>Nepomuk search api is available using e0 as prefix</li>\n" \
                     "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api</li>\n" \
                     "<li>Query syntax is inspired in Google's search syntax</li>\n" \

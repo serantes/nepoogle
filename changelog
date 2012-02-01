@@ -1,3 +1,13 @@
+v08 -- 2012/02/01
+-BUG: Fixed not displayed "nie:url in resource viewer when url was not a local file.
+-BUG: Fixed the bug searchin for the word "where" using Nepomuk::Query::QueryParser().
+-BUG: Fixed "vob" and "wmv" video extensions in movie previewer.
+-CHANGE: Parenthesis are now special characters.
+-NEW: Added contentcreated, created, releasedate and duration shortcuts.
+-NEW: Added experimental support to "video.js" but is disabled by default.
+-NEW: Added support to date and time types in queries.
+-NEW: Added two new commands: --findduplicates and --findduplicatephotos.
+
 v07 -- 2011/11/19
 -BUG: Fixed failed start when DISPLAY was not :0.
 -BUG: Fixed image files with upper case extension was not displayed in the resource viewer.
