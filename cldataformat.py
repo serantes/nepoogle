@@ -225,6 +225,7 @@ class cDataFormat():
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
+                        # To add a comment to git.
                         ["nfo:Website", \
                             "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
                             "{type}", \
