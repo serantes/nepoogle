@@ -225,6 +225,14 @@ class cDataFormat():
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
+                        ["nfo:Website", \
+                            "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
+                        ["nfo:WebDataObject", \
+                            "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
                         ["nao:Tag", \
                             "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
@@ -584,7 +592,7 @@ class cDataFormat():
                             formatValue += tmpSplit[0] + "]"
                             displayValue = ""
                             for i in range(1, len(tmpSplit)):
-                                displayValue += tmpSplit[i]
+                                displayValue += ']' + tmpSplit[i]
                             
                         else:
                             displayValue = value[1]
