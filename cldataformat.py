@@ -165,6 +165,7 @@ class cDataFormat():
     ontologyFormat = [ \
                         [None, \
                             "{uri|l|of}%[<br /><b>Full name</b>: {nco:fullname}%]%[<br /><b>Label</b>: {nao:prefLabel}%]%[<br /><b>Title</b>: {nie:title}%]" \
+                                "%[<br /><b>Url</b>: {nie:url|of|ol}%]" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
@@ -217,15 +218,27 @@ class cDataFormat():
                             "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:PaginatedTextDocument", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:RasterImage", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:Spreadsheet", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:TextDocument", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]" \
+                                "%[<br /><b>Lines</b>: {nfo:lineCount} <b>Words</b>: {nfo:wordCount} <b>Characters</b>: {nfo:characterCount}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Video", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
-                        # To add a comment to git.
                         ["nfo:Website", \
                             "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
                             "{type}", \
