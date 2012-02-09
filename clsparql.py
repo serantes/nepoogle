@@ -5,7 +5,7 @@
 #*   cSparqlBuilder - a SPARQL query builder                               *
 #*                                                                         *
 #*   Copyright                                                             *
-#*   (C) 2011 Ignacio Serantes <kde@aynoa.net>                             *
+#*   (C) 2011, 12 Ignacio Serantes <kde@aynoa.net>                         *
 #*                                                                         *
 #*   This program is free software; you can redistribute it and/or modify  *
 #*   it under the terms of the GNU General Public License as published by  *
