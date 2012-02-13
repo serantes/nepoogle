@@ -232,7 +232,7 @@ def ontologyInfo(ontology = '', model = None):
                 i = -1
 
     if i == None:
-        return []
+        return [shortOnt, shortOnt, "string"]
         
     else:
         return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
