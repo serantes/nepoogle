@@ -61,7 +61,7 @@ class cDataFormat():
     renderedDataRows = 0
     renderedDataText = ""
     structure = []
-    videojsEnabled = True
+    videojsEnabled = False
 
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
@@ -184,17 +184,20 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
                             "{nfo:fileName|l|of|ol}<br />" \
-                                "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber} - {nie:title}</em><br />" \
+                                "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber|f%02d} - {nie:title}</em><br />" \
                                 "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                                "<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                                "%[<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
-                            "{nie:title|l|s:tvserie}<br />", \
+                            "{nie:title|l|s:tvserie}<br />" \
+                                "%[<b>Last episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . }|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . }|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
-                            "%[S{nmm:season}E{nmm:episodeNumber} - %]{nie:title|l|of|ol}%[<br \>Series: {nmm:series->nie:title|l|ol}%]", \
+                            "%[S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}%[<br \>Series: {nmm:series->nie:title|l|ol}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
@@ -301,7 +304,7 @@ class cDataFormat():
                     value += column
 
             if uri != "":
-                try:
+                #try:
                     resource = Nepomuk.Resource(uri)
                     altLabel = resource.property(NOC('nao:altLabel')).toString()
                     fullName = resource.property(NOC('nco:fullname')).toString()
@@ -318,8 +321,8 @@ class cDataFormat():
                     if line[:2] == ", ":
                         line = line[2:]
 
-                except:
-                    line = value
+                #except:
+                #    line = value
 
             else:
                 for i in range(0, numColumns):
@@ -503,11 +506,11 @@ class cDataFormat():
                 else:
                     propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
                     #TODO: Some special formats, this must be improved.
-                    if elements[0] in ("nmm:trackNumber", "nmm:season", "nmm:episodeNumber"):
-                        if len(propertyValue) < 2:
-                            propertyValue = "0" + propertyValue
+                    #if elements[0] in ("nmm:trackNumber", "nmm:season", "nmm:episodeNumber"):
+                    #    if len(propertyValue) < 2:
+                    #        propertyValue = "0" + propertyValue
 
-                    elif elements[0] == "nie:url":
+                    if elements[0] == "nie:url":
                         #propertyValue = fromPercentEncoding(propertyValue)
                         if propertyValue[:8] == "filex://":
                             uuid = propertyValue[8:].split('/')[0]
@@ -584,6 +587,19 @@ class cDataFormat():
 
                 elif item == "n":
                     listSeparation = "<br />"
+
+                elif item[:1] == "f" and len(item) > 1:
+                    fmtValue = item[1:]
+                    #TODO: this must be improved.
+                    if (fmtValue[-1].lower() == 'd'):
+                        fmtValueToNumber = True
+                        
+                    for value in values:
+                        if fmtValueToNumber:
+                            value[1] = fmtValue % int(value[1])
+
+                        else:
+                            value[1] = fmtValue % value[1]
 
                 else:
                     values = self.readValues(resource, item)
@@ -765,12 +781,12 @@ class cDataFormat():
                         value += column
 
                 if uri != "":
-                    try:
-                    #if True:
+                    #try:
+                    if True:
                         line = self.formatHtmlLine(uri)
 
-                    except:
-                    #else:
+                    #except:
+                    else:
                         line = self.htmlTableRow % (value, "", "")
 
                 else:
@@ -976,7 +992,8 @@ class cDataFormat():
             while data.next():
                 uri = toUnicode(data["uri"].toString())
                 res = Nepomuk.Resource(uri)
-                val = fromPercentEncoding(toUnicode(res.genericLabel()))
+                #val = fromPercentEncoding(toUnicode(res.genericLabel()))
+                val = toUnicode(res.genericLabel())
                 reverseResources += [[uri, NOCR(data["ont"].toString()), val]]
 
             tmpOutput = ''
