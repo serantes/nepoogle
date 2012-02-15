@@ -85,7 +85,8 @@ knownOntologies = [ \
                     ['nid3', '2007/05/10'], ['nie', '2007/01/19'], \
                     ['nmm', '2009/02/19'], ['nmo', '2007/03/22'], \
                     ['nrl', '2007/08/15'], ['nuau', '2010/01/25'], \
-                    ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'] \
+                    ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'], \
+                    ['nbib', 'http://www.example.com/'] \
                 ]
 
 ontologiesInfo = []
@@ -94,7 +95,11 @@ def NOC(name = '', returnQUrl = False):
     ontology, property = name.strip().split(':')
     date = lvalue(knownOntologies, ontology, 0, 1)
     if date != None:
-        value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
+        if date[:7] == "http://":
+            value = "%s/%s#%s" % (date, ontology, property)
+            
+        else:
+            value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
 
     else:
         value = 'Soprano.Vocabulary.%s.%s().toString()' % (ontology.upper(), property)
