@@ -809,7 +809,10 @@ class cSparqlBuilder():
                     val = val[1:-1]
 
                 # Caution: valType could be none.
-                if valType == 'number':
+                if val == ".*":
+                    filterExpression = " }\n"
+                
+                elif valType == 'number':
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif ((valType == "date") or (valType == "datep")):
@@ -1002,7 +1005,7 @@ class cSparqlBuilder():
                     text = ""
 
                 text += \
-                        "  ?x0 rdf:type ?type .\n" \
+                        "  ?x0 nao:userVisible 1 .\n" \
                         "  FILTER(\n" \
                             "    bif:exists ((\n" \
                                 "      SELECT *\n" \
@@ -1020,8 +1023,8 @@ class cSparqlBuilder():
                 else:
                     text = ""
 
-                text += \
-                        "  ?x0 rdf:type ?type .\n" \
+                #text += \
+                #        "  ?x0 rdf:type ?type .\n" \
 
         return text
 
@@ -1166,6 +1169,9 @@ class cSparqlBuilder():
 
                 ontology = ''
                 while True:
+                    if item == "":
+                        item = ".*"
+                    
                     if item[0] in ('"', "'") and item[-1] in ('"', "'"):
                         parts = [item[1:-1], '', '']
 
