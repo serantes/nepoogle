@@ -170,6 +170,10 @@ class cDataFormat():
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["pimo:Topic", \
+                            "{pimo:tagLabel|l}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
@@ -190,7 +194,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
-                            "{nie:title|l|s:tvserie}" \
+                            "{nie:title|l|s:tvserie|ok:tvshow}" \
                                 "%[<br /><b>Last viewed episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
                                 "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
                                 " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
@@ -567,6 +571,7 @@ class cDataFormat():
             variable = toUnicode(variable)
             elements = variable.split("|")
             addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addSearch = False
+            openKIO = ""
             for item in elements:
                 if item == "l" or item[:1] == "l":
                     addLink = True
@@ -578,6 +583,9 @@ class cDataFormat():
                     
                 elif item == "ol":
                     addOpenLocation = True
+
+                elif item[:2] == "ok":
+                    openKIO = item[3:]
 
                 elif item == "s" or item[:2] == "s:":
                     addSearch = True
@@ -634,6 +642,9 @@ class cDataFormat():
 
                             if addLinkOpenLocation:
                                 displayValue += " " + self.htmlLinkOpenLocation % {"uri": os.path.dirname(value[1])}
+
+                            if openKIO != "":
+                                displayValue += " " + self.htmlLinkOpenLocation % {"uri": openKIO + ":/" + "?"}
                             
 
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
@@ -1022,7 +1033,7 @@ class cDataFormat():
 
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
 
-            output += tmpOutput + '</td></tr>\n'
+            output += "<hr>\n" + tmpOutput + '</td></tr>\n'
 
         output += self.htmlViewerTableFooter + "<hr>\n"
 
