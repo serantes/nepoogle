@@ -190,8 +190,11 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
-                            "{nie:title|l|s:tvserie}<br />" \
-                                "%[<b>Last episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . }|f%02d{/SPARQL}" \
+                            "{nie:title|l|s:tvserie}" \
+                                "%[<br /><b>Last viewed episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
+                                "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . }|f%02d{/SPARQL}" \
                                 "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . }|f%02d{/SPARQL}" \
                                 " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
                             "{type}", \
@@ -304,7 +307,7 @@ class cDataFormat():
                     value += column
 
             if uri != "":
-                #try:
+                try:
                     resource = Nepomuk.Resource(uri)
                     altLabel = resource.property(NOC('nao:altLabel')).toString()
                     fullName = resource.property(NOC('nco:fullname')).toString()
@@ -321,8 +324,8 @@ class cDataFormat():
                     if line[:2] == ", ":
                         line = line[2:]
 
-                #except:
-                #    line = value
+                except:
+                    line = value
 
             else:
                 for i in range(0, numColumns):
@@ -656,12 +659,15 @@ class cDataFormat():
 
             if variable[:7].lower() == "sparql:":
                 data = data.replace("{SPARQL}" + variable[7:] + "{/SPARQL}", formatValue)
+                variable = variable[7:]
 
             else:
                 data = data.replace("{" + variable + "}", formatValue)
 
             for i in range(0, len(optionalsEmpty)):
+                optionals[i] = optionals[i].replace("{SPARQL}" + variable + "{/SPARQL}", formatValue)
                 optionals[i] = optionals[i].replace("{" + variable + "}", formatValue)
+                optionalsEmpty[i] = optionalsEmpty[i].replace("{SPARQL}" + variable + "{/SPARQL}", "")
                 optionalsEmpty[i] = optionalsEmpty[i].replace("{" + variable + "}", "")
 
         # Empty optionals are eliminated.
@@ -781,12 +787,12 @@ class cDataFormat():
                         value += column
 
                 if uri != "":
-                    #try:
-                    if True:
+                    try:
+                    #if True:
                         line = self.formatHtmlLine(uri)
 
-                    #except:
-                    else:
+                    except:
+                    #else:
                         line = self.htmlTableRow % (value, "", "")
 
                 else:
