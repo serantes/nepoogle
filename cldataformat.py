@@ -67,6 +67,7 @@ class cDataFormat():
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.Small)
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
+    iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
     iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.Small)
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
@@ -140,6 +141,9 @@ class cDataFormat():
                             % {"to": "previous", "hotkey": "Ctrl+Left", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
     htmlLinkNavigateNext = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "next", "hotkey": "Ctrl+Right", "style": htmlStyleNavigate, "icon": iconNavigateNext}
+    htmlLinkOpenKIO = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
+                                + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconKIO) \
+                                + "</a>"
     htmlLinkOpenLocation = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
                                 + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconFileManager) \
                                 + "</a>"
@@ -204,7 +208,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
-                            "%[S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}%[<br \>Series: {nmm:series->nie:title|l|ol}%]", \
+                            "%[S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}%[<br \>Series: {nmm:series->nie:title|l|ol|ok:tvshow}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
@@ -570,8 +574,8 @@ class cDataFormat():
         for variable in variables:
             variable = toUnicode(variable)
             elements = variable.split("|")
-            addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addSearch = False
-            openKIO = ""
+            addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = False
+            KIOName = ""
             for item in elements:
                 if item == "l" or item[:1] == "l":
                     addLink = True
@@ -585,7 +589,8 @@ class cDataFormat():
                     addOpenLocation = True
 
                 elif item[:2] == "ok":
-                    openKIO = item[3:]
+                    addOpenKIO = True
+                    KIOName = item[3:]
 
                 elif item == "s" or item[:2] == "s:":
                     addSearch = True
@@ -643,15 +648,14 @@ class cDataFormat():
                             if addLinkOpenLocation:
                                 displayValue += " " + self.htmlLinkOpenLocation % {"uri": os.path.dirname(value[1])}
 
-                            if openKIO != "":
-                                displayValue += " " + self.htmlLinkOpenLocation % {"uri": openKIO + ":/" + "?"}
-                            
-
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
                 else:
                     formatValue += value[1]
 
+                if addOpenKIO:
+                    formatValue += " " + self.htmlLinkOpenKIO % {"uri": KIOName + ":/" + value[1]}
+                    
                 if addSearch:
                     formatValue += " " + self.htmlLinkSearch % {"uri": "%s:+'%s'" % (searchTerm, value[1])}
 
