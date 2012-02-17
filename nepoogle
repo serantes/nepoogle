@@ -735,16 +735,17 @@ class Nepoogle(QWidget):
                     "<br />\n" \
                     "<em>query</em> :== item [[logop] item]... | command | uri<br />\n"\
                     "<br />\n" \
-                    "<em>item</em> :== [ontology:][op]text<br />\n" \
-                    "<br />\n" \
                     "<em>logop</em> :== and | or<br />\n" \
-                    "<em>op</em> :== + | - | < | <= | > | >=<br />\n" \
+                    "<em>compop</em> :==  = | < | <= | > | >=<br />\n" \
+                    "<em>op</em> :== + | - | compop<br />\n" \
+                    "<br />\n" \
+                    "<em>item</em> :== [ontology:][op]text | &lt;ontology&gt;&lt;op&gt;&lt;text&gt;<br />\n" \
                     "<br />\n" \
                     "<em>ontology</em> :== [ontitem=]ontitem[->[ontitem=]ontitem]]...<br />\n" \
                     "<em>ontitem</em> :== shortcutontology | shortontology | fullontology<br />\n" \
                     "<em>shortcutontology</em> :== %(shortcuts)s<br />\n" \
                     "<em>shortontology</em> :== prefix:name<br />\n" \
-                    "<em>fullontology</em> :== http://url<br />\n" \
+                    "<em>fullontology</em> :== &lt;http://fullurl&gt;<br />\n" \
                     "<br />\n" \
                     "<em>text</em> :== date | number | string | time<br />\n" \
                     "<em>date</em> :== yyyy-mm-dd | month | day | year<br />\n" \
@@ -1394,6 +1395,7 @@ def buildHelp():
           "commands:\n" \
           "  --help           -- Shows this help\n" \
           "  --gui[=MODE]     -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
+          "  --results[=MODE] -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
           "  --verbose[=MODE] -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
           "\n" \
           "query:\n" \
@@ -1426,6 +1428,7 @@ def main(args):
     #options.add("--nostdout", ki18n("force no stdout in gui mode"))
     #KCmdLineArgs.addCmdLineOptions(options)
     
+    displayResults = None
     gui = not sys.stdout.isatty()
     verboseMode = None
     parameters = toUnicode('')
@@ -1471,6 +1474,25 @@ def main(args):
                 
             continue
         
+        elif parameter.lower()[:9] == '--results':
+            paramValue = parameter.lower()[9:]
+            if paramValue == '':
+                if verboseMode == None:
+                    displayResults = True
+
+            elif paramValue == '=on':
+                displayResults = True
+
+            elif paramValue == '=off':
+                displayResults = False
+
+            else:
+                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                buildHelp()
+                quit()
+
+            continue
+
         elif parameter.find(' ') >= 0:
             j = parameter.rfind(':')
             if j >= 0:
@@ -1543,8 +1565,10 @@ def main(args):
                     warningsList =  oSparql.warningsList
                     oSparql.warningsList = []
 
-                oDataFormat = cDataFormat(searchString)
-                oDataFormat.formatAsText(data, structure, time)
+                if displayResults in (None, True):
+                    oDataFormat = cDataFormat(searchString)
+                    oDataFormat.formatAsText(data, structure, time)
+                    
                 output = "\n%(records)s records found in %(seconds)f seconds.\n" \
                             "--\n" \
                             "Powered by %(name)s %(version)s (%(date)s)" \
