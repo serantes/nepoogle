@@ -473,8 +473,8 @@ class cSparqlBuilder():
                     ['_nmm:composer->nco:fullname', _('composer'), _('cm')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
-                    ['nie:contentCreated', _('contentcreated'), _('cd')], \
-                    ['nie:contentCreated', _('created'), _('cd')], \
+                    ['nao:created', _('created'), _('cd')], \
+                    ['nie:contentCreated', _('contentcreated'), _('cc')], \
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
@@ -1238,6 +1238,16 @@ class cSparqlBuilder():
 
                 oneFilter = [data, operator, ontology]
                 addAnd = True
+
+            # A little bit of language improvement.
+            if oneFilter[2] == "":
+                for op in (">=", "<=", ">", "<", "="):
+                    oneFilterDummy = oneFilter[0].split(op)
+                    if len(oneFilterDummy) > 1:
+                        oneFilter[0] = oneFilterDummy[1]
+                        oneFilter[1] = op
+                        oneFilter[2] = oneFilterDummy[0]
+                        break
 
             allFilters += [oneFilter]
 
