@@ -1249,6 +1249,10 @@ class cSparqlBuilder():
                         oneFilter[2] = oneFilterDummy[0]
                         break
 
+            if oneFilter[0][0] == "=":
+                oneFilter[0] = oneFilter[0][1:]
+            # A little bit of language improvement.
+
             allFilters += [oneFilter]
 
         # Check basic errors.
