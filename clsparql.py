@@ -434,6 +434,7 @@ class cSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
+    #ontologyFilters = ['?p0', '%nie:url']
     # All in lowercase so search in lowercase.
     #TODO: esta información, en forma básica, está en la base de datos. Ejemplo:
     #select *
@@ -709,7 +710,6 @@ class cSparqlBuilder():
             typeMark = None
 
         try:
-            print val
             intVal = int(val)
             if typeMark == None:
                 if ((intVal >= 1) and (intVal <= 24)):
