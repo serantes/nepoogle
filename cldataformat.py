@@ -847,7 +847,7 @@ class cDataFormat():
 
         query = "SELECT DISTINCT ?ont ?val\n" \
                 "WHERE {\n" \
-                    "\t<" + uri + "> ?ont ?val .\n"\
+                    "\t<" + uri + "> ?ont ?val ; nao:userVisible 1 .\n"\
                 "}\n"
         if stdout:
             print toUtf8(query)
@@ -1004,7 +1004,7 @@ class cDataFormat():
         # Reverse resources.
         query = "select ?uri ?ont\n" \
                 "   where { " \
-                "       ?uri ?ont <%s> ." \
+                "       ?uri ?ont <%s> ; nao:userVisible 1 . " \
                 "}" \
                 "order by ?ont" % uri
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
