@@ -612,10 +612,18 @@ class cDataFormat():
                         
                     for value in values:
                         if fmtValueToNumber:
-                            value[1] = fmtValue % int(value[1])
+                            try:
+                                value[1] = fmtValue % int(value[1])
+                                
+                            except:
+                                value[1] = "0"
 
                         else:
-                            value[1] = fmtValue % value[1]
+                            try:
+                                value[1] = fmtValue % value[1]
+
+                            except:
+                                value[1] = "0"
 
                 else:
                     values = self.readValues(resource, item)
