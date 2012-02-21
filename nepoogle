@@ -1552,7 +1552,7 @@ def main(args):
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
                         
                     # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
-                    query = "SELECT DISTINCT ?r\n" + query[query.find("where"):]
+                    query = "SELECT DISTINCT ?r " + query[query.find("where"):]
                     data, structure, time = oSparql.executeQuery(query)
 
                 elif searchEngine == 2:
