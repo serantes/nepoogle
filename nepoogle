@@ -1568,7 +1568,6 @@ def main(args):
                     # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
                     query = "SELECT DISTINCT ?r " + query[query.find("where"):]
                     query = query.replace('SELECT DISTINCT ?r where { { { ', 'SELECT DISTINCT ?r WHERE { { ')
-                    print query
                     if verboseMode:
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
