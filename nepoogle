@@ -1298,16 +1298,22 @@ class Nepoogle(QWidget):
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
-                    # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
-                    query = "SELECT DISTINCT ?r\n" + query[query.find(" where "):]
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
-                        query = query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")
-                        print toUtf8(query)
+                        print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+
+                    query = hackQueryParser(query, 'e0')
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
                 elif searchEngine == 2:
-                    raise Exception('v2 engine not available.')
+                    oNQP = Nepomuk.Query.QueryParser()
+                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    if (self.verboseMode and sys.stdout.isatty()):
+                        # Improve a little bit readability.
+                        print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+
+                    query = hackQueryParser(query, 'e2')
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
                 else:
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
@@ -1385,6 +1391,27 @@ class Nepoogle(QWidget):
         if warningMsg != "":
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
 
+
+def hackQueryParser(query = '', hackLevel = 'e2'):
+
+    if hackLevel.lower() == 'e2':
+        query = query.replace(' ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> ?v1 . FILTER(?v1>0) .', '')
+        query = query.replace(' UNION { ?r ', ' UNION { ?0 ')
+        query = query.replace(' { ?r ', ' { SELECT ?r WHERE { { ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> 1 . ?r ')
+        query = query.replace(' UNION { ?0 ', ' UNION { ?r ')
+        query = query.replace(' } .', '}}} .')
+        query = query.replace('.}}} .}}} . }', '. }}} . }')
+
+        # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
+        query = "SELECT DISTINCT ?r " + query[query.find("where"):]
+        query = query.replace('SELECT DISTINCT ?r where { { { ', 'SELECT DISTINCT ?r WHERE { { ')
+
+    elif hackLevel.lower() == 'e0':
+        # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
+        query = "SELECT DISTINCT ?r " + query[query.find("where"):]
+
+    return query
+    
   
 def buildHelp():
     print "%(name)s %(version)s (%(date)s)\n" \
@@ -1522,7 +1549,7 @@ def main(args):
 
         if searchString != '':
             nepoogle.execQuery()
-
+            
         sys.exit(app.exec_())
 
     else:
@@ -1551,27 +1578,17 @@ def main(args):
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
                         
-                    # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
-                    query = "SELECT DISTINCT ?r " + query[query.find("where"):]
+                    query = hackQueryParser(query, 'e0')
                     data, structure, time = oSparql.executeQuery(query)
 
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
-                    query = query.replace(' ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> ?v1 . FILTER(?v1>0) .', '')
-                    query = query.replace(' UNION { ?r ', ' UNION { ?0 ')
-                    query = query.replace(' { ?r ', ' { SELECT ?r WHERE { { ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> 1 . ?r ')
-                    query = query.replace(' UNION { ?0 ', ' UNION { ?r ')
-                    query = query.replace(' } .', '}}} .')
-                    query = query.replace('.}}} .}}} . }', '. }}} . }')
-                    
-                    # Removing ?_n_f_t_m_ex_ field to avoid duplicates in the result.
-                    query = "SELECT DISTINCT ?r " + query[query.find("where"):]
-                    query = query.replace('SELECT DISTINCT ?r where { { { ', 'SELECT DISTINCT ?r WHERE { { ')
                     if verboseMode:
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
 
+                    query = hackQueryParser(query, 'e2')
                     data, structure, time = oSparql.executeQuery(query)
 
                 else:
