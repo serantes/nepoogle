@@ -210,7 +210,7 @@ class cDataFormat():
                         ["nmm:TVShow", \
                             "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
                                 "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
-                                " %[<b>Viewed</b>: {nuao:usageCount} times%]", \
+                                "%[ <b>Viewed</b>: {nuao:usageCount} times%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
@@ -613,19 +613,20 @@ class cDataFormat():
                         fmtValueToNumber = True
                         
                     for value in values:
-                        if fmtValueToNumber:
-                            try:
-                                value[1] = fmtValue % int(value[1])
-                                
-                            except:
-                                value[1] = "0"
+                        if value[1] != "":
+                            if fmtValueToNumber:
+                                try:
+                                    value[1] = fmtValue % int(value[1])
 
-                        else:
-                            try:
-                                value[1] = fmtValue % value[1]
+                                except:
+                                    value[1] = "0"
 
-                            except:
-                                value[1] = "0"
+                            else:
+                                try:
+                                    value[1] = fmtValue % value[1]
+
+                                except:
+                                    value[1] = "0"
 
                 else:
                     values = self.readValues(resource, item)
