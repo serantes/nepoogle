@@ -1308,11 +1308,11 @@ class Nepoogle(QWidget):
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    query = hackQueryParser(query, 'e2')
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
 
-                    query = hackQueryParser(query, 'e2')
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
                 else:
@@ -1584,11 +1584,11 @@ def main(args):
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    query = hackQueryParser(query, 'e2')
                     if verboseMode:
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
 
-                    query = hackQueryParser(query, 'e2')
                     data, structure, time = oSparql.executeQuery(query)
 
                 else:
