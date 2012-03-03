@@ -63,6 +63,10 @@ class cDataFormat():
     structure = []
     videojsEnabled = False
 
+    supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
+    supportedImageFormats = QImageReader.supportedImageFormats()
+    supportedVideoFormats = ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "webm", "wmv")
+    
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.Small)
@@ -124,6 +128,9 @@ class cDataFormat():
     htmlStadistics = "%(records)s records found in %(seconds)f seconds." \
                         "&nbsp;HTML visualization builded in %(sechtml)s seconds." \
                         
+    htmlLinkDelete = "<a title=\"Delete\" href=\"delete:/%(uri)s\">" \
+                            + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
+                            + "</a>"
     htmlLinkDolphin = "<a title=\"Open with Dolphin\" href=\"dolp:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconFileManager) \
                         + "</a>"
@@ -150,7 +157,7 @@ class cDataFormat():
     htmlLinkProperties = "<a title=\"Properties\" href=\"prop:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDocumentInfo) \
                             + "</a>"
-    htmlLinkRemove = "<a title=\"Remove\" href=\"remove:/%(uri)s\">" \
+    htmlLinkRemove = "<a title=\"Remove resource\" href=\"remove:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
                             + "</a>"
     htmlLinkSearch = "<a title=\"%(uri)s\" href=\"query:/%(uri)s\">" \
@@ -223,7 +230,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileHash", \
                             "<b>File hash</b>: {nie:url|l|of|ol}" \
-                                "<br /><b>Associated files</b>:<br />{SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?uri nfo:hasHash <%(uri)s> . optional { ?uri nie:url ?value } . } ORDER BY ?value|lfl|n{/SPARQL}", \
+                                "<br /><b>Associated files</b>:<br />{SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?uri nfo:hasHash <%(uri)s> . optional { ?uri nie:url ?value } . } ORDER BY ?value|lfld|n{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:Folder", \
@@ -583,6 +590,7 @@ class cDataFormat():
                     addLink = True
                     addLinkOpenFile = (item[1:].find("f") >= 0)
                     addLinkOpenLocation = (item[1:].find("l") >= 0)
+                    addLinkDelete = (item[1:].find("d") >= 0)
 
                 elif item == "of":
                     addOpenFile = True
@@ -658,6 +666,9 @@ class cDataFormat():
 
                             if addLinkOpenLocation:
                                 displayValue += " " + self.htmlLinkOpenLocation % {"uri": os.path.dirname(value[1])}
+
+                            if addLinkDelete:
+                                displayValue += " " + self.htmlLinkDelete % {"uri": value[1]}
 
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
@@ -912,10 +923,12 @@ class cDataFormat():
 
                     elif resource.hasType(NOC('rdfs:Resource', True)):
                         ontLabel = ''
-                        ext = os.path.splitext(toUnicode(resource.genericLabel()))[1][1:]
-                        if ext != '' and ext in QImageReader.supportedImageFormats():
+                        ext = os.path.splitext(toUnicode(resource.genericLabel()))[1][1:].lower()
+                        if ext != '' and ext in self.supportedImageFormats:
                             if resource.hasProperty(NOC('nie:url')):
-                                images += [toUnicode(resource.property(NOC('nie:url')).toString())]
+                                url = toUnicode(resource.property(NOC('nie:url')).toString())
+                                if not url in images:
+                                    images += [url]
 
                     else:
                         value = toUnicode(resource.type())
@@ -939,14 +952,17 @@ class cDataFormat():
                     url = fromPercentEncoding(value)
                     ext = os.path.splitext(url)[1][1:].lower()
                     if ((ext != '') and fileExists(url)):
-                        if ext in QImageReader.supportedImageFormats():
-                            images += [value]
+                        if ext in self.supportedImageFormats:
+                            if not value in images:
+                                images += [value]
 
-                        elif ext in ("flac", "mp3", "ogg", "wav"):
-                            audios += [value]
+                        elif ext in self.supportedAudioFormats:
+                            if not value in audios:
+                                audios += [value]
 
-                        elif ext in ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "wmv"):
-                            videos += [value]
+                        elif ext in self.supportedVideoFormats:
+                            if not value in videos:
+                                videos += [value]
 
                     value = ''
                     if url[:7] == 'file://':
@@ -971,9 +987,10 @@ class cDataFormat():
 
                 else:
                     if fileExists(value):
-                        ext = os.path.splitext(value)[1][1:]
-                        if ext != '' and ext in QImageReader.supportedImageFormats():
-                            images += [value]
+                        ext = os.path.splitext(value)[1][1:].lower()
+                        if ext != '' and ext in self.supportedImageFormats:
+                            if not value in images:
+                                images += [value]
 
                         if value[:7] != 'file://':
                             value = 'file://' + value
@@ -1026,7 +1043,13 @@ class cDataFormat():
                 res = Nepomuk.Resource(uri)
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 val = toUnicode(res.genericLabel())
-                reverseResources += [[uri, NOCR(data["ont"].toString()), val]]
+                if res.hasProperty(NOC('nie:url')):
+                    url = toUnicode(res.property(NOC('nie:url')).toString())
+
+                else:
+                    url = None
+                    
+                reverseResources += [[uri, NOCR(data["ont"].toString()), val, url]]
 
             tmpOutput = ''
             if len(reverseResources) > 0:
@@ -1045,6 +1068,20 @@ class cDataFormat():
                     tmpOutput += '<!-- ' + item[2] + '-->' \
                                     + self.htmlRenderLink('uri', item[0], item[2]) # \
                                     #+ ' ' + self.htmlRenderLink('ontology', item[1], item[2])
+
+                    if ((item[3] != None) and fileExists(item[3])):
+                        ext = os.path.splitext(item[3])[1][1:].lower()
+                        if ext in self.supportedImageFormats:
+                            if not item[3] in images:
+                                images += [item[3]]
+
+                        elif ext in self.supportedAudioFormats:
+                            if not item[3] in audios:
+                                audios += [item[3]]
+
+                        elif ext in self.supportedVideoFormats:
+                            if not item[3] in videos:
+                                videos += [item[3]]
 
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
 
