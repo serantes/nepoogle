@@ -501,7 +501,18 @@ class Nepoogle(QWidget):
         url = toUnicode(url.toString())
         print toUtf8(url)
         
-        if url[:6] == 'dolp:/':
+        if url[:8] == 'delete:/':
+            reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:            
+                subprocess.Popen(['kioclient', 'move', url[8:], 'trash:/'])
+                self.pendingQuery = True
+                self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                                        % self.iconProcessIdle)
+                if forceExec:
+                    self.execQuery()
+                    self.pendingQuery = False
+
+        elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
 
         elif url[:6] == 'konq:/':
