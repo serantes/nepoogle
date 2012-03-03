@@ -885,8 +885,8 @@ class cDataFormat():
                         "<script src=\"http://vjs.zencdn.net/c/video.js\"></script>\n"
                             
         output = self.htmlPageHeader % ('Resource viewer', script) \
-                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;&nbsp;%(navigator)s<cached /></h2><hr>' \
-                        % {'uri': uri, "navigator": self.htmlRenderLink("navigator")}
+                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2><hr>' \
+                        % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri}, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlViewerTableHeader
 
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)

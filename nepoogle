@@ -484,6 +484,11 @@ class Nepoogle(QWidget):
             elif event.key() == Qt.Key_Right:
                 self.linkClicked(QUrl("navigate:/next"))
 
+            if event.key() == Qt.Key_Delete:
+                uri = toUnicode(self.leSearch.text()).strip()
+                if uri[:13] == 'nepomuk:/res/':
+                    self.linkClicked(QUrl("remove:/" + uri))
+
             #else
                 #pass
                 
@@ -587,6 +592,7 @@ class Nepoogle(QWidget):
                 resource = Nepomuk.Resource(url[8:])
                 resource.remove()
                 self.pendingQuery = True
+                self.queryMethod = "refresh"
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                         % self.iconProcessIdle)
                 if forceExec:
