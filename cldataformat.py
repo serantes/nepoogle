@@ -1094,41 +1094,47 @@ class cDataFormat():
             
         # Resource audios.
         if len(audios) > 0:
-            for audio in audios:
-                if audio[:7] != "file://":
-                    audio = "file://" + audio
+            for url in audios:
+                if url[:7] != "file://":
+                    url = "file://" + url
 
-                output += "<audio src=\"" + audio + "\" controls preload>" \
-                            "No audio support</audio>"
+                output += "<audio src=\"" + url + "\" controls preload>" \
+                            "No audio support</audio><br />"
+                output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
+                output += '<hr>'
 
         # Resource images.
         if len(images) > 0:
-            for image in images:
-                if image[:7] != 'file://':
-                    image = 'file://' + image
+            for url in images:
+                if url[:7] != 'file://':
+                    url = 'file://' + url
 
                 if self.enableImageViewer:
-                    output += imageViewer % {'url': image}
+                    output += imageViewer % {'url': url}
 
                 else:
                     output += '<img title=\"%(url)s\" style=\"height:auto;width:400px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                % {'url': image}
+                                % {'url': url}
+                output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
+                output += '<hr>'
 
             output += '<hr>\n'
 
         # Resource videos.
         if len(videos) > 0:
-            for video in videos:
-                if video[:7] != "file://":
-                    video = "file://" + video
+            for url in videos:
+                if url[:7] != "file://":
+                    url = "file://" + url
 
                 if self.videojsEnabled:
                     output += "<video class=\"video-js vjs-default-skin\" controls preload=\"none\" %s data-setup=\"{}\">\n" \
-                                "<source src=\"%s\" type=\"video/mp4\" />\nNo video support\n</video>" % (self.htmlVideoSize, video)
+                                "<source src=\"%s\" type=\"video/mp4\" />\nNo video support\n</video><br />" % (self.htmlVideoSize, url)
 
                 else:
-                    output += "<video src=\"" + video + "\" %s controls preload>" \
-                                "No video support</video>" % (self.htmlVideoSize)
+                    output += "<video src=\"" + url + "\" %s controls preload>" \
+                                "No video support</video><br />" % (self.htmlVideoSize)
+                output += "<b>File name</b>:<title>%s</title><em>%s</em><br /><br />" % (url, os.path.basename(url))
+                output += '<hr>'
 
         output += self.htmlProgramInfo
         output += self.htmlPageFooter
