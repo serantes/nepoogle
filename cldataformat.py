@@ -953,16 +953,16 @@ class cDataFormat():
                     ext = os.path.splitext(url)[1][1:].lower()
                     if ((ext != '') and fileExists(url)):
                         if ext in self.supportedImageFormats:
-                            if not value in images:
-                                images += [value]
+                            if not url in images:
+                                images += [url]
 
                         elif ext in self.supportedAudioFormats:
-                            if not value in audios:
-                                audios += [value]
+                            if not url in audios:
+                                audios += [url]
 
                         elif ext in self.supportedVideoFormats:
-                            if not value in videos:
-                                videos += [value]
+                            if not url in videos:
+                                videos += [url]
 
                     value = ''
                     if url[:7] == 'file://':
@@ -999,7 +999,7 @@ class cDataFormat():
                                     % {'url': value, 'name': os.path.basename(value)}
 
                     else:
-                        # No es un fichero así que añadimos los links si hay urls.
+                        # No es un fichero así que añadimos los linksitem[3] si hay urls.
                         value = addLinksToText(value)
 
                 if value != '':
@@ -1069,19 +1069,25 @@ class cDataFormat():
                                     + self.htmlRenderLink('uri', item[0], item[2]) # \
                                     #+ ' ' + self.htmlRenderLink('ontology', item[1], item[2])
 
-                    if ((item[3] != None) and fileExists(item[3])):
-                        ext = os.path.splitext(item[3])[1][1:].lower()
+                    url = item[3] 
+                    if ((url != None) and fileExists(url)):
+                        ext = os.path.splitext(url)[1][1:].lower()
                         if ext in self.supportedImageFormats:
-                            if not item[3] in images:
-                                images += [item[3]]
+                            if not url in images:
+                                images += [url]
 
                         elif ext in self.supportedAudioFormats:
-                            if not item[3] in audios:
-                                audios += [item[3]]
+                            if defaultType == "nmm:MusicAlbum":
+                                if lindex(audios, url) == None:
+                                    audios += [[url, item[0]]]
+
+                            else:
+                                if not url in audios:
+                                    audios += [url]
 
                         elif ext in self.supportedVideoFormats:
-                            if not item[3] in videos:
-                                videos += [item[3]]
+                            if not url in videos:
+                                videos += [url]
 
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
 
@@ -1091,21 +1097,10 @@ class cDataFormat():
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "<h3><b>Preview</b></h3>\n"
-            
-        # Resource audios.
-        if len(audios) > 0:
-            for url in audios:
-                if url[:7] != "file://":
-                    url = "file://" + url
-
-                output += "<audio src=\"" + url + "\" controls preload>" \
-                            "No audio support</audio><br />"
-                output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
-                output += '<hr>'
 
         # Resource images.
         if len(images) > 0:
-            for url in images:
+            for url in sorted(images):
                 if url[:7] != 'file://':
                     url = 'file://' + url
 
@@ -1120,9 +1115,114 @@ class cDataFormat():
 
             output += '<hr>\n'
 
+        # Resource audios.
+        if len(audios) > 0:
+            # Dirty hack for support covers in nmm:MusicAlbum.
+            if defaultType == "nmm:MusicAlbum":
+                url = audios[0][0]
+                if url[:7] != "file://":
+                    url = "file://" + url
+                url = os.path.dirname(url)
+                for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
+                    coverUrl = url + '/' + coverName
+                    if fileExists(coverUrl):
+                        output += "<b>Album cover</b><br />"
+                        output += '<img title=\"%(url)s\" style=\"height:auto;width:300px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                        % {'url': coverUrl}
+                        output += "<br />\n"
+                        break
+
+                audios = sorted(audios, key=lambda audio: audio[0])
+                
+                url = audios[0][0]
+                if url[:7] != "file://":
+                    url = "file://" + url
+                output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br />\n" % url
+
+                i = 0
+                playList = ""
+                for item in audios:
+                    url = item[0]
+                    if url[:7] != "file://":
+                        url = "file://" + url
+                    res = Nepomuk.Resource(item[1])
+                    try:
+                        trackNumber = int(res.property(NOC('nmm:trackNumber')).toString())
+                        
+                    except:
+                        trackNumber = None
+
+                    try:
+                        discNumber = int(res.property(NOC('nmm:setNumber')).toString())
+
+                    except:
+                        discNumber = None
+                        
+                    title = res.property(NOC('nie:title')).toString()
+                    if trackNumber != None:
+                        title = "%02d - " % trackNumber + title
+                        
+                    if discNumber != None:
+                        title = "%02d/" % discNumber + title
+                        
+                    playList += "playlist[%s] = ['%s', '%s']\n" % (i, url, title)
+                    i += 1
+
+                output += "<script>\n" \
+                    "var currItem = 0;\n" \
+                    "var totalItems = %s;\n" \
+                    "var playlist = new Array();\n" \
+                    "%s" % (i, playList)
+
+                output += \
+                    "for ( var i = 0; i < totalItems; i++ ) {\n" \
+                    "    trackNum = i+1\n" \
+                    "    document.write(\"<div id='track\" + i + \"'><button onclick='playTrack(\" + i + \")' type='btnTrack'\" + i +\">&nbsp;\" + trackNum + \"&nbsp;</button>&nbsp;\" + playlist[i][1] + '</div>');\n" \
+                    "}\n" \
+                    "var player = document.getElementById('player');\n" \
+                    "player.addEventListener('play', function () {\n" \
+                    "    for ( var i = 0; i < totalItems; i++ ) {\n" \
+                    "        var track = document.getElementById('track' + i);\n" \
+                    "        if (i == currItem) {\n" \
+                    "            track.style.fontWeight = 'bold';\n" \
+                    "        } else {\n" \
+                    "            track.style.fontWeight = 'normal';\n" \
+                    "        }\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "player.addEventListener('ended', function () {\n" \
+                    "    currItem += 1;\n" \
+                    "    if (currItem < totalItems) {\n" \
+                    "        player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "        player.play();\n" \
+                    "    } else {\n" \
+                    "        currItem = currItem - 1;\n" \
+                    "        var track = document.getElementById('track' + currItem);\n" \
+                    "        track.style.fontWeight = 'normal';\n" \
+                    "        currItem = 0;\n" \
+                    "        player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "function playTrack(track) {\n" \
+                    "    currItem = track;\n" \
+                    "    player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "    player.play();\n" \
+                    "}\n" \
+                    "</script>\n"
+
+            else:
+                for url in sorted(audios):
+                    if url[:7] != "file://":
+                        url = "file://" + url
+
+                    output += "<audio src=\"" + url + "\" controls preload>" \
+                                "No audio support</audio><br />"
+                    output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
+                    output += '<hr>'
+
         # Resource videos.
         if len(videos) > 0:
-            for url in videos:
+            for url in sorted(videos):
                 if url[:7] != "file://":
                     url = "file://" + url
 
