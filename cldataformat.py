@@ -962,8 +962,8 @@ class cDataFormat():
                                 audios += [[url, uri]]
 
                         elif ext in self.supportedVideoFormats:
-                            if not url in videos:
-                                videos += [url]
+                            if lindex(videos, url) == None:
+                                videos += [[url, uri]]
 
                     value = ''
                     if url[:7] == 'file://':
@@ -1079,18 +1079,13 @@ class cDataFormat():
                                 images += [url]
 
                         elif ext in self.supportedAudioFormats:
-                            #if defaultType == "nmm:MusicAlbum":
-                                if lindex(audios, url) == None:
-                                    audios += [[url, item[0]]]
-
-                            #else:
-                                #if not url in audios:
-                                #    audios += [url]
+                            if lindex(audios, url) == None:
+                                audios += [[url, item[0]]]
 
                         elif ext in self.supportedVideoFormats:
-                            if not url in videos:
-                                videos += [url]
-
+                            if lindex(videos, url) == None:
+                                videos += [[url, item[0]]]
+                                
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
                 reverseResourcesList[-1][1] = reverseResourcesList[-1][1] + tmpOutput + '</td></tr>\n'
 
@@ -1144,7 +1139,6 @@ class cDataFormat():
                     output += "<br />\n"
     
             audios = sorted(audios, key=lambda audio: audio[0])
-
             i = 0
             playList = []
             for item in audios:
@@ -1174,7 +1168,9 @@ class cDataFormat():
                 playList += [[item[1], i, url, title.replace('"', '\\"')]]
                 i += 1
 
-            url = audios[0][0]
+            playList = sorted(playList, key=lambda item: item[3])
+            url = playList[0][2]
+            #url = audios[0][0]
             if url[:7] != "file://":
                 url = "file://" + url
             output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br /><b>Playlist</b>:<br />\n" % url
@@ -1238,19 +1234,107 @@ class cDataFormat():
 
         # Resource videos.
         if len(videos) > 0:
-            for url in sorted(videos):
+            i = 0
+            playList = []
+            for item in videos:
+                url = item[0]
                 if url[:7] != "file://":
                     url = "file://" + url
-
-                if self.videojsEnabled:
-                    output += "<video class=\"video-js vjs-default-skin\" controls preload=\"none\" %s data-setup=\"{}\">\n" \
-                                "<source src=\"%s\" type=\"video/mp4\" />\nNo video support\n</video><br />" % (self.htmlVideoSize, url)
+                res = Nepomuk.Resource(item[1])
+                
+                title = res.property(NOC('nie:title')).toString()
+                if title == "":
+                    title = os.path.basename(url)
 
                 else:
-                    output += "<video src=\"" + url + "\" %s controls preload>" \
-                                "No video support</video><br />" % (self.htmlVideoSize)
-                output += "<b>File name</b>:<title>%s</title><em>%s</em><br /><br />" % (url, os.path.basename(url))
-                output += '\n<hr>\n'
+                    try:
+                        episodeNumber = int(res.property(NOC('nmm:episodeNumber')).toString())
+
+                    except:
+                        episodeNumber = None
+
+                    try:
+                        seasonNumber = int(res.property(NOC('nmm:season')).toString())
+
+                    except:
+                        seasonNumber = None
+
+                    if episodeNumber != None:
+                        title = "E%02d - " % episodeNumber + title
+
+                    if seasonNumber != None:
+                        title = "S%02d" % seasonNumber + title
+
+                playList += [[item[1], i, url, title.replace('"', '\\"')]]
+                i += 1
+
+            playList = sorted(playList, key=lambda item: item[3])
+            url = playList[0][2]
+            if url[:7] != "file://":
+                url = "file://" + url
+            output += "<b>Video player</b><br />\n" \
+                        "<video id=\"vplayer\" " \
+                            "src=\"file://%s\" %s controls preload>No video support</video><br />" \
+                            "<b>Playlist</b>:<br />\n" % (url, self.htmlVideoSize)
+            
+            output += "<script>\n" \
+                "var currItem = 0;\n" \
+                "var totalItems = %s;\n" \
+                "var vplayList = new Array();\n" % i
+
+            i = 0
+            for item in playList:
+                output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (item[1], item[2], item[3])
+                output += "document.write(\"<div id='track%(i)s'>" \
+                            "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
+                            "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
+                i += 1
+
+            output += \
+                "var vplayer = document.getElementById('vplayer');\n" \
+                "vplayer.addEventListener('play', function () {\n" \
+                "    for ( var i = 0; i < totalItems; i++ ) {\n" \
+                "        var track = document.getElementById('track' + i);\n" \
+                "        if (i == currItem) {\n" \
+                "            track.style.fontWeight = 'bold';\n" \
+                "        } else {\n" \
+                "            track.style.fontWeight = 'normal';\n" \
+                "        }\n" \
+                "    }\n" \
+                "} );\n" \
+                "vplayer.addEventListener('ended', function () {\n" \
+                "    currItem += 1;\n" \
+                "    if (currItem < totalItems) {\n" \
+                "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                "        vplayer.play();\n" \
+                "    } else {\n" \
+                "        currItem = currItem - 1;\n" \
+                "        var track = document.getElementById('track' + currItem);\n" \
+                "        track.style.fontWeight = 'normal';\n" \
+                "        currItem = 0;\n" \
+                "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                "    }\n" \
+                "} );\n" \
+                "function playTrack(track) {\n" \
+                "    currItem = track;\n" \
+                "    vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                "    vplayer.play();\n" \
+                "}\n" \
+                "</script>\n"
+
+            #for url in sorted(videos):
+                #if url[:7] != "file://":
+                    #url = "file://" + url
+
+                #if self.videojsEnabled:
+                    #output += "<video class=\"video-js vjs-default-skin\" controls preload=\"none\" %s data-setup=\"{}\">\n" \
+                                #"<source src=\"%s\" type=\"video/mp4\" />\nNo video support\n</video><br />" % (self.htmlVideoSize, url)
+
+                #else:
+                    #output += "<video src=\"" + url + "\" %s controls preload>" \
+                                #"No video support</video><br />" % (self.htmlVideoSize)
+                #output += "<b>File name</b>:<title>%s</title><em>%s</em><br /><br />" % (url, os.path.basename(url))
+                #output += '\n<hr>\n'
 
         output += self.htmlProgramInfo
         output += self.htmlPageFooter
