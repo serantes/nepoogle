@@ -471,7 +471,7 @@ class cSparqlBuilder():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
-                    ['_nmm:composer->nco:fullname', _('composer'), _('cm')], \
+                    ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('artistalbum'), _('aa')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
                     ['nao:created', _('created'), _('cd')], \
@@ -768,7 +768,12 @@ class cSparqlBuilder():
         for item in ontologies:
             textAux = ""
             ontologyElements = item.split("->")
-            i = 0
+            if item.find('?x0') >= 0:
+                i = 1
+                
+            else:
+                i = 0
+                
             optionalUsage = False
             for ontology in ontologyElements:
                 ontology = ontology.strip()
