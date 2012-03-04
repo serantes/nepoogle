@@ -77,6 +77,7 @@ class cDataFormat():
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
     iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.Small)
+    iconNoCover = KIconLoader().iconPath('audio-x-generic', KIconLoader.Desktop)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
@@ -885,7 +886,7 @@ class cDataFormat():
                         "<script src=\"http://vjs.zencdn.net/c/video.js\"></script>\n"
                             
         output = self.htmlPageHeader % ('Resource viewer', script) \
-                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2><hr>' \
+                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2>\n<hr>\n' \
                         % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri}, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlViewerTableHeader
 
@@ -1036,7 +1037,8 @@ class cDataFormat():
                 "}" \
                 "order by ?ont" % uri
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        reverseResources = []
+        reverseResourcesItems = []
+        reverseResourcesList = []
         if data.isValid():
             while data.next():
                 uri = toUnicode(data["uri"].toString())
@@ -1049,26 +1051,26 @@ class cDataFormat():
                 else:
                     url = None
                     
-                reverseResources += [[uri, NOCR(data["ont"].toString()), val, url]]
+                reverseResourcesItems += [[uri, NOCR(data["ont"].toString()), val, url]]
 
             tmpOutput = ''
-            if len(reverseResources) > 0:
-                reverseResources = sorted(reverseResources, key=lambda revRes: revRes[1] + revRes[2])
+            if len(reverseResourcesItems) > 0:
+                reverseResourcesItems = sorted(reverseResourcesItems, key=lambda revRes: revRes[1] + revRes[2])
                 oldOnt = ''
-                for item in reverseResources:
+                for item in reverseResourcesItems:
                     if oldOnt != item[1]:
-                        if tmpOutput != '':
-                            output += tmpOutput.replace('</a><', '</a>, <')
-                            tmpOutput = ''
-
-                        output += '<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>' \
-                                    % (item[1], ontologyToHuman(item[1], True))
+                        if tmpOutput != "":
+                            tmpOutput = tmpOutput.replace('</a><', '</a>, <')
+                            reverseResourcesList[-1][1] = reverseResourcesList[-1][1] + tmpOutput
+                            tmpOutput = ""
+                            
+                        reverseResourcesList += [[item[1], '\n<hr>\n<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>' \
+                                    % (item[1], ontologyToHuman(item[1], True))]]
                         oldOnt = item[1]
 
                     tmpOutput += '<!-- ' + item[2] + '-->' \
-                                    + self.htmlRenderLink('uri', item[0], item[2]) # \
-                                    #+ ' ' + self.htmlRenderLink('ontology', item[1], item[2])
-
+                                    + self.htmlRenderLink('uri', item[0], item[2])
+                                    
                     url = item[3] 
                     if ((url != None) and fileExists(url)):
                         ext = os.path.splitext(url)[1][1:].lower()
@@ -1090,10 +1092,17 @@ class cDataFormat():
                                 videos += [url]
 
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
+                reverseResourcesList[-1][1] = reverseResourcesList[-1][1] + tmpOutput + '</td></tr>\n'
 
-            output += "<hr>\n" + tmpOutput + '</td></tr>\n'
-
-        output += self.htmlViewerTableFooter + "<hr>\n"
+        for item in reverseResourcesList:
+            if defaultType == "nmm:MusicAlbum" and item[0] in ("nmm:musicAlbum", "_no_nao:hasSubResource"):
+                # Don't print for music albums this reverse resources.
+                pass
+                
+            else:
+                output += item[1]
+            
+        output += self.htmlViewerTableFooter + "\n<hr>\n"
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "<h3><b>Preview</b></h3>\n"
@@ -1111,36 +1120,33 @@ class cDataFormat():
                     output += '<img title=\"%(url)s\" style=\"height:auto;width:400px;scalefit=1\" src=\"%(url)s\"><br />\n' \
                                 % {'url': url}
                 output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
-                output += '<hr>'
-
-            output += '<hr>\n'
+                output += '\n<hr>\n'
 
         # Resource audios.
         if len(audios) > 0:
-            # Dirty hack for support covers in nmm:MusicAlbum.
+            # Dirty hack for support covers and playlist in nmm:MusicAlbum.
             if defaultType == "nmm:MusicAlbum":
+                coverUrl = "file://" + self.iconNoCover
                 url = audios[0][0]
                 if url[:7] != "file://":
                     url = "file://" + url
                 url = os.path.dirname(url)
                 for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-                    coverUrl = url + '/' + coverName
-                    if fileExists(coverUrl):
-                        output += "<b>Album cover</b><br />"
-                        output += '<img title=\"%(url)s\" style=\"height:auto;width:300px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                        % {'url': coverUrl}
-                        output += "<br />\n"
+                    tmpCoverUrl = url + '/' + coverName
+                    if fileExists(tmpCoverUrl):
+                        coverUrl = tmpCoverUrl
                         break
 
+                if coverUrl != None:
+                    output += "<b>Album cover</b><br />"
+                    output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                    % {'url': coverUrl}
+                    output += "<br />\n"
+    
                 audios = sorted(audios, key=lambda audio: audio[0])
                 
-                url = audios[0][0]
-                if url[:7] != "file://":
-                    url = "file://" + url
-                output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br />\n" % url
-
                 i = 0
-                playList = ""
+                playList = []
                 for item in audios:
                     url = item[0]
                     if url[:7] != "file://":
@@ -1165,20 +1171,30 @@ class cDataFormat():
                     if discNumber != None:
                         title = "%02d/" % discNumber + title
                         
-                    playList += "playlist[%s] = ['%s', '%s']\n" % (i, url, title)
+                    playList += [[item[1], i, url, title.replace('"', '\\"')]]
                     i += 1
+
+                url = audios[0][0]
+                if url[:7] != "file://":
+                    url = "file://" + url
+                output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br /><br />\n" % url
 
                 output += "<script>\n" \
                     "var currItem = 0;\n" \
                     "var totalItems = %s;\n" \
-                    "var playlist = new Array();\n" \
-                    "%s" % (i, playList)
+                    "var playList = new Array();\n" % i
+
+                i = 0
+                for item in playList:
+                    output += "playList[%s] = [\"%s\", \"%s\"]\n" % (item[1], item[2], item[3])
+                    output += "document.write(\"<div id='track%(i)s'>" \
+                                "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
+                                "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
+                    i += 1
+
+                #self.htmlRenderLink('uri', item[0], item[3])
 
                 output += \
-                    "for ( var i = 0; i < totalItems; i++ ) {\n" \
-                    "    trackNum = i+1\n" \
-                    "    document.write(\"<div id='track\" + i + \"'><button onclick='playTrack(\" + i + \")' type='btnTrack'\" + i +\">&nbsp;\" + trackNum + \"&nbsp;</button>&nbsp;\" + playlist[i][1] + '</div>');\n" \
-                    "}\n" \
                     "var player = document.getElementById('player');\n" \
                     "player.addEventListener('play', function () {\n" \
                     "    for ( var i = 0; i < totalItems; i++ ) {\n" \
@@ -1193,19 +1209,19 @@ class cDataFormat():
                     "player.addEventListener('ended', function () {\n" \
                     "    currItem += 1;\n" \
                     "    if (currItem < totalItems) {\n" \
-                    "        player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "        player.setAttribute('src', playList[currItem][0]);\n" \
                     "        player.play();\n" \
                     "    } else {\n" \
                     "        currItem = currItem - 1;\n" \
                     "        var track = document.getElementById('track' + currItem);\n" \
                     "        track.style.fontWeight = 'normal';\n" \
                     "        currItem = 0;\n" \
-                    "        player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "        player.setAttribute('src', playList[currItem][0]);\n" \
                     "    }\n" \
                     "} );\n" \
                     "function playTrack(track) {\n" \
                     "    currItem = track;\n" \
-                    "    player.setAttribute('src', playlist[currItem][0]);\n" \
+                    "    player.setAttribute('src', playList[currItem][0]);\n" \
                     "    player.play();\n" \
                     "}\n" \
                     "</script>\n"
@@ -1218,7 +1234,7 @@ class cDataFormat():
                     output += "<audio src=\"" + url + "\" controls preload>" \
                                 "No audio support</audio><br />"
                     output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
-                    output += '<hr>'
+                    output += '\n<hr>\n'
 
         # Resource videos.
         if len(videos) > 0:
@@ -1234,7 +1250,7 @@ class cDataFormat():
                     output += "<video src=\"" + url + "\" %s controls preload>" \
                                 "No video support</video><br />" % (self.htmlVideoSize)
                 output += "<b>File name</b>:<title>%s</title><em>%s</em><br /><br />" % (url, os.path.basename(url))
-                output += '<hr>'
+                output += '\n<hr>\n'
 
         output += self.htmlProgramInfo
         output += self.htmlPageFooter
