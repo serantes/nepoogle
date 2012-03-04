@@ -34,7 +34,11 @@ _ = gettext.gettext
 
 #BEGIN lfunctions.py
 # Program functions.
-gSysEncoding = 'utf-8' # Change this for a detection system.
+try:
+    gSysEncoding = os.environ["LANG"].split(".")[1]
+    
+except:
+    gSysEncoding = 'utf-8' # Forcing UTF-8.
 
 
 def addLinksToText(text = ''):
