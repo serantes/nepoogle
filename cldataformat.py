@@ -1041,8 +1041,8 @@ class cDataFormat():
         reverseResourcesList = []
         if data.isValid():
             while data.next():
-                uri = toUnicode(data["uri"].toString())
-                res = Nepomuk.Resource(uri)
+                resUri = toUnicode(data["uri"].toString())
+                res = Nepomuk.Resource(resUri)
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 val = toUnicode(res.genericLabel())
                 if res.hasProperty(NOC('nie:url')):
@@ -1051,7 +1051,7 @@ class cDataFormat():
                 else:
                     url = None
                     
-                reverseResourcesItems += [[uri, NOCR(data["ont"].toString()), val, url]]
+                reverseResourcesItems += [[resUri, NOCR(data["ont"].toString()), val, url]]
 
             tmpOutput = ''
             if len(reverseResourcesItems) > 0:
@@ -1165,6 +1165,12 @@ class cDataFormat():
                 if discNumber != None:
                     title = "%02d/" % discNumber + title
 
+                if res.hasProperty(NOC('nmm:musicAlbum')):
+                    resUri = res.property(NOC('nmm:musicAlbum')).toString()
+                    res = Nepomuk.Resource(resUri)
+                    if res.hasProperty(NOC('nie:title')):
+                        title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
+
                 playList += [[item[1], i, url, title.replace('"', '\\"')]]
                 i += 1
 
@@ -1264,6 +1270,12 @@ class cDataFormat():
 
                     if seasonNumber != None:
                         title = "S%02d" % seasonNumber + title
+
+                    if res.hasProperty(NOC('nmm:series')):
+                        resUri = res.property(NOC('nmm:series')).toString()
+                        res = Nepomuk.Resource(resUri)
+                        if res.hasProperty(NOC('nie:title')):
+                            title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
 
                 playList += [[item[1], i, url, title.replace('"', '\\"')]]
                 i += 1
