@@ -158,7 +158,7 @@ class cDataFormat():
     htmlLinkProperties = "<a title=\"Properties\" href=\"prop:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDocumentInfo) \
                             + "</a>"
-    htmlLinkRemove = "<a title=\"Remove resource\" href=\"remove:/%(uri)s\">" \
+    htmlLinkRemove = "<a title=\"Remove resource%(hotkey)s\" href=\"remove:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
                             + "</a>"
     htmlLinkSearch = "<a title=\"%(uri)s\" href=\"query:/%(uri)s\">" \
@@ -733,7 +733,7 @@ class cDataFormat():
                     icons += self.htmlLinkProperties % {"uri": uri}
 
                 elif (i == _CONST_ICON_REMOVE):
-                    icons += self.htmlLinkRemove % {"uri": uri}
+                    icons += self.htmlLinkRemove % {"uri": uri, "hotkey": ""}
 
                 elif (i == _CONST_ICON_SYSTEM_RUN):
                     icons += self.htmlLinkSystemRun % {"uri": uri}
@@ -887,7 +887,7 @@ class cDataFormat():
                             
         output = self.htmlPageHeader % ('Resource viewer', script) \
                     + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2>\n<hr>\n' \
-                        % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri}, "navigator": self.htmlRenderLink("navigator")}
+                        % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
         output += self.htmlViewerTableHeader
 
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
