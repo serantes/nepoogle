@@ -1,3 +1,24 @@
+v0.9 -- 2012/03/05
+-BUG: Fixed a mispelled nuao ontology name.
+-BUG: Fixed display problems with characters "]" and "?" in urls.
+-CHANGE: added last episode available and last episode viewed to "nmm:TVSeries" template.
+-CHANGE: added to resource viewer a personalized view for music albums with basic cover support.
+-CHANGE: colons are now optional if a logical operator is used, "created>2004" is equivalent to "create:>2004".
+-CHANGE: "created" is now a shortcut to "nao:created" ontology and "contentcreated" is a shortcut to "nie:contentCreated" ontology.
+-CHANGE: default template displays "nie:url" when is available.
+-CHANGE: empty values are now supported in queries and are equivalent to ".*", "tvseries:" is the same as "tvseries:.*".
+-CHANGE: resource viewer don't display resources if nao:userVisible is not equal to 1.
+-CHANGE: videojs is disabled by default because performance reasons.
+-NEW: Added a basic playlist to audios and videos. Now you can listen an album or watch your series in Nepoogle.
+-NEW: Added a button to open "tvshow:/" kio to "nmm:TVShow" and "nmm:TVSeries" templates.
+-NEW: Added "artistalbum" and "tvshows" shortcuts.
+-NEW: Added command "--topics" to display all "pimo:Topic" resources.
+-NEW: Added e2 engine, a hacked version of Query::QueryParser() using subqueries optimization.
+-NEW: Added "nfo:Website", "nfo:WebDataObject", "nfo:PaginatedTextDocument", "nfo:SpreadSheet" and "nfo:TextDocument" templates.
+-NEW: Added support to Conquirere "http://www.example.com/nbid" ontologies.
+-NEW: Added support to sending files to trash with a delete button.
+-NEW: Added support to resource viewer to delete the resource using a button or the Ctrl+Del hotkey.
+
 v0.8 -- 2012/02/01
 -BUG: Fixed not displayed "nie:url in resource viewer when url was not a local file.
 -BUG: Fixed the bug searching for the word "where" using Nepomuk::Query::QueryParser().

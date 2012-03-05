@@ -720,15 +720,15 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program was tested on <b>KDE 4.8.0</b>" \
-                    "<li>Nepomuk search api is available using e0 as prefix</li>\n" \
-                    "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api</li>\n" \
-                    "<li>Query syntax is inspired in Google's search syntax</li>\n" \
-                    "<li>Nepoogle do a text search in identifiers, descriptions, tags, fullnames, titles and urls</li>\n" \
-                    "<li>Dates and parenthesis are not supported</li>\n" \
-                    "<li>You can use regular expressions searching strings</li>\n" \
-                    "<li>Nepoogle own engine works with Soprano and don't uses Nepomuk to do queries</li>\n" \
-                    "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results</li>\n" \
+                    "<li>This program was tested on <b>KDE 4.8.0</b>." \
+                    "<li>Nepomuk search api is available using e0 as prefix.</li>\n" \
+                    "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api.</li>\n" \
+                    "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
+                    "<li>Nepoogle do a text search in identifiers, descriptions, tags, fullnames, titles and urls.</li>\n" \
+                    "<li>Parenthesis for group queries are not supported.</li>\n" \
+                    "<li>You can use regular expressions searching strings.</li>\n" \
+                    "<li>Nepoogle's own engine works with Soprano and don't uses Nepomuk to do queries.</li>\n" \
+                    "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results.</li>\n" \
                     "</ul></p>\n" \
 
         commandsList = ''
@@ -748,9 +748,10 @@ class Nepoogle(QWidget):
                 shortcutsList += shortcut[1]
 
         syntax = "<p><b>The query syntax is</b>:<ul>\n" \
-                    "<em>query</em> :== e0 querystring<sup>*</sup><br />\n"\
+                    "<em>query</em> :== e0 querystring<sup>1)</sup><br />\n"\
+                    "<em>query</em> :== e2 querystring<sup>2)</sup><br />\n"\
                     "<br />\n" \
-                    "<em>query</em> :== item [[logop] item]... | command | uri<br />\n"\
+                    "<em>query</em> :== [e1] item [[logop] item]... | command | uri<br />\n"\
                     "<br />\n" \
                     "<em>logop</em> :== and | or<br />\n" \
                     "<em>compop</em> :==  = | < | <= | > | >=<br />\n" \
@@ -780,7 +781,8 @@ class Nepoogle(QWidget):
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
                     "<br />\n" \
-                    "<sup>*</sup>e0 uses <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> and it has its own query syntax." \
+                    "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> and it has its own query syntax.<br />" \
+                    "<sup>2)</sup>e2 uses a hacked version of <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> optimized with subqueries.<br />" \
                     "</ul>" \
                     "</p>\n" \
                     % {'shortcuts': shortcutsList, 'instructions': commandsList}
