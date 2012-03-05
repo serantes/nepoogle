@@ -1271,6 +1271,10 @@ class cDataFormat():
                     if seasonNumber != None:
                         title = "S%02d" % seasonNumber + title
 
+                    if res.hasProperty(NOC('nuao:usageCount')):
+                        if res.property(NOC('nuao:usageCount')).toString() == '1':
+                            title += ' <b><em>(viewed)</em></b>'
+
                     if res.hasProperty(NOC('nmm:series')):
                         resUri = res.property(NOC('nmm:series')).toString()
                         res = Nepomuk.Resource(resUri)
