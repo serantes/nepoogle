@@ -1188,7 +1188,7 @@ class cDataFormat():
 
             i = 0
             for item in playList:
-                output += "playList[%s] = [\"%s\", \"%s\"]\n" % (item[1], item[2], item[3])
+                output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
                 output += "document.write(\"<div id='track%(i)s'>" \
                             "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
                             "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
@@ -1285,6 +1285,7 @@ class cDataFormat():
                 i += 1
 
             playList = sorted(playList, key=lambda item: item[3])
+            
             url = playList[0][2]
             if url[:7] != "file://":
                 url = "file://" + url
@@ -1300,7 +1301,8 @@ class cDataFormat():
 
             i = 0
             for item in playList:
-                output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (item[1], item[2], item[3])
+                print "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
+                output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
                 output += "document.write(\"<div id='track%(i)s'>" \
                             "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
                             "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
