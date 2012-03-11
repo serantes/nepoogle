@@ -1301,7 +1301,6 @@ class cDataFormat():
 
             i = 0
             for item in playList:
-                print "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
                 output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
                 output += "document.write(\"<div id='track%(i)s'>" \
                             "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
