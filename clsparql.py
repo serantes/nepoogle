@@ -93,10 +93,10 @@ ontologyTypes = [ \
                     ['nao:created', 'datetime'], \
                     ['nao:lastmodified', 'datetime'], \
                     ['nao:numericrating', 'number'], \
-                    ['nexif:aperturevalue', 'apertureValue'], \
-                    ['nexif:exposurebiasvalue', 'exposureBiasValue'], \
-                    ['nexif:exposuretime', 'exposureTime'], \
-                    ['nexif:focallength', 'focalLength'], \
+                    ['nexif:aperturevalue', 'aperturevalue'], \
+                    ['nexif:exposurebiasvalue', 'exposurebiasvalue'], \
+                    ['nexif:exposuretime', 'exposuretime'], \
+                    ['nexif:focallength', 'focallength'], \
                     ['nfo:averagebitrate', 'number'], \
                     ['nfo:duration', 'seconds'], \
                     ['nfo:height', 'number'], \
@@ -691,6 +691,12 @@ class cSparqlBuilder():
             dateFilter =  "FILTER(xsd:date(?x%s) %s \"%s\"^^xsd:date) . }\n" % (var, op, val)
         
         return dateFilter
+
+
+    def buildFloatFilter(self, val, var, op):
+        #TODO: a special filter is required for float values.
+        #FILTER(?x1 >= 2.97 and ?x1 < 2.98) }
+        return "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': var, 'op': op, 'val': val}
         
 
     def buildTimeFilter(self, val, var, op):
@@ -811,6 +817,7 @@ class cSparqlBuilder():
 
             else:
                 # Sometimes " character must be removed.
+                print valType
                 if val[0] == val[-1] == '"':
                     val = val[1:-1]
 
@@ -822,9 +829,7 @@ class cSparqlBuilder():
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif valType == "float":
-                    #TODO: a special filter is required for float values.
-                    #FILTER(?x1 >= 2.97 and ?x1 < 2.98) }
-                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
+                    filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif ((valType == "date") or (valType == "datep")):
                     filterExpression = self.buildDateFilter(val, i, operator)
@@ -836,6 +841,18 @@ class cSparqlBuilder():
                 elif ((valType == "seconds") or (valType == "time")):
                     filterExpression = self.buildTimeFilter(val, i, operator)
 
+                elif valType == "aperturevalue":
+                    filterExpression = self.buildFloatFilter(val, i, operator)
+
+                elif valType == "exposurebiasvalue":
+                    raise Exception("nexif:exposureBiasValue can be used in a future update.")
+
+                elif valType == "exposuretime":
+                    raise Exception("nexif:exposureTime can be used in a future update.")
+
+                elif valType == "focallength":
+                    raise Exception("nexif:focalLenth can be used in a future update.")
+                    
                 else:
                     if operator == '==':
                         filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}

@@ -464,10 +464,10 @@ class cDataFormat():
             elif valueType == 'string':
                 result = value
 
-            elif valueType == 'apertureValue':
+            elif valueType == 'aperturevalue':
                 result = "%.1f" % float(value)
 
-            elif valueType == 'exposureBiasValue':
+            elif valueType == 'exposurebiasvalue':
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=3)
                     result = "%s/%s" % (value.numerator, value.denominator)
@@ -475,15 +475,15 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'exposureTime':
+            elif valueType == 'exposuretime':
                 try:
-                    value = fractions.Fraction(value).limit_denominator(max_denominator=1000)
+                    value = fractions.Fraction(value).limit_denominator(max_denominator=16000)
                     result = "%s/%s" % (value.numerator, value.denominator)
 
                 except:
                     result = "%s" % value
 
-            elif valueType == 'focalLength':
+            elif valueType == 'focallength':
                 try:
                     value = fractions.Fraction(value).limit_denominator()
                     result = "%s/%s" % (value.numerator, value.denominator)
