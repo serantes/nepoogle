@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, os, re
+import datetime, fractions, os, re
 
 from PyQt4.QtCore import *
 from PyKDE4.kdeui import *
@@ -464,6 +464,33 @@ class cDataFormat():
             elif valueType == 'string':
                 result = value
 
+            elif valueType == 'apertureValue':
+                result = "%.1f" % float(value)
+
+            elif valueType == 'exposureBiasValue':
+                try:
+                    value = fractions.Fraction(value).limit_denominator(max_denominator=3)
+                    result = "%s/%s" % (value.numerator, value.denominator)
+
+                except:
+                    result = "%s" % value
+
+            elif valueType == 'exposureTime':
+                try:
+                    value = fractions.Fraction(value).limit_denominator(max_denominator=1000)
+                    result = "%s/%s" % (value.numerator, value.denominator)
+
+                except:
+                    result = "%s" % value
+
+            elif valueType == 'focalLength':
+                try:
+                    value = fractions.Fraction(value).limit_denominator()
+                    result = "%s/%s" % (value.numerator, value.denominator)
+
+                except:
+                    result = "%s" % value
+                
             else:
                 result = value
 
@@ -903,8 +930,7 @@ class cDataFormat():
                     continue
                 
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
-                value = self.fmtValue(toUnicode(data["val"].toString()), \
-                            ontInfo[2])
+                value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
                     resource = Nepomuk.Resource(value)
                     value = ''
