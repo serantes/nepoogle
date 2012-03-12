@@ -822,8 +822,13 @@ class cSparqlBuilder():
                 # Caution: valType could be none.
                 if val == ".*":
                     filterExpression = " }\n"
-                
-                elif valType == 'number':
+
+                elif valType in ('number', 'int', 'integer'):
+                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+                elif valType == "float":
+                    #TODO: a special filter is required for float values.
+                    #FILTER(?x1 >= 2.97 and ?x1 < 2.98) }
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif ((valType == "date") or (valType == "datep")):
@@ -1088,7 +1093,11 @@ class cSparqlBuilder():
 
 
     def ontologyVarType(self, ontology = ''):
-        return lvalue(self.ontologyTypes, ontology.lower().strip(), 0, 1)
+        ontType = lvalue(self.ontologyTypes, ontology.lower().strip(), 0, 1)
+        if ontType == None:
+            ontType = ontologyInfo(ontology)[2]
+
+        return ontType
 
 
     def split(self, string = ''):
