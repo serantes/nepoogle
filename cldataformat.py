@@ -453,7 +453,7 @@ class cDataFormat():
                 result = "%d" % int(float(value))
 
             elif valueType == 'float':
-                result = "%d" % float(value)
+                result = "%f" % float(value)
 
             elif valueType == 'duration':
                 result = "%s" % datetime.timedelta(0, int(value), 0)
@@ -470,7 +470,7 @@ class cDataFormat():
         except:
             result = value
             if valueType == "dateTime":
-                if result[-6:] ==  "-01-01":
+                if result[-6:] == "-01-01":
                     result = value.replace('-01-01', '')
 
         return result
