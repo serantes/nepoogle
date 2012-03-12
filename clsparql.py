@@ -89,6 +89,30 @@ knownOntologies = [ \
                     ['nbib', 'http://www.example.com/'] \
                 ]
 
+ontologyTypes = [ \
+                    ['nao:created', 'datetime'], \
+                    ['nao:lastmodified', 'datetime'], \
+                    ['nao:numericrating', 'number'], \
+                    ['nexif:aperturevalue', 'apertureValue'], \
+                    ['nexif:exposurebiasvalue', 'exposureBiasValue'], \
+                    ['nexif:exposuretime', 'exposureTime'], \
+                    ['nexif:focallength', 'focalLength'], \
+                    ['nfo:averagebitrate', 'number'], \
+                    ['nfo:duration', 'seconds'], \
+                    ['nfo:height', 'number'], \
+                    ['nfo:samplerate', 'number'], \
+                    ['nfo:width', 'number'], \
+                    ['nie:contentcreated', 'datetimep'], \
+                    ['nie:contentsize', 'size'], \
+                    ['nie:lastmodified', 'datetime'], \
+                    ['nmm:episodenumber', 'number'], \
+                    ['nmm:releasedate', 'datep'], \
+                    ['nmm:season', 'number'], \
+                    ['nmm:setnumber', 'number'], \
+                    ['nmm:tracknumber', 'number'], \
+                    ['nuao:usagecount', 'number'] \
+                ]
+                
 ontologiesInfo = []
 
 def NOC(name = '', returnQUrl = False):
@@ -221,10 +245,8 @@ def ontologyInfo(ontology = '', model = None):
         data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
             while data.next():
-                if shortOnt == "nie:contentSize":
-                    ontType = "size"
-
-                else:
+                ontType = lvalue(ontologyTypes, shortOnt.lower().strip(), 0, 1)
+                if ontType == None:
                     ontologyRange = toUnicode(data["range"].toString())
                     if ontologyRange.find("#") >= 0:
                         ontType = toUnicode(ontologyRange.split("#")[1])
@@ -233,7 +255,6 @@ def ontologyInfo(ontology = '', model = None):
                         ontType = ontologyRange
 
                 ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
-
                 i = -1
 
     if i == None:
@@ -435,32 +456,6 @@ class cSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
-    # All in lowercase so search in lowercase.
-    #TODO: esta información, en forma básica, está en la base de datos. Ejemplo:
-    #select *
-    #where {
-    #    nao:lastModified rdfs:range ?v
-    #}
-    #resultado: <http://www.w3.org/2001/XMLSchema#dateTime>
-    ontologyTypes = [ \
-                        ['nao:created', 'datetime'], \
-                        ['nao:lastmodified', 'datetime'], \
-                        ['nao:numericrating', 'number'], \
-                        ['nfo:averagebitrate', 'number'], \
-                        ['nfo:duration', 'seconds'], \
-                        ['nfo:height', 'number'], \
-                        ['nfo:samplerate', 'number'], \
-                        ['nfo:width', 'number'], \
-                        ['nie:contentcreated', 'datetimep'], \
-                        ['nie:contentsize', 'size'], \
-                        ['nie:lastmodified', 'datetime'], \
-                        ['nmm:episodenumber', 'number'], \
-                        ['nmm:releasedate', 'datep'], \
-                        ['nmm:season', 'number'], \
-                        ['nmm:setnumber', 'number'], \
-                        ['nmm:tracknumber', 'number'], \
-                        ['nuao:usagecount', 'number'] \
-                    ]
     shortcuts = [ \
                     #TODO: singulares y plurales para todo
                     ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
@@ -1093,9 +1088,11 @@ class cSparqlBuilder():
 
 
     def ontologyVarType(self, ontology = ''):
-        ontType = lvalue(self.ontologyTypes, ontology.lower().strip(), 0, 1)
-        if ontType == None:
+        try:
             ontType = ontologyInfo(ontology)[2]
+
+        except:
+            ontType = None
 
         return ontType
 
