@@ -1285,7 +1285,8 @@ class Nepoogle(QWidget):
 
                 if cachedData == None:
                     oDataFormat = cDataFormat(searchString, self.model)
-                    output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
+                    #output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
+                    output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
                 else:
                     output = cachedData
