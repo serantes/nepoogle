@@ -281,13 +281,12 @@ class cResource():
     ovPrefix = "_ov_"
     ontologyType = None
     stdout = False
-    uri = None
-    
+    valUri = None
     
     def __init__(self, uri = None):
 
         if uri != None:
-            self.uri = uri
+            self.valUri = uri
             self.read()
 
 
@@ -296,11 +295,11 @@ class cResource():
 
 
     def read(self, uri = None):
-        if uri == self.uri == None:
+        if uri == self.valUri == None:
             return False
 
         if uri == None:
-            uri = self.uri
+            uri = self.valUri
 
         query = "SELECT DISTINCT ?ont ?val\n" \
                 "WHERE {\n" \
@@ -345,7 +344,7 @@ class cResource():
                     exec("self." + name + " += [" + value + "]")
                     
                 elif valueType == 'string':
-                    exec("self." + name + " += [\"" + value + "\"]")
+                    exec("self." + name + " += [\"" + value.replace('"', '\\"').replace("\n", "\\\n'").replace("\r", "\\\r'") + "\"]")
                     
                 else:
                     exec("self." + name + " += [\"" + value + "\"]")
@@ -356,8 +355,8 @@ class cResource():
         ##    [] <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v
         ##}
         ##ORDER BY ?v
-        self.resourceType = Nepomuk.Resource(uri).resourceType().toString()
-        
+        self.typeValue = Nepomuk.Resource(uri).resourceType().toString()
+
 
     def getValue(self, ontology = None):
         if ontology == None:
@@ -378,7 +377,7 @@ class cResource():
 
 
     def property(self, ontology = None):
-        return toUnicode(str(self.getValue(NOCR(ontology))))
+        return QVariant(toUnicode(str(self.getValue(NOCR(ontology)))))
 
 
     def getAllValues(self):
@@ -389,10 +388,50 @@ class cResource():
 
         return values
 
-
+        
     def resourceType(self):
-        return ""
+        return QVariant(self.typeValue)
 
+        
+    def type(self):
+        return self.typeValue
+        
+    
+    def uri(self):
+        return self.valUri
+
+
+    def hasType(self, uri):
+        #ontology = "rdf:type"
+        #key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
+        return uri.toString() in self.__dict__["_ov_rdf_1_type"]
+
+        
+    def hasProperty(self, uri):
+        ontology = NOCR(uri)
+        key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
+        try:
+            value = self.__dict__[key]
+            result = True
+
+        except:
+            result = False
+
+        return result
+        
+
+    def genericLabel(self):
+        #ontology = "nao:prefLabel"
+        #key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
+        try:
+            result = self.__dict__["_ov_nao_1_prefLabel"][0]
+
+        except:
+            result = ""
+
+        return result
+        
+    
 class cSparqlBuilder():
 
     _private_main_header = \
@@ -817,7 +856,6 @@ class cSparqlBuilder():
 
             else:
                 # Sometimes " character must be removed.
-                print valType
                 if val[0] == val[-1] == '"':
                     val = val[1:-1]
 
