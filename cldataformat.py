@@ -326,14 +326,25 @@ class cDataFormat():
 
             if uri != "":
                 try:
-                    resource = Nepomuk.Resource(uri)
-                    altLabel = resource.property(NOC('nao:altLabel')).toString()
-                    fullName = resource.property(NOC('nco:fullname')).toString()
-                    identifier = resource.property(NOC('nao:identifier')).toString()
-                    itemType = toUnicode(resource.resourceType().toString().split('#')[1])
-                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                    title = resource.property(NOC('nie:title')).toString()
-                    url = resource.property(NOC('nie:url')).toString()
+                    if INTERNAL_RESOURCE:
+                        resource = cResource(uri)
+                        altLabel = resource.property(NOC('nao:altLabel')).toString()
+                        fullName = resource.property(NOC('nco:fullname')).toString()
+                        identifier = resource.property(NOC('nao:identifier')).toString()
+                        itemType = toUnicode(resource.type().split('#')[1])
+                        prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                        title = resource.property(NOC('nie:title')).toString()
+                        url = resource.property(NOC('nie:url')).toString()
+
+                    else:
+                        resource = Nepomuk.Resource(uri)
+                        altLabel = resource.property(NOC('nao:altLabel')).toString()
+                        fullName = resource.property(NOC('nco:fullname')).toString()
+                        identifier = resource.property(NOC('nao:identifier')).toString()
+                        itemType = toUnicode(resource.type().split('#')[1])
+                        prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                        title = resource.property(NOC('nie:title')).toString()
+                        url = resource.property(NOC('nie:url')).toString()
                     
                     fullTitle = "%s  %s  %s  %s" % (fullName, title, prefLabel, altLabel)
                     fullTitle = fullTitle.strip().replace("  ", " - ")
@@ -549,7 +560,7 @@ class cDataFormat():
                     values += [[toUnicode(resource.uri()), toUnicode(resource.uri())]]
 
                 elif elements[0] == "type":
-                    values += [[toUnicode(resource.uri()), NOCR(resource.resourceType().toString())]]
+                    values += [[toUnicode(resource.uri()), NOCR(resource.type())]]
 
                 else:
                     propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
@@ -772,8 +783,13 @@ class cDataFormat():
         
 
     def formatHtmlLine(self, uri):
-        resource = Nepomuk.Resource(uri)
-        itemType = NOCR(resource.resourceType().toString())
+        if INTERNAL_RESOURCE:
+            resource = cResource(uri)
+
+        else:
+            resource = Nepomuk.Resource(uri)
+        
+        itemType = NOCR(resource.type())
         idx = lindex(self.ontologyFormat, itemType, column = 0)
         if (idx == None):
             idx = 0
@@ -853,11 +869,9 @@ class cDataFormat():
 
                 if uri != "":
                     try:
-                    #if True:
                         line = self.formatHtmlLine(uri)
 
                     except:
-                    #else:
                         line = self.htmlTableRow % (value, "", "")
 
                 else:
@@ -932,7 +946,12 @@ class cDataFormat():
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
+                    #if INTERNAL_RESOURCE:
+                    #    resource = cResource(uri)
+
+                    #else:
                     resource = Nepomuk.Resource(value)
+                        
                     value = ''
                     if resource.hasType(NOC('nao:Tag', True)):
                         #altLabels = QStringListToString(resource.altLabels())
@@ -1027,6 +1046,8 @@ class cDataFormat():
 
                     else:
                         # No es un fichero así que añadimos los linksitem[3] si hay urls.
+                        value = value.replace("\n", "<br />")
+                        value = value.replace("\r", "<br />")
                         value = addLinksToText(value)
 
                 if value != '':
@@ -1068,7 +1089,12 @@ class cDataFormat():
         if data.isValid():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
+                #if INTERNAL_RESOURCE:
+                #    res = cResource(resUri)
+
+                #else:
                 res = Nepomuk.Resource(resUri)
+                    
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 val = toUnicode(res.genericLabel())
                 if res.hasProperty(NOC('nie:url')):
@@ -1171,7 +1197,13 @@ class cDataFormat():
                 url = item[0]
                 if url[:7] != "file://":
                     url = "file://" + url
-                res = Nepomuk.Resource(item[1])
+                    
+                if INTERNAL_RESOURCE:
+                    res = cResource(item[1])
+
+                else:
+                    res = Nepomuk.Resource(item[1])
+                    
                 try:
                     trackNumber = int(res.property(NOC('nmm:trackNumber')).toString())
 
@@ -1193,7 +1225,12 @@ class cDataFormat():
 
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
-                    res = Nepomuk.Resource(resUri)
+                    if INTERNAL_RESOURCE:
+                        res = cResource(resUri)
+
+                    else:
+                        res = Nepomuk.Resource(resUri)
+                        
                     if res.hasProperty(NOC('nie:title')):
                         title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
 

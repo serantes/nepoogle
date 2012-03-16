@@ -47,5 +47,6 @@ _ = gettext.gettext
 #gettext.translation(PROGRAM_NAME, languages=['es']).install()
 
 DEFAULT_ENGINE = 1
+INTERNAL_RESOURCE = False
 
 #END lglobals.py
