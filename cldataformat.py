@@ -112,7 +112,7 @@ class cDataFormat():
     #TODO: This must be automatic.
     # This is not automatically generated and is linked to self.columnsCount.
     # To add a column self.columnsCount must be changed and this properties too.
-    # Search form columnsformat for more changes.
+    # Search for columnsformat for more changes.
     htmlTableColumn1 = "<td>%s</td>"
     htmlTableColumn2 = "<td>%s</td>"
     htmlTableColumn3 = "<td width=\"65px\">%s</td>"
@@ -443,6 +443,7 @@ class cDataFormat():
 
 
     def fmtValue(self, value, valueType):
+        valueType = valueType.lower()
         try:
             if valueType == 'boolean':
                 result = value
@@ -454,13 +455,15 @@ class cDataFormat():
             #    if value[-6:] ==  "-01-01":
             #        result = value.replace('-01-01', '')
 
-            elif valueType == 'dateTime':
+            elif valueType == 'datetime':
                 result = formatDateTime(value[:19])
+                if result[-6:] == "-01-01":
+                    result = value.replace('-01-01', '')
 
             #elif valueType == 'datetimep':
             #    result = formatDateTime(value[:19], True)
 
-            elif valueType == 'int' or valueType == 'integer' or valueType == 'nonNegativeInteger':
+            elif valueType == 'int' or valueType == 'integer' or valueType == 'nonnegativeinteger':
                 result = "%d" % int(float(value))
 
             elif valueType == 'float':
@@ -507,9 +510,6 @@ class cDataFormat():
 
         except:
             result = value
-            if valueType == "dateTime":
-                if result[-6:] == "-01-01":
-                    result = value.replace('-01-01', '')
 
         return result
         
