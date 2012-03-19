@@ -61,6 +61,7 @@ class cDataFormat():
     renderedDataRows = 0
     renderedDataText = ""
     structure = []
+    showPlaylistWithOneElement = False
     videojsEnabled = False
 
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
@@ -1242,54 +1243,56 @@ class cDataFormat():
             #url = audios[0][0]
             if url[:7] != "file://":
                 url = "file://" + url
-            output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br /><b>Playlist</b>:<br />\n" % url
+            output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br />\n" % url
 
-            output += "<script>\n" \
-                "var currItem = 0;\n" \
-                "var totalItems = %s;\n" \
-                "var playList = new Array();\n" % i
+            if self.showPlaylistWithOneElement or len(audios) > 1:
+                output += "<b>Playlist</b>:<br />\n" \
+                            "<script>\n" \
+                            "var currItem = 0;\n" \
+                            "var totalItems = %s;\n" \
+                            "var playList = new Array();\n" % i
 
-            i = 0
-            for item in playList:
-                output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                output += "document.write(\"<div id='track%(i)s'>" \
-                            "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
-                            "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
-                i += 1
+                i = 0
+                for item in playList:
+                    output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
+                    output += "document.write(\"<div id='track%(i)s'>" \
+                                "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
+                                "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
+                    i += 1
 
-            #self.htmlRenderLink('uri', item[0], item[3])
+                #self.htmlRenderLink('uri', item[0], item[3])
 
-            output += \
-                "var player = document.getElementById('player');\n" \
-                "player.addEventListener('play', function () {\n" \
-                "    for ( var i = 0; i < totalItems; i++ ) {\n" \
-                "        var track = document.getElementById('track' + i);\n" \
-                "        if (i == currItem) {\n" \
-                "            track.style.fontWeight = 'bold';\n" \
-                "        } else {\n" \
-                "            track.style.fontWeight = 'normal';\n" \
-                "        }\n" \
-                "    }\n" \
-                "} );\n" \
-                "player.addEventListener('ended', function () {\n" \
-                "    currItem += 1;\n" \
-                "    if (currItem < totalItems) {\n" \
-                "        player.setAttribute('src', playList[currItem][0]);\n" \
-                "        player.play();\n" \
-                "    } else {\n" \
-                "        currItem = currItem - 1;\n" \
-                "        var track = document.getElementById('track' + currItem);\n" \
-                "        track.style.fontWeight = 'normal';\n" \
-                "        currItem = 0;\n" \
-                "        player.setAttribute('src', playList[currItem][0]);\n" \
-                "    }\n" \
-                "} );\n" \
-                "function playTrack(track) {\n" \
-                "    currItem = track;\n" \
-                "    player.setAttribute('src', playList[currItem][0]);\n" \
-                "    player.play();\n" \
-                "}\n" \
-                "</script>\n"
+                output += \
+                    "var player = document.getElementById('player');\n" \
+                    "player.addEventListener('play', function () {\n" \
+                    "    for ( var i = 0; i < totalItems; i++ ) {\n" \
+                    "        var track = document.getElementById('track' + i);\n" \
+                    "        if (i == currItem) {\n" \
+                    "            track.style.fontWeight = 'bold';\n" \
+                    "        } else {\n" \
+                    "            track.style.fontWeight = 'normal';\n" \
+                    "        }\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "player.addEventListener('ended', function () {\n" \
+                    "    currItem += 1;\n" \
+                    "    if (currItem < totalItems) {\n" \
+                    "        player.setAttribute('src', playList[currItem][0]);\n" \
+                    "        player.play();\n" \
+                    "    } else {\n" \
+                    "        currItem = currItem - 1;\n" \
+                    "        var track = document.getElementById('track' + currItem);\n" \
+                    "        track.style.fontWeight = 'normal';\n" \
+                    "        currItem = 0;\n" \
+                    "        player.setAttribute('src', playList[currItem][0]);\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "function playTrack(track) {\n" \
+                    "    currItem = track;\n" \
+                    "    player.setAttribute('src', playList[currItem][0]);\n" \
+                    "    player.play();\n" \
+                    "}\n" \
+                    "</script>\n"
 
             #else:
                 #for url in sorted(audios):
@@ -1355,52 +1358,54 @@ class cDataFormat():
             output += "<b>Video player</b><br />\n" \
                         "<video id=\"vplayer\" " \
                             "src=\"file://%s\" %s controls preload>No video support</video><br />" \
-                            "<b>Playlist</b>:<br />\n" % (url, self.htmlVideoSize)
-            
-            output += "<script>\n" \
-                "var currItem = 0;\n" \
-                "var totalItems = %s;\n" \
-                "var vplayList = new Array();\n" % i
+                            % (url, self.htmlVideoSize)
 
-            i = 0
-            for item in playList:
-                output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                output += "document.write(\"<div id='track%(i)s'>" \
-                            "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
-                            "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
-                i += 1
+            if self.showPlaylistWithOneElement or len(videos) > 1:
+                output += "<b>Playlist</b>:<br />\n" \
+                            "<script>\n" \
+                            "var currItem = 0;\n" \
+                            "var totalItems = %s;\n" \
+                            "var vplayList = new Array();\n" % i
 
-            output += \
-                "var vplayer = document.getElementById('vplayer');\n" \
-                "vplayer.addEventListener('play', function () {\n" \
-                "    for ( var i = 0; i < totalItems; i++ ) {\n" \
-                "        var track = document.getElementById('track' + i);\n" \
-                "        if (i == currItem) {\n" \
-                "            track.style.fontWeight = 'bold';\n" \
-                "        } else {\n" \
-                "            track.style.fontWeight = 'normal';\n" \
-                "        }\n" \
-                "    }\n" \
-                "} );\n" \
-                "vplayer.addEventListener('ended', function () {\n" \
-                "    currItem += 1;\n" \
-                "    if (currItem < totalItems) {\n" \
-                "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                "        vplayer.play();\n" \
-                "    } else {\n" \
-                "        currItem = currItem - 1;\n" \
-                "        var track = document.getElementById('track' + currItem);\n" \
-                "        track.style.fontWeight = 'normal';\n" \
-                "        currItem = 0;\n" \
-                "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                "    }\n" \
-                "} );\n" \
-                "function playTrack(track) {\n" \
-                "    currItem = track;\n" \
-                "    vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                "    vplayer.play();\n" \
-                "}\n" \
-                "</script>\n"
+                i = 0
+                for item in playList:
+                    output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
+                    output += "document.write(\"<div id='track%(i)s'>" \
+                                "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
+                                "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
+                    i += 1
+
+                output += \
+                    "var vplayer = document.getElementById('vplayer');\n" \
+                    "vplayer.addEventListener('play', function () {\n" \
+                    "    for ( var i = 0; i < totalItems; i++ ) {\n" \
+                    "        var track = document.getElementById('track' + i);\n" \
+                    "        if (i == currItem) {\n" \
+                    "            track.style.fontWeight = 'bold';\n" \
+                    "        } else {\n" \
+                    "            track.style.fontWeight = 'normal';\n" \
+                    "        }\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "vplayer.addEventListener('ended', function () {\n" \
+                    "    currItem += 1;\n" \
+                    "    if (currItem < totalItems) {\n" \
+                    "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                    "        vplayer.play();\n" \
+                    "    } else {\n" \
+                    "        currItem = currItem - 1;\n" \
+                    "        var track = document.getElementById('track' + currItem);\n" \
+                    "        track.style.fontWeight = 'normal';\n" \
+                    "        currItem = 0;\n" \
+                    "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                    "    }\n" \
+                    "} );\n" \
+                    "function playTrack(track) {\n" \
+                    "    currItem = track;\n" \
+                    "    vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
+                    "    vplayer.play();\n" \
+                    "}\n" \
+                    "</script>\n"
 
             #for url in sorted(videos):
                 #if url[:7] != "file://":
