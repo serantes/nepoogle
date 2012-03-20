@@ -330,19 +330,9 @@ class cDataFormat():
                 res = Nepomuk.Resource(item[1])
 
             if listType == 'audio':
-                try:
-                    trackNumber = int(res.property(NOC('nmm:trackNumber')).toString())
-
-                except:
-                    trackNumber = None
-
-                try:
-                    discNumber = int(res.property(NOC('nmm:setNumber')).toString())
-
-                except:
-                    discNumber = None
-
-                title = res.property(NOC('nie:title')).toString()
+                trackNumber = self.readProperty(res, 'nmm:trackNumber', 'int')
+                discNumber = self.readProperty(res, 'nmm:setNumber', 'int')
+                title = self.readProperty(res, 'nie:title', 'str')
                 if trackNumber != None:
                     title = "%02d - " % trackNumber + title
 
@@ -366,18 +356,8 @@ class cDataFormat():
                     title = os.path.basename(url)
 
                 else:
-                    try:
-                        episodeNumber = int(res.property(NOC('nmm:episodeNumber')).toString())
-
-                    except:
-                        episodeNumber = None
-
-                    try:
-                        seasonNumber = int(res.property(NOC('nmm:season')).toString())
-
-                    except:
-                        seasonNumber = None
-
+                    episodeNumber = self.readProperty(res, 'nmm:episodeNumber', 'int')
+                    seasonNumber = self.readProperty(res, 'nmm:season', 'int')
                     if episodeNumber != None:
                         title = "E%02d - " % episodeNumber + title
 
@@ -681,6 +661,23 @@ class cDataFormat():
         return result
         
 
+    def readProperty(self, resource, propertyOntology, propertyType = "str"):
+        try:
+            if (propertyType == "str"):
+                result = resource.property(NOC(propertyOntology)).toString()
+
+            elif (propertyType == "int"):
+                result = int(resource.property(NOC(propertyOntology)).toString())
+
+            else:
+                result = resource.property(NOC(propertyOntology)).toString()
+
+        except:
+            result = None
+
+        return result
+
+        
     def readValues(self, resource, valuesName):
         values = []
         if valuesName[:7].lower() == "sparql:":
@@ -989,6 +986,9 @@ class cDataFormat():
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
+        if self.searchString.find('--playlist') >= 0:
+            return self.formatAsHtmlPlaylist()
+
         htmlQueryTime = time.time()
 
         text = self.htmlPageHeader % ("Query results", "")
@@ -1066,8 +1066,8 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        text += "<br />" + self.htmlProgramInfo
-        text += self.htmlPageFooter
+        text += self.htmlProgramInfo \
+                    + self.htmlPageFooter
 
         return text
 
@@ -1076,12 +1076,14 @@ class cDataFormat():
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
+        if param1 == None:
+            return self.renderedDataText
+
         htmlQueryTime = time.time()
 
         if vartype(param1) != "list":
             raise Exception('error')
 
-        
         if self.data == []:
             self.data = list(param1)
             self.structure = list(structure)
@@ -1116,7 +1118,7 @@ class cDataFormat():
                     if ((ext != '') and fileExists(url)):
                         if ext in self.supportedImageFormats:
                             if not url in images:
-                                images += [[url]]
+                                images += [[url, item[0]]]
 
                         elif ext in self.supportedAudioFormats:
                             if lindex(audios, url) == None:
@@ -1142,9 +1144,14 @@ class cDataFormat():
 
             if len(videos) > 0:
                 output += self.buildPlaylist(videos, 'video')
-                
-        output += self.htmlProgramInfo
-        output += self.htmlPageFooter
+
+        output += self.htmlTableFooter
+        output += "<br />\n" + self.htmlStadistics \
+                    % {'records': len(self.data), \
+                        'seconds': queryTime, \
+                        'sechtml': time.time() - htmlQueryTime}
+        output += self.htmlProgramInfo \
+                    + self.htmlPageFooter
 
         if stdout:
             print toUtf8(output)
@@ -1438,239 +1445,15 @@ class cDataFormat():
                     output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
                                     % {'url': coverUrl}
                     output += "<br />\n"
-    
-            audios = sorted(audios, key=lambda audio: audio[0])
-            i = 0
-            playList = []
-            for item in audios:
-                url = item[0]
-                if url[:7] != "file://":
-                    url = "file://" + url
-                    
-                if INTERNAL_RESOURCE:
-                    res = cResource(item[1])
 
-                else:
-                    res = Nepomuk.Resource(item[1])
-                    
-                try:
-                    trackNumber = int(res.property(NOC('nmm:trackNumber')).toString())
-
-                except:
-                    trackNumber = None
-
-                try:
-                    discNumber = int(res.property(NOC('nmm:setNumber')).toString())
-
-                except:
-                    discNumber = None
-
-                title = res.property(NOC('nie:title')).toString()
-                if trackNumber != None:
-                    title = "%02d - " % trackNumber + title
-
-                if discNumber != None:
-                    title = "%02d/" % discNumber + title
-
-                if res.hasProperty(NOC('nmm:musicAlbum')):
-                    resUri = res.property(NOC('nmm:musicAlbum')).toString()
-                    if INTERNAL_RESOURCE:
-                        res = cResource(resUri)
-
-                    else:
-                        res = Nepomuk.Resource(resUri)
-                        
-                    if res.hasProperty(NOC('nie:title')):
-                        title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
-
-                playList += [[item[1], i, url, title.replace('"', '\\"')]]
-                i += 1
-
-            playList = sorted(playList, key=lambda item: item[3])
-            url = playList[0][2]
-            #url = audios[0][0]
-            if url[:7] != "file://":
-                url = "file://" + url
-            output += "<b>Audio player</b><br />\n<audio id=\"player\" src=\"file://%s\" controls preload>No audio support</audio><br />\n" % url
-
-            if self.showPlaylistWithOneElement or len(audios) > 1:
-                output += "<b>Playlist</b>:<br />\n" \
-                            "<script>\n" \
-                            "var currItem = 0;\n" \
-                            "var totalItems = %s;\n" \
-                            "var playList = new Array();\n" % i
-
-                i = 0
-                for item in playList:
-                    output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                    output += "document.write(\"<div id='track%(i)s'>" \
-                                "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
-                                "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
-                    i += 1
-
-                #self.htmlRenderLink('uri', item[0], item[3])
-
-                output += \
-                    "var player = document.getElementById('player');\n" \
-                    "player.addEventListener('play', function () {\n" \
-                    "    for ( var i = 0; i < totalItems; i++ ) {\n" \
-                    "        var track = document.getElementById('track' + i);\n" \
-                    "        if (i == currItem) {\n" \
-                    "            track.style.fontWeight = 'bold';\n" \
-                    "        } else {\n" \
-                    "            track.style.fontWeight = 'normal';\n" \
-                    "        }\n" \
-                    "    }\n" \
-                    "} );\n" \
-                    "player.addEventListener('ended', function () {\n" \
-                    "    currItem += 1;\n" \
-                    "    if (currItem < totalItems) {\n" \
-                    "        player.setAttribute('src', playList[currItem][0]);\n" \
-                    "        player.play();\n" \
-                    "    } else {\n" \
-                    "        currItem = currItem - 1;\n" \
-                    "        var track = document.getElementById('track' + currItem);\n" \
-                    "        track.style.fontWeight = 'normal';\n" \
-                    "        currItem = 0;\n" \
-                    "        player.setAttribute('src', playList[currItem][0]);\n" \
-                    "    }\n" \
-                    "} );\n" \
-                    "function playTrack(track) {\n" \
-                    "    currItem = track;\n" \
-                    "    player.setAttribute('src', playList[currItem][0]);\n" \
-                    "    player.play();\n" \
-                    "}\n" \
-                    "</script>\n"
-
-            #else:
-                #for url in sorted(audios):
-                    #if url[:7] != "file://":
-                        #url = "file://" + url
-
-                    #output += "<audio src=\"" + url + "\" controls preload>" \
-                                #"No audio support</audio><br />"
-                    #output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
-                    #output += '\n<hr>\n'
+            output += self.buildPlaylist(audios, 'audio')
 
         # Resource videos.
         if len(videos) > 0:
-            i = 0
-            playList = []
-            for item in videos:
-                url = item[0]
-                if url[:7] != "file://":
-                    url = "file://" + url
-                res = Nepomuk.Resource(item[1])
-                
-                title = res.property(NOC('nie:title')).toString()
-                if title == "":
-                    title = os.path.basename(url)
+            output += self.buildPlaylist(videos, 'video')
 
-                else:
-                    try:
-                        episodeNumber = int(res.property(NOC('nmm:episodeNumber')).toString())
-
-                    except:
-                        episodeNumber = None
-
-                    try:
-                        seasonNumber = int(res.property(NOC('nmm:season')).toString())
-
-                    except:
-                        seasonNumber = None
-
-                    if episodeNumber != None:
-                        title = "E%02d - " % episodeNumber + title
-
-                    if seasonNumber != None:
-                        title = "S%02d" % seasonNumber + title
-
-                    if res.hasProperty(NOC('nuao:usageCount')):
-                        if res.property(NOC('nuao:usageCount')).toString() == '1':
-                            title += ' <b><em>(viewed)</em></b>'
-
-                    if res.hasProperty(NOC('nmm:series')):
-                        resUri = res.property(NOC('nmm:series')).toString()
-                        res = Nepomuk.Resource(resUri)
-                        if res.hasProperty(NOC('nie:title')):
-                            title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
-
-                playList += [[item[1], i, url, title.replace('"', '\\"')]]
-                i += 1
-
-            playList = sorted(playList, key=lambda item: item[3])
-            
-            url = playList[0][2]
-            if url[:7] != "file://":
-                url = "file://" + url
-            output += "<b>Video player</b><br />\n" \
-                        "<video id=\"vplayer\" " \
-                            "src=\"file://%s\" %s controls preload>No video support</video><br />" \
-                            % (url, self.htmlVideoSize)
-
-            if self.showPlaylistWithOneElement or len(videos) > 1:
-                output += "<b>Playlist</b>:<br />\n" \
-                            "<script>\n" \
-                            "var currItem = 0;\n" \
-                            "var totalItems = %s;\n" \
-                            "var vplayList = new Array();\n" % i
-
-                i = 0
-                for item in playList:
-                    output += "vplayList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                    output += "document.write(\"<div id='track%(i)s'>" \
-                                "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
-                                "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
-                    i += 1
-
-                output += \
-                    "var vplayer = document.getElementById('vplayer');\n" \
-                    "vplayer.addEventListener('play', function () {\n" \
-                    "    for ( var i = 0; i < totalItems; i++ ) {\n" \
-                    "        var track = document.getElementById('track' + i);\n" \
-                    "        if (i == currItem) {\n" \
-                    "            track.style.fontWeight = 'bold';\n" \
-                    "        } else {\n" \
-                    "            track.style.fontWeight = 'normal';\n" \
-                    "        }\n" \
-                    "    }\n" \
-                    "} );\n" \
-                    "vplayer.addEventListener('ended', function () {\n" \
-                    "    currItem += 1;\n" \
-                    "    if (currItem < totalItems) {\n" \
-                    "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                    "        vplayer.play();\n" \
-                    "    } else {\n" \
-                    "        currItem = currItem - 1;\n" \
-                    "        var track = document.getElementById('track' + currItem);\n" \
-                    "        track.style.fontWeight = 'normal';\n" \
-                    "        currItem = 0;\n" \
-                    "        vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                    "    }\n" \
-                    "} );\n" \
-                    "function playTrack(track) {\n" \
-                    "    currItem = track;\n" \
-                    "    vplayer.setAttribute('src', vplayList[currItem][0]);\n" \
-                    "    vplayer.play();\n" \
-                    "}\n" \
-                    "</script>\n"
-
-            #for url in sorted(videos):
-                #if url[:7] != "file://":
-                    #url = "file://" + url
-
-                #if self.videojsEnabled:
-                    #output += "<video class=\"video-js vjs-default-skin\" controls preload=\"none\" %s data-setup=\"{}\">\n" \
-                                #"<source src=\"%s\" type=\"video/mp4\" />\nNo video support\n</video><br />" % (self.htmlVideoSize, url)
-
-                #else:
-                    #output += "<video src=\"" + url + "\" %s controls preload>" \
-                                #"No video support</video><br />" % (self.htmlVideoSize)
-                #output += "<b>File name</b>:<title>%s</title><em>%s</em><br /><br />" % (url, os.path.basename(url))
-                #output += '\n<hr>\n'
-
-        output += self.htmlProgramInfo
-        output += self.htmlPageFooter
+        output += self.htmlProgramInfo \
+                    + self.htmlPageFooter
 
         if stdout:
             print toUtf8(output)
