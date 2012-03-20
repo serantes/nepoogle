@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, gettext, os, re, subprocess, sys, time
+import datetime, gettext, os, re, signal, subprocess, sys, time
 
 from PyQt4.QtCore import *
 from PyKDE4.nepomuk import *
@@ -720,7 +720,7 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program was tested on <b>KDE 4.8.0</b>." \
+                    "<li>This program was tested on <b>KDE 4.8.1</b>." \
                     "<li>Nepomuk search api is available using e0 as prefix.</li>\n" \
                     "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api.</li>\n" \
                     "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
@@ -1318,6 +1318,7 @@ class Nepoogle(QWidget):
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    oNQP = None
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
@@ -1328,6 +1329,7 @@ class Nepoogle(QWidget):
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    oNQP = None
                     query = hackQueryParser(query, 'e2')
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
@@ -1343,7 +1345,11 @@ class Nepoogle(QWidget):
                     self.sparql.warningsList = []
                     
                 oDataFormat = cDataFormat(searchString, self.model)
-                output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
+                if self.sparql.externalParameters == ['playlist']:
+                    output = oDataFormat.formatAsHtmlPlaylist(self.resultData, self.resultStructure, self.resultTime)
+
+                else:
+                    output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
 
                 # Cache must be trunked in current position if query changed.
                 if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
@@ -1594,6 +1600,7 @@ def main(args):
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    oNQP = None
                     if verboseMode:
                         # Improve a little bit readability.
                         print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
@@ -1604,6 +1611,7 @@ def main(args):
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    oNQP = None
                     query = hackQueryParser(query, 'e2')
                     if verboseMode:
                         # Improve a little bit readability.
@@ -1618,9 +1626,17 @@ def main(args):
                     warningsList =  oSparql.warningsList
                     oSparql.warningsList = []
 
+                oSparql = None
+
                 if displayResults in (None, True):
                     oDataFormat = cDataFormat(searchString)
-                    oDataFormat.formatAsText(data, structure, time)
+                    signal.signal(signal.SIGINT, handleSIGINT)
+                    try:
+                        oDataFormat.formatAsText(data, structure, time)
+
+                    except KeyboardInterrupt:
+                        print "^C Aborted by user..."
+                        
                     
                 output = "\n%(records)s records found in %(seconds)f seconds.\n" \
                             "--\n" \
