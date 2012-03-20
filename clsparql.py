@@ -445,7 +445,7 @@ class cSparqlBuilder():
     #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
     #columns = '?url ?title ?prefLabel ?fullname ?altLabel'
     columns = ""
-    command = ''
+    command = ""
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
     commands = [ \
                 [_('--actors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
@@ -466,8 +466,9 @@ class cSparqlBuilder():
                 [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
                 [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
                 [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
-                [_('--quit'), ['quit', [], [], []]], \
+                #[_('--quit'), ['quit', [], [], []]], \
                 [_('--tags'), ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:identifier']]], \
                 [_('--topics'), ['?x0 AS ?id ?label', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
                 [_('--tvseries'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
@@ -477,6 +478,8 @@ class cSparqlBuilder():
             ]
 
     engine = 0 # 0- Nepomuk.QueryParse(), 1- v1, 2- v2
+
+    externalParameters = []
     
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
     #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
@@ -495,6 +498,11 @@ class cSparqlBuilder():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
+    resultsetLimit = 0
+    resultsetOffset = 0
+    sortSuffix = '_sort'
+    stdoutQuery = False
+    
     shortcuts = [ \
                     #TODO: singulares y plurales para todo
                     ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
@@ -552,12 +560,6 @@ class cSparqlBuilder():
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
 
-    resultsetLimit = 0
-    resultsetOffset = 0
-
-    sortSuffix = '_sort'
-    stdoutQuery = False
-
     visibilityFilter = "nao:userVisible 1 ."
 
     warningsList = []
@@ -575,15 +577,14 @@ class cSparqlBuilder():
         if ((self.command == '') and (self.filters == []) and (searchString != '')):
             self.filters = self.stringQueryConversion(searchString.strip())
 
-        command = self.command.strip().lower()
-        if command == '':
+        if self.command == '':
             pass
 
         else:
-            idx = lindex(self.commands, command, 0)
+            idx = lindex(self.commands, self.command, 0)
             if idx >= 0:
                 if self.commands[idx][1][0] == '':
-                    raise Exception("Sorry, command \"%s\" not implemented yet." % self.command)
+                    raise Exception("Sorry, command <b>%s</b> not implemented yet." % self.command)
 
                 elif self.commands[idx][1][0].strip().upper()[:7] == "SELECT ":
                     # It's a full query.
@@ -597,11 +598,15 @@ class cSparqlBuilder():
                     self.tempData = self.commands[idx][1]
 
             else:
-                raise Exception("Unknown command \"%s\", try \"--help\" command." % self.command)
+                raise Exception("Unknown command <b>%s</b>, try <b>--help</b> command." % self.command)
 
-            # La ayuda tiene tratamiento especial
+            # Comandos especiales.
             if self.tempData[0] == 'help':
                 raise Exception(self.tempData[0])
+
+            elif self.tempData[0] == 'playlist':
+                self.externalParameters = [self.tempData[0]]
+                self.tempData = ['', [], [], []]
 
         if self.tempData[0] == '':
             columns = self.columns
@@ -684,7 +689,7 @@ class cSparqlBuilder():
                 ontology = self.shortcuts[idx][0]
 
             else:
-                raise Exception("Unknown ontology \"%s\"." % ontology)
+                raise Exception("Unknown ontology <b>%s</b>." % ontology)
 
         return ontology
 
@@ -724,7 +729,7 @@ class cSparqlBuilder():
                 dateFilter = "FILTER(bif:dayofmonth(?x%s) %s %s) . }\n" % (var, op, val)
                 
             else:
-                raise Exception("Can't recognized \"%s\" as date format." % self.command)
+                raise Exception("Can't recognized <b>%s</b> as date format." % self.command)
 
         except:
             dateFilter =  "FILTER(xsd:date(?x%s) %s \"%s\"^^xsd:date) . }\n" % (var, op, val)
@@ -787,10 +792,10 @@ class cSparqlBuilder():
                 intVal = int(splitTime[0])
 
             else:
-                raise Exception("Can't recognized \"%s\" as time format." % self.command)
+                raise Exception("Can't recognized <b>%s</b> as time format." % self.command)
 
         except:
-            raise Exception("Can't recognized \"%s\" as time format." % self.command)
+            raise Exception("Can't recognized <b>%s</b> as time format." % self.command)
 
         return "FILTER(?x%s %s %s) . }\n" % (var, op, intVal)
 
@@ -883,13 +888,13 @@ class cSparqlBuilder():
                     filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif valType == "exposurebiasvalue":
-                    raise Exception("nexif:exposureBiasValue can be used in a future update.")
+                    raise Exception("<b>nexif:exposureBiasValue</b> can be used in a future update.")
 
                 elif valType == "exposuretime":
-                    raise Exception("nexif:exposureTime can be used in a future update.")
+                    raise Exception("<b>nexif:exposureTime</b> can be used in a future update.")
 
                 elif valType == "focallength":
-                    raise Exception("nexif:focalLenth can be used in a future update.")
+                    raise Exception("<b>nexif:focalLenth</b> can be used in a future update.")
                     
                 else:
                     if operator == '==':
@@ -1220,12 +1225,15 @@ class cSparqlBuilder():
         #print toUtf8(string)
         #print toUtf8(items)
 
-        commandFound = False
+        command = ""
+        commandsFound = 0
         addAnd = False
         for item in items:
             if item[:2] == '--':
-                commandFound = True
-                oneFilter = [item, '', '']
+                command = item.lower()
+                commandsFound += 1
+                continue
+                #oneFilter = [item, '', '']
 
             elif item.lower() == 'or':
                 oneFilter = ['or', '', '']
@@ -1322,19 +1330,30 @@ class cSparqlBuilder():
             allFilters += [oneFilter]
 
         # Check basic errors.
-        if allFilters[len(allFilters)-1][0] == 'and' or allFilters[len(allFilters)-1][0] == 'or':
+        if allFilters != [] and (allFilters[-1][0] in ('and', 'or')):
             allFilters = []
             raise Exception(_("Syntax error, please check your search text."))
 
-        if (commandFound and (len(allFilters) > 1)):
-            allFilters = []
-            raise Exception(_("Syntax error, commands and queries are mutual exclude."))
+        if ((commandsFound > 0) and (len(allFilters) > 1)):
+            if command != '--playlist':
+                allFilters = []
+                raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
-        if ((len(allFilters) == 1) and (allFilters[0][0][:2] == "--")):
-            dummy = allFilters[0][0].split(':')
-            self.command = dummy[0]
-            if ((len(dummy) > 1) and (dummy[1] != "")):
+        if commandsFound > 1:
+            raise Exception(_("Syntax error, only one command by query."))
+        
+        elif commandsFound == 1:
+            dummy = command.split(':')
+            command = dummy[0]
+            
+            # Commands that don't support filters.
+            if command in ("--playlist"):
+                if (len(dummy) > 1):
+                    raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % command)
+
+            # Commands that support filters.
+            elif ((len(dummy) > 1) and (dummy[1] != "")):
                 if dummy[1][0] == '-':
                     allFilters = [[dummy[1][1:], '!=', '']]
 
@@ -1347,6 +1366,11 @@ class cSparqlBuilder():
             else:
                 allFilters = []
 
+        # Commands associated to queries.
+        if ((len(allFilters) == 0) and (command in ("--playlist"))):
+            raise Exception(_("Syntax error, command <b>%s</b> require an associated query.") % command)
+
+        self.command = command
         return allFilters
 
 
