@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, os, re
+import datetime, os, re, sys
 
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
@@ -50,7 +50,11 @@ def addLinksToText(text = ''):
 
     return text
 
+    
+def handleSIGINT(signum, frame):
+    sys.exit('Operation aborted by user...') 
 
+    
 def fileExists(fileName = ''):
     if fileName == '':
         return False
