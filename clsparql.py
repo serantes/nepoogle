@@ -737,10 +737,21 @@ class cSparqlBuilder():
         return dateFilter
 
 
-    def buildFloatFilter(self, val, var, op):
-        #TODO: a special filter is required for float values.
-        #FILTER(?x1 >= 2.97 and ?x1 < 2.98) }
-        return "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': var, 'op': op, 'val': val}
+    def buildFloatFilter(self, val, var, op, precision = 4):
+        if op == "=":
+            # There is no method to do and equal because precision so this is a workaround.
+            if vartype(val) in ("str", "unicode"):
+                val = round(float(val), precision)
+
+            val = round(val, precision)
+            adjustmentNumber = "0.%0" + "%sd1" % (precision - 1)
+            adjustmentNumber = float(adjustmentNumber % 0)
+            val2 = val + adjustmentNumber
+            val -= adjustmentNumber
+            return "FILTER((?x%(v2)s >= %(val)s) and (?x%(v2)s < %(val2)s))}\n" % {'v2': var, 'op': op, 'val': val, 'val2': val2}
+
+        else:
+            return "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': var, 'op': op, 'val': val}
         
 
     def buildTimeFilter(self, val, var, op):
@@ -888,13 +899,25 @@ class cSparqlBuilder():
                     filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif valType == "exposurebiasvalue":
-                    raise Exception("<b>nexif:exposureBiasValue</b> can be used in a future update.")
-
+                    valTerms = val.split("/")
+                    if (len(valTerms) > 1):
+                        val = float(valTerms[0])/float(valTerms[1])
+                            
+                    filterExpression = self.buildFloatFilter(val, i, operator)
+                    
                 elif valType == "exposuretime":
-                    raise Exception("<b>nexif:exposureTime</b> can be used in a future update.")
+                    valTerms = val.split("/")
+                    if (len(valTerms) > 1):
+                        val = float(valTerms[0])/float(valTerms[1])
+
+                    filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif valType == "focallength":
-                    raise Exception("<b>nexif:focalLenth</b> can be used in a future update.")
+                    valTerms = val.split("/")
+                    if (len(valTerms) > 1):
+                        val = float(valTerms[0])/float(valTerms[1])
+
+                    filterExpression = self.buildFloatFilter(val, i, operator)
                     
                 else:
                     if operator == '==':
