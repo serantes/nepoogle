@@ -317,8 +317,11 @@ class cDataFormat():
         i = 0
         playList = []
         output = ""
+        oldTitle = ""
+        oldPerformer = ""
         
         for item in data:
+            sortColumn = ""
             url = item[0]
             if url[:7] != "file://":
                 url = "file://" + url
@@ -332,12 +335,29 @@ class cDataFormat():
             if listType == 'audio':
                 trackNumber = self.readProperty(res, 'nmm:trackNumber', 'int')
                 discNumber = self.readProperty(res, 'nmm:setNumber', 'int')
-                title = self.readProperty(res, 'nie:title', 'str')
+                trackName = self.readProperty(res, 'nie:title', 'str')
                 if trackNumber != None:
-                    title = "%02d - " % trackNumber + title
+                    trackName = "%02d - " % trackNumber + trackName
 
                 if discNumber != None:
-                    title = "%02d/" % discNumber + title
+                    trackName = "%02d/" % discNumber + trackName
+
+                sortColumn = trackName
+                if res.hasProperty(NOC('nie:url')):
+                    coverUrl = "file://" + self.iconNoCover
+                    trackUrl = toUnicode(self.readProperty(res, 'nie:url', 'str'))
+                    if trackUrl[:7] != "file://":
+                        trackUrl = "file://" + trackUrl
+
+                    trackUrl = os.path.dirname(trackUrl)
+                    for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
+                        tmpCoverUrl = trackUrl + '/' + coverName
+                        if fileExists(tmpCoverUrl):
+                            coverUrl = tmpCoverUrl
+                            break
+
+                else:
+                    coverUrl = None
 
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
@@ -348,36 +368,51 @@ class cDataFormat():
                         res = Nepomuk.Resource(resUri)
 
                     if res.hasProperty(NOC('nie:title')):
-                        title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
+                        #trackName = "<table width='100%%'><tr><td align='center'><em>%s</em></td></tr><tr><td>%s</td></tr></table>" % (res.property(NOC('nie:title')).toString(), title)
+                        albumTitle = res.property(NOC('nie:title')).toString()
+                        if not (oldTitle == albumTitle):
+                            oldTitle = albumTitle
+                            if coverUrl == None:
+                                trackName = "<em>%s</em><br />%s" % (albumTitle, trackName)
 
+                            else:
+                                trackName = "<img width=48 style='float:left; vertical-align:text-bottom; margin:2px' src='%s'><em>%s</em><br />%s" % (coverUrl, albumTitle, trackName)
+
+                            trackName = trackName.replace('"', '\\"')
+
+                        sortColumn = oldTitle + '_' + sortColumn
+                        
             elif listType == 'video':
-                title = res.property(NOC('nie:title')).toString()
-                if title == "":
-                    title = os.path.basename(url)
+                trackName = res.property(NOC('nie:title')).toString()
+                if trackName == "":
+                    trackName = os.path.basename(url)
 
                 else:
                     episodeNumber = self.readProperty(res, 'nmm:episodeNumber', 'int')
                     seasonNumber = self.readProperty(res, 'nmm:season', 'int')
                     if episodeNumber != None:
-                        title = "E%02d - " % episodeNumber + title
+                        trackName = "E%02d - " % episodeNumber + trackName
 
                     if seasonNumber != None:
-                        title = "S%02d" % seasonNumber + title
+                        trackName = "S%02d" % seasonNumber + trackName
 
                     if res.hasProperty(NOC('nuao:usageCount')):
                         if res.property(NOC('nuao:usageCount')).toString() == '1':
-                            title += ' <b><em>(viewed)</em></b>'
+                            trackName += ' <b><em>(viewed)</em></b>'
 
                     if res.hasProperty(NOC('nmm:series')):
                         resUri = res.property(NOC('nmm:series')).toString()
                         res = Nepomuk.Resource(resUri)
                         if res.hasProperty(NOC('nie:title')):
-                            title = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), title)
+                            trackName = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), trackName)
+                            
+                    trackName = trackName.replace('"', '\\"')
+                    sortColumn = trackName
 
-            playList += [[item[1], i, url, title.replace('"', '\\"')]]
+            playList += [[item[1], i, url, trackName, sortColumn]]
             i += 1
 
-        playList = sorted(playList, key=lambda item: item[3])
+        playList = sorted(playList, key=lambda item: item[4])
         url = playList[0][2]
         if url[:7] != "file://":
             url = "file://" + url
@@ -401,14 +436,18 @@ class cDataFormat():
                         "var totalItems = %s;\n" \
                         "var playList = new Array();\n" % i
 
+            output += "document.write(\"<table width='90%'>\")\n"
             i = 0
             for item in playList:
                 output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                output += "document.write(\"<div id='track%(i)s'>" \
-                            "<button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>\&nbsp;%(trackNumber)02d&nbsp;\</button>" \
-                            "&nbsp;%(title)s</div>\");\n" % {"i": i, "trackNumber": i + 1, "title": item[3]}
+                row = "<tr><td width='30px'><button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>" \
+                            "%(trackNumber)02d</button></td>" % {"i": i, "trackNumber": i + 1 }
+                row += "<td id='track%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='playTrack(%(i)s)'>" \
+                            "%(title)s</td></tr>" % {"color": "LightBlue", "i": i, "title": item[3]}
+                output += "document.write(\"%s\");\n" % (row)
                 i += 1
 
+            output += "document.write(\"</table>\")\n"
 
             if listType == "audio":
                 output += "var player = document.getElementById('aplayer');\n"
@@ -426,7 +465,9 @@ class cDataFormat():
                 "            track.style.fontWeight = 'normal';\n" \
                 "        }\n" \
                 "    }\n" \
-                "} );\n" \
+                "} );\n"
+
+            output += \
                 "player.addEventListener('ended', function () {\n" \
                 "    currItem += 1;\n" \
                 "    if (currItem < totalItems) {\n" \
@@ -439,13 +480,16 @@ class cDataFormat():
                 "        currItem = 0;\n" \
                 "        player.setAttribute('src', playList[currItem][0]);\n" \
                 "    }\n" \
-                "} );\n" \
+                "} );\n"
+
+            output += \
                 "function playTrack(track) {\n" \
                 "    currItem = track;\n" \
                 "    player.setAttribute('src', playList[currItem][0]);\n" \
                 "    player.play();\n" \
-                "}\n" \
-                "</script>\n"
+                "}\n"
+
+            output += "</script>\n"
 
         return output
 
