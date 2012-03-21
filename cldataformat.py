@@ -436,7 +436,7 @@ class cDataFormat():
                         "var totalItems = %s;\n" \
                         "var playList = new Array();\n" % i
 
-            output += "document.write(\"<div style='overflow: auto; height: 60%; width: 100%;'>\")\n"
+            output += "document.write(\"<div style='overflow: auto; height: 250px; width: 100%;'>\")\n"
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
