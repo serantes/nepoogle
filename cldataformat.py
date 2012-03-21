@@ -436,7 +436,8 @@ class cDataFormat():
                         "var totalItems = %s;\n" \
                         "var playList = new Array();\n" % i
 
-            output += "document.write(\"<table width='90%'>\")\n"
+            output += "document.write(\"<div style='overflow: auto; height: 60%; width: 100%;'>\")\n"
+            output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
                 output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
@@ -448,6 +449,7 @@ class cDataFormat():
                 i += 1
 
             output += "document.write(\"</table>\")\n"
+            output += "document.write(\"</div>\")\n"
 
             if listType == "audio":
                 output += "var player = document.getElementById('aplayer');\n"
