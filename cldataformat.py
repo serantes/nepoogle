@@ -343,6 +343,9 @@ class cDataFormat():
                     trackName = "%02d/" % discNumber + trackName
 
                 sortColumn = trackName
+
+                # Cover.
+                coverUrl = None
                 if res.hasProperty(NOC('nie:url')):
                     coverUrl = "file://" + self.iconNoCover
                     trackUrl = toUnicode(self.readProperty(res, 'nie:url', 'str'))
@@ -356,31 +359,61 @@ class cDataFormat():
                             coverUrl = tmpCoverUrl
                             break
 
-                else:
-                    coverUrl = None
+                # Performer.
+                performer = ""
+                if res.hasProperty(NOC('nmm:performer')):
+                    resUri = res.property(NOC('nmm:performer')).toString()
+                    if INTERNAL_RESOURCE:
+                        resTmp = cResource(resUri)
 
+                    else:
+                        resTmp = Nepomuk.Resource(resUri)
+
+                    performer = self.readProperty(resTmp, 'nco:fullname', 'str')
+                    if performer == None:
+                        oldPerformer = ""
+
+                    elif not (oldPerformer == performer):
+                        oldPerformer = performer
+
+                    else:
+                        performer = ""
+
+                # Album title.
+                albumTitle = ""
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
                     if INTERNAL_RESOURCE:
-                        res = cResource(resUri)
+                        resTmp = cResource(resUri)
 
                     else:
-                        res = Nepomuk.Resource(resUri)
+                        resTmp = Nepomuk.Resource(resUri)
 
-                    if res.hasProperty(NOC('nie:title')):
-                        #trackName = "<table width='100%%'><tr><td align='center'><em>%s</em></td></tr><tr><td>%s</td></tr></table>" % (res.property(NOC('nie:title')).toString(), title)
-                        albumTitle = res.property(NOC('nie:title')).toString()
-                        if not (oldTitle == albumTitle):
-                            oldTitle = albumTitle
-                            if coverUrl == None:
-                                trackName = "<em>%s</em><br />%s" % (albumTitle, trackName)
+                    albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
+                    if albumTitle == None:
+                        oldTitle = ""
 
-                            else:
-                                trackName = "<img width=48 style='float:left; vertical-align:text-bottom; margin:2px' src='%s'><em>%s</em><br />%s" % (coverUrl, albumTitle, trackName)
+                    elif not (oldTitle == albumTitle):
+                        oldTitle = albumTitle
 
-                            trackName = trackName.replace('"', '\\"')
+                    else:
+                        albumTitle = ""
+                        
+                if albumTitle != "":
+                    trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
+                                    % (albumTitle, oldPerformer, trackName)
+                    if coverUrl != None:
+                        trackName = "<img width=48 style='float:left; " \
+                                        "vertical-align:text-bottom; margin:2px' " \
+                                        "src='%s'>" % (coverUrl) \
+                                    + trackName
 
-                        sortColumn = oldTitle + '_' + sortColumn
+                else:
+                    if performer != "":
+                        trackName = "<em>%s</em><br />%s" % (performer, trackName)
+
+                trackName = trackName.replace('"', '\\"')
+                sortColumn = oldTitle + '_' + sortColumn
                         
             elif listType == 'video':
                 trackName = res.property(NOC('nie:title')).toString()
@@ -414,6 +447,7 @@ class cDataFormat():
 
         playList = sorted(playList, key=lambda item: item[4])
         url = playList[0][2]
+        print url
         if url[:7] != "file://":
             url = "file://" + url
 
@@ -522,7 +556,7 @@ class cDataFormat():
                     if INTERNAL_RESOURCE:
                         resource = cResource(uri)
                         altLabel = resource.property(NOC('nao:altLabel')).toString()
-                        fullName = resource.property(NOC('nco:fullname')).toString()
+                        fullname = resource.property(NOC('nco:fullname')).toString()
                         identifier = resource.property(NOC('nao:identifier')).toString()
                         itemType = toUnicode(resource.type().split('#')[1])
                         prefLabel = resource.property(NOC('nao:prefLabel')).toString()
@@ -532,14 +566,14 @@ class cDataFormat():
                     else:
                         resource = Nepomuk.Resource(uri)
                         altLabel = resource.property(NOC('nao:altLabel')).toString()
-                        fullName = resource.property(NOC('nco:fullname')).toString()
+                        fullname = resource.property(NOC('nco:fullname')).toString()
                         identifier = resource.property(NOC('nao:identifier')).toString()
                         itemType = toUnicode(resource.type().split('#')[1])
                         prefLabel = resource.property(NOC('nao:prefLabel')).toString()
                         title = resource.property(NOC('nie:title')).toString()
                         url = resource.property(NOC('nie:url')).toString()
                     
-                    fullTitle = "%s  %s  %s  %s" % (fullName, title, prefLabel, altLabel)
+                    fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
                     fullTitle = fullTitle.strip().replace("  ", " - ")
                     line = "%s, %s, %s" % (url, fullTitle, itemType)
                     line = line.replace(", , ", ", ")
