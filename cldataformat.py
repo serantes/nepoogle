@@ -356,7 +356,7 @@ class cDataFormat():
                     for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                         tmpCoverUrl = trackUrl + '/' + coverName
                         if fileExists(tmpCoverUrl):
-                            coverUrl = tmpCoverUrl
+                            coverUrl = tmpCoverUrl.replace("'", "&#39;")
                             break
 
                 # Performer.
@@ -398,7 +398,8 @@ class cDataFormat():
 
                     else:
                         albumTitle = ""
-                        
+
+                # Final track name building.
                 if albumTitle != "":
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
                                     % (albumTitle, oldPerformer, trackName)
@@ -412,7 +413,7 @@ class cDataFormat():
                     if performer != "":
                         trackName = "<em>%s</em><br />%s" % (performer, trackName)
 
-                trackName = trackName.replace('"', '\\"')
+                trackName = trackName.replace('"', '&quot;')
                 sortColumn = oldTitle + '_' + sortColumn
                         
             elif listType == 'video':
@@ -447,7 +448,6 @@ class cDataFormat():
 
         playList = sorted(playList, key=lambda item: item[4])
         url = playList[0][2]
-        print url
         if url[:7] != "file://":
             url = "file://" + url
 
