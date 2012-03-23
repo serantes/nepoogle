@@ -90,9 +90,10 @@ knownOntologies = [ \
                 ]
 
 ontologyTypes = [ \
+                    ['kext:unixfilemode', 'unixfilemode'], \
                     ['nao:created', 'datetime'], \
                     ['nao:lastmodified', 'datetime'], \
-                    ['nao:numericrating', 'number'], \
+                    ['nao:numericrating', 'int'], \
                     ['nexif:aperturevalue', 'aperturevalue'], \
                     ['nexif:exposurebiasvalue', 'exposurebiasvalue'], \
                     ['nexif:exposuretime', 'exposuretime'], \
@@ -100,7 +101,7 @@ ontologyTypes = [ \
                     ['nfo:averagebitrate', 'number'], \
                     ['nfo:duration', 'seconds'], \
                     ['nfo:height', 'number'], \
-                    ['nfo:samplerate', 'number'], \
+                    ['nfo:samplerate', 'int'], \
                     ['nfo:width', 'number'], \
                     ['nie:contentcreated', 'datetimep'], \
                     ['nie:contentsize', 'size'], \
