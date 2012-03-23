@@ -312,7 +312,6 @@ class cDataFormat():
     def buildPlaylist(self, data = [], listType = "audio"):
         listType = listType.lower()
         #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
-        #TODO: |< < > >|
         #TODO: Mantener volumen entre preproducciones.
         if not listType in ('audio', 'video'):
             return ""
@@ -324,8 +323,8 @@ class cDataFormat():
         i = 0
         playList = []
         output = ""
-        oldTitle = ""
-        oldPerformer = ""
+        oldTitle = ["", ""]
+        oldPerformer = ["", ""]
         
         for item in data:
             sortColumn = ""
@@ -343,6 +342,8 @@ class cDataFormat():
                 trackNumber = self.readProperty(res, 'nmm:trackNumber', 'int')
                 discNumber = self.readProperty(res, 'nmm:setNumber', 'int')
                 trackName = self.readProperty(res, 'nie:title', 'str')
+                trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                % {"uri": item[1], "title": trackName}
                 if trackNumber != None:
                     trackName = "%02d - " % trackNumber + trackName
 
@@ -367,7 +368,7 @@ class cDataFormat():
                             break
 
                 # Performer.
-                performer = ""
+                performer = ["", ""]
                 if res.hasProperty(NOC('nmm:performer')):
                     resUri = res.property(NOC('nmm:performer')).toString()
                     if INTERNAL_RESOURCE:
@@ -378,16 +379,17 @@ class cDataFormat():
 
                     performer = self.readProperty(resTmp, 'nco:fullname', 'str')
                     if performer == None:
-                        oldPerformer = ""
+                        oldPerformer = ["", ""]
 
-                    elif not (oldPerformer == performer):
-                        oldPerformer = performer
+                    elif not (oldPerformer[1] == performer):
+                        oldPerformer = [resUri, performer]
+                        performer = [resUri, performer]
 
                     else:
-                        performer = ""
+                        performer = ["", ""]
 
                 # Album title.
-                albumTitle = ""
+                albumTitle = ["", ""]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
                     if INTERNAL_RESOURCE:
@@ -398,18 +400,23 @@ class cDataFormat():
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
                     if albumTitle == None:
-                        oldTitle = ""
+                        oldTitle = ["", ""]
 
-                    elif not (oldTitle == albumTitle):
-                        oldTitle = albumTitle
+                    elif not (oldTitle[1] == albumTitle):
+                        oldTitle = [resUri, albumTitle]
+                        albumTitle = [resUri, albumTitle]
 
                     else:
-                        albumTitle = ""
+                        albumTitle = ["", ""]
 
                 # Final track name building.
-                if albumTitle != "":
+                if albumTitle[1] != "":
+                    linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                    % {"uri": albumTitle[0], "title": albumTitle[1]}
+                    linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                    % {"uri": oldPerformer[0], "title": oldPerformer[1]}
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
-                                    % (albumTitle, oldPerformer, trackName)
+                                    % (linkTitle, linkPerformer, trackName)
                     if coverUrl != None:
                         trackName = "<img width=48 style='float:left; " \
                                         "vertical-align:text-bottom; margin:2px' " \
@@ -417,11 +424,13 @@ class cDataFormat():
                                     + trackName
 
                 else:
-                    if performer != "":
-                        trackName = "<em>%s</em><br />%s" % (performer, trackName)
+                    if performer[1] != "":
+                        linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                        % {"uri": performer[0], "title": performer[1]}
+                        trackName = "<em>%s</em><br />%s" % (linkPerformer, trackName)
 
                 trackName = trackName.replace('"', '&quot;')
-                sortColumn = oldTitle + '_' + sortColumn
+                sortColumn = oldTitle[1] + '_' + sortColumn
                         
             elif listType == 'video':
                 # Title.
@@ -473,8 +482,8 @@ class cDataFormat():
 
         playList = sorted(playList, key=lambda item: item[4])
         url = playList[0][2]
-        if url[:7] != "file://":
-            url = "file://" + url
+        if url[:7] == "file://":
+            url = url[7:]
 
         if listType == 'audio':
             output += "<b>Audio player</b><br />\n" \
@@ -495,7 +504,6 @@ class cDataFormat():
                         "<img onclick='playTrack(-4)' style='margin:2px' src='file://%s'>" \
                         "<br />" \
                         % (self.iconPlaylistFirst, self.iconPlaylistPrevious, self.iconPlaylistNext, self.iconPlaylistLast)
-            print self.iconPlaylistFirst
             output += "<b>Playlist</b>:<br />\n" \
                         "<script>\n" \
                         "var currItem = 0;\n" \
@@ -558,15 +566,17 @@ class cDataFormat():
                 "    if (track == -4) { track = playList.length - 1 };\n" \
                 "    if (track <= 0) { track = 0 };\n" \
                 "    if (track >= playList.length) { track = playList.length - 1 };\n" \
-                "    if (currItem != track) {\n" \
+                "    <!--if (currItem != track) {-->\n" \
                 "        currItem = track;\n" \
                 "        player.setAttribute('src', playList[currItem][0]);\n" \
                 "        player.play();\n" \
-                "    };\n" \
+                "    <!--}-->;\n" \
                 "}\n"
 
             output += "</script>\n"
 
+            #print '<html>\n<body>\n' + toUtf8(output) + '\n</body>\n</html>'
+            
         return output
 
    
