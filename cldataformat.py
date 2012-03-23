@@ -79,6 +79,10 @@ class cDataFormat():
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
     iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.Small)
     iconNoCover = KIconLoader().iconPath('audio-x-generic', KIconLoader.Desktop)
+    iconPlaylistFirst = KIconLoader().iconPath('go-first-view', KIconLoader.Small)
+    iconPlaylistPrevious = KIconLoader().iconPath('go-previous-view', KIconLoader.Small)
+    iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
+    iconPlaylistLast = KIconLoader().iconPath('go-last-view', KIconLoader.Small)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
@@ -307,6 +311,9 @@ class cDataFormat():
 
     def buildPlaylist(self, data = [], listType = "audio"):
         listType = listType.lower()
+        #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
+        #TODO: |< < > >|
+        #TODO: Mantener volumen entre preproducciones.
         if not listType in ('audio', 'video'):
             return ""
 
@@ -417,32 +424,50 @@ class cDataFormat():
                 sortColumn = oldTitle + '_' + sortColumn
                         
             elif listType == 'video':
-                trackName = res.property(NOC('nie:title')).toString()
-                if trackName == "":
-                    trackName = os.path.basename(url)
+                # Title.
+                trackName = self.readProperty(res, 'nie:title', 'str')
+                if ((trackName == None) or (trackName == "")):
+                    dummyVal = os.path.basename(url)
+                    sortColumn = dummyVal
+                    trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                    % {"uri": res.uri(), "title": dummyVal}
 
                 else:
+                    sortColumn = trackName
+                    trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                    % {"uri": res.uri(), "title": trackName}
+
+                    # Episode number.
                     episodeNumber = self.readProperty(res, 'nmm:episodeNumber', 'int')
                     seasonNumber = self.readProperty(res, 'nmm:season', 'int')
                     if episodeNumber != None:
-                        trackName = "E%02d - " % episodeNumber + trackName
+                        dummyVal = "E%02d - " % episodeNumber
+                        sortColumn = dummyVal + sortColumn
+                        trackName = dummyVal + trackName
 
+                    # Season.
                     if seasonNumber != None:
-                        trackName = "S%02d" % seasonNumber + trackName
+                        dummyVal = "S%02d" % seasonNumber
+                        sortColumn = dummyVal + sortColumn
+                        trackName = dummyVal + trackName
 
+                    # Viewed?.
                     if res.hasProperty(NOC('nuao:usageCount')):
                         if res.property(NOC('nuao:usageCount')).toString() == '1':
                             trackName += ' <b><em>(viewed)</em></b>'
 
+                    # Series title.
                     if res.hasProperty(NOC('nmm:series')):
                         resUri = res.property(NOC('nmm:series')).toString()
-                        res = Nepomuk.Resource(resUri)
-                        if res.hasProperty(NOC('nie:title')):
-                            trackName = "<em>%s</em>: %s" % (res.property(NOC('nie:title')).toString(), trackName)
+                        resTmp = Nepomuk.Resource(resUri)
+                        if resTmp.hasProperty(NOC('nie:title')):
+                            dummyVal = resTmp.property(NOC('nie:title')).toString()
+                            sortColumn = dummyVal + sortColumn
+                            trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
+                                            % {"uri": resTmp.uri(), "title": dummyVal, "trackName": trackName}
                             
-                    trackName = trackName.replace('"', '\\"')
-                    sortColumn = trackName
-
+                trackName = trackName.replace('"', '&quot;')
+                
             playList += [[item[1], i, url, trackName, sortColumn]]
             i += 1
 
@@ -464,6 +489,13 @@ class cDataFormat():
                             % (url, self.htmlVideoSize)
 
         if self.showPlaylistWithOneElement or len(data) > 1:
+            output += "<img onclick='playTrack(-1)' style='margin:2px' src='file://%s'>" \
+                        "<img onclick='playTrack(-2)' style='margin:2px' src='file://%s'>" \
+                        "<img onclick='playTrack(-3)' style='margin:2px' src='file://%s'>" \
+                        "<img onclick='playTrack(-4)' style='margin:2px' src='file://%s'>" \
+                        "<br />" \
+                        % (self.iconPlaylistFirst, self.iconPlaylistPrevious, self.iconPlaylistNext, self.iconPlaylistLast)
+            print self.iconPlaylistFirst
             output += "<b>Playlist</b>:<br />\n" \
                         "<script>\n" \
                         "var currItem = 0;\n" \
@@ -520,9 +552,17 @@ class cDataFormat():
 
             output += \
                 "function playTrack(track) {\n" \
-                "    currItem = track;\n" \
-                "    player.setAttribute('src', playList[currItem][0]);\n" \
-                "    player.play();\n" \
+                "    if (track == -1) { track = 0 };\n" \
+                "    if (track == -2) { track = currItem - 1 };\n" \
+                "    if (track == -3) { track = currItem + 1 };\n" \
+                "    if (track == -4) { track = playList.length - 1 };\n" \
+                "    if (track <= 0) { track = 0 };\n" \
+                "    if (track >= playList.length) { track = playList.length - 1 };\n" \
+                "    if (currItem != track) {\n" \
+                "        currItem = track;\n" \
+                "        player.setAttribute('src', playList[currItem][0]);\n" \
+                "        player.play();\n" \
+                "    };\n" \
                 "}\n"
 
             output += "</script>\n"
@@ -675,26 +715,27 @@ class cDataFormat():
             if valueType == 'boolean':
                 result = value
 
+            elif valueType == 'datep':
+                result = formatDate(value[:19], True)
+
             elif valueType == 'date':
                 result = formatDate(value[:19])
 
-            #elif valueType == 'datep':
-            #    if value[-6:] ==  "-01-01":
-            #        result = value.replace('-01-01', '')
+            elif valueType == 'datetimep':
+                result = formatDateTime(value[:19], True)
 
             elif valueType == 'datetime':
                 result = formatDateTime(value[:19])
-                if result[-6:] == "-01-01":
-                    result = value.replace('-01-01', '')
 
-            #elif valueType == 'datetimep':
-            #    result = formatDateTime(value[:19], True)
+            elif valueType == 'unixfilemode':
+                result = "%o" % int(value)
+                result = "%s %s" % (result[:3], result[3:])
 
-            elif valueType == 'int' or valueType == 'integer' or valueType == 'nonnegativeinteger':
+            elif valueType in ('int', 'integer', 'number', 'nonnegativeinteger'):
                 result = "%d" % int(float(value))
 
             elif valueType == 'float':
-                result = "%f" % float(value)
+                result = "%.4f" % float(value)
 
             elif valueType == 'duration':
                 result = "%s" % datetime.timedelta(0, int(value), 0)
@@ -731,7 +772,7 @@ class cDataFormat():
 
                 except:
                     result = "%s" % value
-                
+
             else:
                 result = value
 
