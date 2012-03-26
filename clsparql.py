@@ -1300,7 +1300,10 @@ class cSparqlBuilder():
                 else:
                     operator = data[0]
 
-                if operator == '-':
+                if operator == "=" and data[1] == "-":
+                    data = data[1:]
+
+                elif operator == '-':
                     operator = '!='
                     data = data[1:]
 
