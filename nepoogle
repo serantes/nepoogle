@@ -721,7 +721,7 @@ class Nepoogle(QWidget):
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
                     "<li>This program was tested on <b>KDE 4.8.1</b>." \
-                    "<li>Nepomuk search api is available using e0 as prefix.</li>\n" \
+                    "<li>Nepomuk search api is available using e0 or e2 as prefix.</li>\n" \
                     "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api.</li>\n" \
                     "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
                     "<li>Nepoogle do a text search in identifiers, descriptions, tags, fullnames, titles and urls.</li>\n" \
@@ -770,7 +770,10 @@ class Nepoogle(QWidget):
                     "<em>month</em> :== 1..12[m]<br />\n" \
                     "<em>day</em> :== 13..31 | 1..31d<br />\n" \
                     "<em>year</em> :== 31..9999 | 1..9999y<br />\n" \
-                    "<em>number</em> :== 0..9<br />\n" \
+                    "<em>number</em> :== posnumber | negnumber | fraction<br />\n" \
+                    "<em>posnumber</em> :== 0..9<br />\n" \
+                    "<em>negnumber</em> :== compop-0..9<br />\n" \
+                    "<em>fraction</em> :== posnumber/posnumber | negnumber/posnumber<br />\n" \
                     "<em>string</em> :== chars | \"chars\" | 'chars'<br />\n" \
                     "<em>chars</em> :== any number of utf-8 characters<br />\n" \
                     "<em>time</em> :== hh:mm:ss | hour | minute | seconds<br />\n" \
