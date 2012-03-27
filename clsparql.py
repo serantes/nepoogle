@@ -1305,12 +1305,20 @@ class cSparqlBuilder():
                     # "-<" ==> ">"
                     if data[1] == "<":
                         operator = ">"
-                        data = ">" + data[2:]
+                        if (len(data) > 2) and (data[2] == "="):
+                            data = ">" + data[3:]
+
+                        else:
+                            data = ">=" + data[2:]
 
                     # "->" ==> "<"
                     elif data[1] == ">":
                         operator = "<"
-                        data = "<" + data[2:]
+                        if (len(data) > 2) and (data[2] == "="):
+                            data = "<" + data[3:]
+                            
+                        else:
+                            data = "<=" + data[2:]
                 #Hack operador negativo.
 
                 if operator == "=" and (len(data) > 1) and data[1] == "-":
