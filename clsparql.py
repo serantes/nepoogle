@@ -696,6 +696,9 @@ class cSparqlBuilder():
 
 
     def buildDateFilter(self, val, var, op):
+        if op == "==":
+            op = "="
+            
         dateType = None
         val = val.upper()
         typeMark = val[-1]
@@ -739,7 +742,7 @@ class cSparqlBuilder():
 
 
     def buildFloatFilter(self, val, var, op, precision = 4):
-        if op == "=":
+        if op in ("=", "=="):
             # There is no method to do and equal because precision so this is a workaround.
             if vartype(val) in ("str", "unicode"):
                 val = round(float(val), precision)
@@ -756,6 +759,9 @@ class cSparqlBuilder():
         
 
     def buildTimeFilter(self, val, var, op):
+        if op == "==":
+            op = "="
+            
         dateType = None
         val = val.upper()
         typeMark = val[-1]
@@ -881,6 +887,9 @@ class cSparqlBuilder():
                     filterExpression = " }\n"
 
                 elif valType in ('number', 'int', 'integer'):
+                    if operator == "==":
+                        operator = "="
+
                     filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif valType == "float":
@@ -891,7 +900,6 @@ class cSparqlBuilder():
                 
                 elif ((valType == "datetime") or (valType == "datetimep")):
                     filterExpression = self.buildDateFilter(val, i, operator)
-                    #filterExpression = "FILTER(xsd:date(?x%(v2)s) %(op)s \"%(val)s\"^^xsd:date) }\n" % {'v2': i, 'op': operator, 'val': val}
 
                 elif ((valType == "seconds") or (valType == "time")):
                     filterExpression = self.buildTimeFilter(val, i, operator)
@@ -921,13 +929,13 @@ class cSparqlBuilder():
                     filterExpression = self.buildFloatFilter(val, i, operator)
                     
                 else:
-                    if operator == '==':
+                    if operator == "==":
                         filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
 
-                    elif operator == '=':
+                    elif operator == "=":
                         filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val.replace('(', '\\\(').replace(')', '\\\)')}
 
-                    elif operator == '!=':
+                    elif operator == "!=":
                         if optionalUsage:
                             filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
                                                     % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val.replace('(', '\\\(').replace(')', '\\\)'), 'ontbase': ontologyElements[0][1:], 'ont': ontology}
