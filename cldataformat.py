@@ -313,6 +313,8 @@ class cDataFormat():
         listType = listType.lower()
         #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
         #TODO: Mantener volumen entre preproducciones.
+        #TODO: from PyKDE4.kio import *
+        #TODO:     oKPJ = KIO.PreviewJob()
         if not listType in ('audio', 'video'):
             return ""
 
@@ -507,6 +509,7 @@ class cDataFormat():
             output += "<b>Playlist</b>:<br />\n" \
                         "<script>\n" \
                         "var currItem = 0;\n" \
+                        "var playerVolume = 0;\n" \
                         "var totalItems = %s;\n" \
                         "var playList = new Array();\n" % i
 
@@ -531,9 +534,13 @@ class cDataFormat():
             else:
                 output += "var player = document.getElementById('vplayer');\n"
 
+            output += "playerVolume = 0.7;\n"
+            output += "player.volume = playerVolume;\n"
+                
             output += \
                 "player.addEventListener('play', function () {\n" \
                 "    for ( var i = 0; i < totalItems; i++ ) {\n" \
+                "        player.volume = playerVolume;\n" \
                 "        var track = document.getElementById('track' + i);\n" \
                 "        if (i == currItem) {\n" \
                 "            track.style.fontWeight = 'bold';\n" \
@@ -541,6 +548,8 @@ class cDataFormat():
                 "            track.style.fontWeight = 'normal';\n" \
                 "        }\n" \
                 "    }\n" \
+                "    player.volume = playerVolume;\n" \
+                "    //window.alert(player.volume);\n" \
                 "} );\n"
 
             output += \
@@ -556,6 +565,11 @@ class cDataFormat():
                 "        currItem = 0;\n" \
                 "        player.setAttribute('src', playList[currItem][0]);\n" \
                 "    }\n" \
+                "} );\n"
+
+            output += \
+                "player.addEventListener('volumechange', function() {\n" \
+                "    playerVolume = player.volume;\n" \
                 "} );\n"
 
             output += \
