@@ -132,8 +132,8 @@ class cDataFormat():
     htmlStyleIcon = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
     htmlStyleNavigate  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
 
-    htmlStadistics = "%(records)s records found in %(seconds)f seconds." \
-                        "&nbsp;HTML visualization builded in %(sechtml)s seconds." \
+    htmlStadistics = "%(records)s records found in %(seconds).4f seconds." \
+                        "&nbsp;HTML visualization builded in %(sechtml).2f seconds." \
                         
     htmlLinkDelete = "<a title=\"Delete\" href=\"delete:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \

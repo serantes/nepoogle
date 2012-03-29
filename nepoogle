@@ -267,8 +267,8 @@ class Nepoogle(QWidget):
                         "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
                         "<tbody>\n"
     htmlTableFooter = "</tbody></table>\n"
-    #htmlTime = "<br />\n%(records)s records found in %(seconds)f seconds. \
-                #HTML visualization builded in %(sechtml)s seconds."
+    #htmlTime = "<br />\n%(records)s records found in %(seconds).4f seconds. \
+                #HTML visualization builded in %(sechtml).4f seconds."
                 
 
     #htmlLinkDolphin = "<a href=\"dolp:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
@@ -1641,7 +1641,7 @@ def main(args):
                         print "^C Aborted by user..."
                         
                     
-                output = "\n%(records)s records found in %(seconds)f seconds.\n" \
+                output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
                             "--\n" \
                             "Powered by %(name)s %(version)s (%(date)s)" \
                             % {'records': len(data), \
