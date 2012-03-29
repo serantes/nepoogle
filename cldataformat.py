@@ -513,7 +513,7 @@ class cDataFormat():
                         "var totalItems = %s;\n" \
                         "var playList = new Array();\n" % i
 
-            output += "document.write(\"<div style='overflow: auto; height: 250px; width: 100%;'>\")\n"
+            output += "document.write(\"<div id='playlist' style='overflow: auto; height: 250px; width: 100%;'>\")\n"
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
@@ -539,14 +539,18 @@ class cDataFormat():
                 
             output += \
                 "player.addEventListener('play', function () {\n" \
+                "    oldTrackOffsetTop = 0;" \
                 "    for ( var i = 0; i < totalItems; i++ ) {\n" \
                 "        player.volume = playerVolume;\n" \
                 "        var track = document.getElementById('track' + i);\n" \
                 "        if (i == currItem) {\n" \
                 "            track.style.fontWeight = 'bold';\n" \
+                "            scrollTop = document.getElementById('playlist').scrollTop;" \
+                "            if (track.offsetTop >  scrollTop + 200 || track.offsetTop < scrollTop + 50) {document.getElementById('playlist').scrollTop = oldTrackOffsetTop;}" \
                 "        } else {\n" \
                 "            track.style.fontWeight = 'normal';\n" \
                 "        }\n" \
+                "        oldTrackOffsetTop = track.offsetTop" \
                 "    }\n" \
                 "    player.volume = playerVolume;\n" \
                 "    //window.alert(player.volume);\n" \
