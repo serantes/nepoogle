@@ -210,6 +210,9 @@ def ontologyInfo(ontology = '', model = None):
     if (model == None):
         model = Nepomuk.ResourceManager.instance().mainModel()
 
+    # Ontology cleanup because sometimes has additional information as
+    # suffix like in nmm:musicAlbum=?x0.
+    ontology = ontology.split("=")[0].split("-")[0]
     shortOnt = NOCR(ontology)
     i = lindex(ontologiesInfo, shortOnt, column = 0)
     if i == None:
@@ -237,12 +240,13 @@ def ontologyInfo(ontology = '', model = None):
                     #"\t%(ont)s rdfs:range ?range\n" \
                     #"\tOPTIONAL { %(ont)s rdfs:label ?label . }\n" \
                 #"}" % {"ont": ontology}
+
         query = "SELECT ?label ?range\n" \
                 "WHERE {\n" \
                     "\t%(ont)s rdfs:label ?label .\n" \
                     "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
                 "}" % {"ont": shortOnt}
-        
+
         data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         if data.isValid():
             while data.next():
@@ -919,7 +923,7 @@ class cSparqlBuilder():
                     if (len(valTerms) > 1):
                         val = float(valTerms[0])/float(valTerms[1])
 
-                    filterExpression = self.buildFloatFilter(val, i, operator)
+                    filterExpression = self.buildFloatFilter(val, i, operator, 6)
 
                 elif valType == "focallength":
                     valTerms = val.split("/")
