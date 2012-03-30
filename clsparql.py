@@ -203,7 +203,7 @@ def ontologyToHuman(ontology = '', reverse = False):
 
 def ontologyInfo(ontology = '', model = None):
     global ontologiesInfo
-    
+
     if (ontology == ""):
         return ["", "", ""]
 
@@ -212,7 +212,7 @@ def ontologyInfo(ontology = '', model = None):
 
     # Ontology cleanup because sometimes has additional information as
     # suffix like in nmm:musicAlbum=?x0.
-    ontology = ontology.split("=")[0].split("-")[0]
+    ontology = ontology.split("=")[0].split("->")[0]
     shortOnt = NOCR(ontology)
     i = lindex(ontologiesInfo, shortOnt, column = 0)
     if i == None:
