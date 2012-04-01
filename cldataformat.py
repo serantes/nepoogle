@@ -56,12 +56,13 @@ class cDataFormat():
     hiddenOntologies = ["nao:userVisible"]
     model = None
     outFormat = 1  # 1- Text, 2- Html
+    playlistShowWithOneElement = False
+    playlistDescendingOrderInAlbumYear = True
     queryString = ""
     renderSize = 50
     renderedDataRows = 0
     renderedDataText = ""
     structure = []
-    showPlaylistWithOneElement = False
     videojsEnabled = False
 
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
@@ -325,8 +326,9 @@ class cDataFormat():
         i = 0
         playList = []
         output = ""
-        oldTitle = ["", ""]
+        oldTitle = ["", "", ""]
         oldPerformer = ["", ""]
+        albumYear = None
         
         for item in data:
             sortColumn = ""
@@ -351,6 +353,8 @@ class cDataFormat():
 
                 if discNumber != None:
                     trackName = "%02d/" % discNumber + trackName
+
+                albumYear = self.readProperty(res, 'nie:contentCreated', 'year')
 
                 sortColumn = trackName
 
@@ -391,7 +395,7 @@ class cDataFormat():
                         performer = ["", ""]
 
                 # Album title.
-                albumTitle = ["", ""]
+                albumTitle = ["", "", ""]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
                     if INTERNAL_RESOURCE:
@@ -402,19 +406,19 @@ class cDataFormat():
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
                     if albumTitle == None:
-                        oldTitle = ["", ""]
+                        oldTitle = ["", "", ""]
 
                     elif not (oldTitle[1] == albumTitle):
-                        oldTitle = [resUri, albumTitle]
-                        albumTitle = [resUri, albumTitle]
+                        oldTitle = [resUri, albumTitle, albumYear]
+                        albumTitle = [resUri, albumTitle, albumYear]
 
                     else:
-                        albumTitle = ["", ""]
+                        albumTitle = ["", "", ""]
 
                 # Final track name building.
                 if albumTitle[1] != "":
-                    linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                    % {"uri": albumTitle[0], "title": albumTitle[1]}
+                    linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
+                                    % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
                     linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                     % {"uri": oldPerformer[0], "title": oldPerformer[1]}
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
@@ -432,7 +436,13 @@ class cDataFormat():
                         trackName = "<em>%s</em><br />%s" % (linkPerformer, trackName)
 
                 trackName = trackName.replace('"', '&quot;')
-                sortColumn = oldTitle[1] + '_' + sortColumn
+                if self.playlistDescendingOrderInAlbumYear:
+                    sortAdjustment = 9999
+                    
+                else:
+                    sortAdjustment = 0
+
+                sortColumn = "%s_%s_%s" % (oldTitle[2] - sortAdjustment, oldTitle[1], sortColumn)
                         
             elif listType == 'video':
                 # Title.
@@ -499,7 +509,7 @@ class cDataFormat():
                             "src=\"file://%s\" %s controls preload>No video support</video><br />\n" \
                             % (url, self.htmlVideoSize)
 
-        if self.showPlaylistWithOneElement or len(data) > 1:
+        if self.playlistShowWithOneElement or len(data) > 1:
             output += "<img onclick='playTrack(-1)' style='margin:2px' src='file://%s'>" \
                         "<img onclick='playTrack(-2)' style='margin:2px' src='file://%s'>" \
                         "<img onclick='playTrack(-3)' style='margin:2px' src='file://%s'>" \
@@ -817,6 +827,9 @@ class cDataFormat():
 
             elif (propertyType == "int"):
                 result = int(resource.property(NOC(propertyOntology)).toString())
+
+            elif (propertyType == "year"):
+                result = int(resource.property(NOC(propertyOntology)).toString()[:4])
 
             else:
                 result = resource.property(NOC(propertyOntology)).toString()
@@ -1311,6 +1324,8 @@ class cDataFormat():
 
         
     def formatResourceInfo(self, uri = "", knownShortcuts = [], ontologyValueTypes = [], stdout = False):
+        #TODO: by jhuebner
+        #TODO: in a 16:9 screen try to put the preview in the right and not in the bottom.
         if uri == "":
             return self.renderedDataText
 
