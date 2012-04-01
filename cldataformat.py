@@ -355,6 +355,8 @@ class cDataFormat():
                     trackName = "%02d/" % discNumber + trackName
 
                 albumYear = self.readProperty(res, 'nie:contentCreated', 'year')
+                if albumYear == None:
+                    albumYear = 0
 
                 sortColumn = trackName
 
