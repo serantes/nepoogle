@@ -555,7 +555,7 @@ class Nepoogle(QWidget):
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             if forceExec:
-                self.execQuery("")
+                self.execQuery()
                 self.pendingQuery = False
 
         elif url[:6] == 'prop:/':
@@ -1266,12 +1266,6 @@ class Nepoogle(QWidget):
         searchEngine = DEFAULT_ENGINE
         if searchString == '':
             searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
-            if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
-                searchEngine = int(searchString[1:2])
-
-        else:
-            if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
-                searchEngine = int(searchString[1:2])
 
         #if True:
         try:
@@ -1318,6 +1312,13 @@ class Nepoogle(QWidget):
                         self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
               
             elif searchString != '':
+                if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+                    searchEngine = int(searchString[1:2])
+
+                else:
+                    searchEngine = 1
+                    searchString = "e1 " + searchString
+
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
@@ -1343,7 +1344,7 @@ class Nepoogle(QWidget):
                 else:
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
                     self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString[3:]))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
                     
@@ -1422,6 +1423,10 @@ class Nepoogle(QWidget):
 
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
+
+    if query.find("?v5 ") == -1:
+        # Don't change queries with only one item.
+        return query    
 
     if hackLevel.lower() == 'e2':
         query = query.replace(' ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> ?v1 . FILTER(?v1>0) .', '')
