@@ -1251,6 +1251,13 @@ class Nepoogle(QWidget):
         #return result
 
 
+    def processMacros(self, searchString = ""):
+        if searchString.find("--m0:") >= 0:
+            searchString = searchString.replace("--m0:", "--playlist url:-inst performer:")
+
+        return searchString
+        
+
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
         self.setCursor(Qt.BusyCursor)
@@ -1312,6 +1319,7 @@ class Nepoogle(QWidget):
                         self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
               
             elif searchString != '':
+                searchString = self.processMacros(searchString)
                 if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
                     searchEngine = int(searchString[1:2])
 
