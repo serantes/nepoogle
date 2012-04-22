@@ -494,7 +494,7 @@ class cDataFormat():
             playList += [[item[1], i, url, trackName, sortColumn]]
             i += 1
 
-        playList = sorted(playList, key=lambda item: item[4])
+        playList = sorted(playList, key=lambda item: toUtf8(item[4]))
         url = playList[0][2]
         if url[:7] == "file://":
             url = url[7:]
@@ -530,10 +530,18 @@ class cDataFormat():
             i = 0
             for item in playList:
                 output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
-                row = "<tr><td width='30px'><button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>" \
+                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("'", "&#39;").replace('"', "&quot;")}
+                iconRun = iconRun.replace('"', "'")
+                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("'", "&#39;").replace('"', "&quot;")}
+                iconDir = iconDir.replace('"', "'")
+                row = "<tr>"
+                row += "<td width='30px'><button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>" \
                             "%(trackNumber)02d</button></td>" % {"i": i, "trackNumber": i + 1 }
                 row += "<td id='track%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='playTrack(%(i)s)'>" \
-                            "%(title)s</td></tr>" % {"color": "LightBlue", "i": i, "title": item[3]}
+                            "%(title)s</td>" % {"color": "LightBlue", "i": i, "title": item[3]}
+                row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s</td>" \
+                            % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir}
+                row += "</tr>"
                 output += "document.write(\"%s\");\n" % (row)
                 i += 1
 
