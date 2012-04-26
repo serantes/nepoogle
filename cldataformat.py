@@ -56,7 +56,7 @@ class cDataFormat():
     hiddenOntologies = ["nao:userVisible"]
     model = None
     outFormat = 1  # 1- Text, 2- Html
-    playlistShowWithOneElement = False
+    playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
     queryString = ""
     renderSize = 50
@@ -214,12 +214,12 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
                             "{nie:title|l|s:tvserie|ok:tvshow}" \
-                                "%[<br /><b>Last viewed episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
-                                "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . }|f%02d{/SPARQL}" \
-                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . ?x1 nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
-                                "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:season ?v1 . }|f%02d{/SPARQL}" \
-                                "E{SPARQL}SELECT DISTINCT ?uri MAX(?v1) AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?v1 . }|f%02d{/SPARQL}" \
-                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode . ?x1 nmm:season ?season . ?x1 nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
+                                "%[<br /><b>Last viewed episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
+                                "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
