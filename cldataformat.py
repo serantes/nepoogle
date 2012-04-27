@@ -640,36 +640,34 @@ class cDataFormat():
                     value += column
 
             if uri != "":
-                try:
-                    if INTERNAL_RESOURCE:
-                        resource = cResource(uri)
-                        altLabel = resource.property(NOC('nao:altLabel')).toString()
-                        fullname = resource.property(NOC('nco:fullname')).toString()
-                        identifier = resource.property(NOC('nao:identifier')).toString()
-                        itemType = toUnicode(resource.type().split('#')[1])
-                        prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                        title = resource.property(NOC('nie:title')).toString()
-                        url = resource.property(NOC('nie:url')).toString()
+                #if INTERNAL_RESOURCE:
+                # There is a segmentation fault using Nepomuk.Resource() in ssh.
+                if True:
+                    resource = cResource(uri)
+                    altLabel = resource.property(NOC('nao:altLabel')).toString()
+                    fullname = resource.property(NOC('nco:fullname')).toString()
+                    identifier = resource.property(NOC('nao:identifier')).toString()
+                    itemType = toUnicode(resource.type().split('#')[1])
+                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                    title = resource.property(NOC('nie:title')).toString()
+                    url = resource.property(NOC('nie:url')).toString()
 
-                    else:
-                        resource = Nepomuk.Resource(uri)
-                        altLabel = resource.property(NOC('nao:altLabel')).toString()
-                        fullname = resource.property(NOC('nco:fullname')).toString()
-                        identifier = resource.property(NOC('nao:identifier')).toString()
-                        itemType = toUnicode(resource.type().split('#')[1])
-                        prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                        title = resource.property(NOC('nie:title')).toString()
-                        url = resource.property(NOC('nie:url')).toString()
-                    
-                    fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
-                    fullTitle = fullTitle.strip().replace("  ", " - ")
-                    line = "%s, %s, %s" % (url, fullTitle, itemType)
-                    line = line.replace(", , ", ", ")
-                    if line[:2] == ", ":
-                        line = line[2:]
+                else:
+                    resource = Nepomuk.Resource(uri)
+                    altLabel = resource.property(NOC('nao:altLabel')).toString()
+                    fullname = resource.property(NOC('nco:fullname')).toString()
+                    identifier = resource.property(NOC('nao:identifier')).toString()
+                    itemType = toUnicode(resource.type().split('#')[1])
+                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                    title = resource.property(NOC('nie:title')).toString()
+                    url = resource.property(NOC('nie:url')).toString()
 
-                except:
-                    line = value
+                fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
+                fullTitle = fullTitle.strip().replace("  ", " - ")
+                line = "%s, %s, %s" % (url, fullTitle, itemType)
+                line = line.replace(", , ", ", ")
+                if line[:2] == ", ":
+                    line = line[2:]
 
             else:
                 for i in range(0, numColumns):
