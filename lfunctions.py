@@ -51,10 +51,6 @@ def addLinksToText(text = ''):
     return text
 
     
-def handleSIGINT(signum, frame):
-    sys.exit('Operation aborted by user...') 
-
-    
 def fileExists(fileName = ''):
     if fileName == '':
         return False

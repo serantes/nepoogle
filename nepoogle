@@ -1646,13 +1646,7 @@ def main(args):
 
                 if displayResults in (None, True):
                     oDataFormat = cDataFormat(searchString)
-                    signal.signal(signal.SIGINT, handleSIGINT)
-                    try:
-                        oDataFormat.formatAsText(data, structure, time)
-
-                    except KeyboardInterrupt:
-                        print "^C Aborted by user..."
-                        
+                    oDataFormat.formatAsText(data, structure, time)
                     
                 output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
                             "--\n" \
@@ -1690,6 +1684,17 @@ def main(args):
 
         #try:
         #    pass
+
+        except KeyboardInterrupt:
+            output = "\nOperation aborted by user...\n" \
+                        "\n--\n" \
+                        "Powered by %(name)s %(version)s (%(date)s)" \
+                        % {'title': 'Querying Nepomuk', \
+                            'error': sys.exc_info()[1], \
+                            'name': PROGRAM_NAME, \
+                            'version': PROGRAM_VERSION_VERSION, \
+                            'date': PROGRAM_VERSION_DATE \
+                            }
 
         except:
             msgError = "%s" % sys.exc_info()[1]
