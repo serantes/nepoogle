@@ -355,13 +355,24 @@ class cResource():
                     exec("self." + name + " += [\"" + value + "\"]")
 
         #TODO: try calculate this value.
-        ##SELECT DISTINCT ?v
-        ##WHERE {
-        ##    [] <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v
-        ##}
-        ##ORDER BY ?v
-        self.typeValue = Nepomuk.Resource(uri).resourceType().toString()
+        #self.typeValue = Nepomuk.Resource(uri).resourceType().toString()
+        query = "SELECT DISTINCT ?val\n" \
+                "WHERE {\n" \
+                    "\t<" + uri + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?val .\n"\
+                "}\n" \
+                "ORDER BY ?val"
+        if self.stdout:
+            print toUtf8(query)
 
+        self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
+        if self.data.isValid():
+            while self.data.next():
+                tmpOntType = self.data["val"].toString()
+                if tmpOntType != "http://www.w3.org/2000/01/rdf-schema#Resource":
+                    ontType = tmpOntType
+
+        self.typeValue = ontType
 
     def getValue(self, ontology = None):
         if ontology == None:
