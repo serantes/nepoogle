@@ -671,7 +671,11 @@ class Nepoogle(QWidget):
 
         if refresh:
             self.setCursor(Qt.BusyCursor)
-            self.leSearch.setText(self.cache[self.queriesIndex].searchString)
+            searchString = self.cache[self.queriesIndex].searchString
+            if searchString[:3] == "e1 ":
+                searchString = searchString[3:]
+                
+            self.leSearch.setText(searchString)
             self.pendingQuery = False
             self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
             self.setCursor(Qt.ArrowCursor)
@@ -685,7 +689,11 @@ class Nepoogle(QWidget):
         if (self.queriesIndex < (len(self.cache) - 1)):
             self.queriesIndex += 1
             self.setCursor(Qt.BusyCursor)
-            self.leSearch.setText(self.cache[self.queriesIndex].searchString)
+            searchString = self.cache[self.queriesIndex].searchString
+            if searchString[:3] == "e1 ":
+                searchString = searchString[3:]
+
+            self.leSearch.setText(searchString)
             self.pendingQuery = False
             self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
             self.setCursor(Qt.ArrowCursor)
