@@ -48,5 +48,6 @@ _ = gettext.gettext
 
 DEFAULT_ENGINE = 1
 INTERNAL_RESOURCE = False
+INTERNAL_RESOURCE_FORCED_IN_CONSOLE = True
 
 #END lglobals.py

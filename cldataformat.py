@@ -642,7 +642,7 @@ class cDataFormat():
             if uri != "":
                 #if INTERNAL_RESOURCE:
                 # There is a segmentation fault using Nepomuk.Resource() in ssh.
-                if True:
+                if INTERNAL_RESOURCE_FORCED_IN_CONSOLE or INTERNAL_RESOURCE:
                     resource = cResource(uri)
                     altLabel = resource.property(NOC('nao:altLabel')).toString()
                     fullname = resource.property(NOC('nco:fullname')).toString()
