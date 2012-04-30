@@ -661,7 +661,11 @@ class Nepoogle(QWidget):
     def goBackward(self):
         #print "Go backward"
         refresh = False
-        if self.queriesIndex >= 0 and self.leSearch.text() != self.cache[self.queriesIndex].searchString:
+        searchText = self.leSearch.text()
+        #if not searchText[:3] in ("e0 ", "e2 "):
+        #    searchText = "e1 " + searchText
+            
+        if self.queriesIndex >= 0 and searchText != self.cache[self.queriesIndex].searchString:
             refresh = True
 
         else:
@@ -672,8 +676,8 @@ class Nepoogle(QWidget):
         if refresh:
             self.setCursor(Qt.BusyCursor)
             searchString = self.cache[self.queriesIndex].searchString
-            if searchString[:3] == "e1 ":
-                searchString = searchString[3:]
+            #if searchString[:3] == "e1 ":
+            #    searchString = searchString[3:]
                 
             self.leSearch.setText(searchString)
             self.pendingQuery = False
@@ -690,8 +694,8 @@ class Nepoogle(QWidget):
             self.queriesIndex += 1
             self.setCursor(Qt.BusyCursor)
             searchString = self.cache[self.queriesIndex].searchString
-            if searchString[:3] == "e1 ":
-                searchString = searchString[3:]
+            #if searchString[:3] == "e1 ":
+            #    searchString = searchString[3:]
 
             self.leSearch.setText(searchString)
             self.pendingQuery = False
@@ -1302,7 +1306,7 @@ class Nepoogle(QWidget):
 
                 else:
                     output = cachedData
-                    
+
                 if self.queryMethod == "manual":
                     # Cache must be trunked in current position if query changed.
                     if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
@@ -1358,9 +1362,10 @@ class Nepoogle(QWidget):
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
                 else:
+                    searchString = searchString[3:]
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
                     self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString[3:]))
+                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
                     
@@ -1372,7 +1377,7 @@ class Nepoogle(QWidget):
                     output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
 
                 # Cache must be trunked in current position if query changed.
-                if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
+                if ((self.queriesIndex >= 0) and (self.queriesIndex + 1 < len(self.cache))):
                     if self.cache[self.queriesIndex].searchString != searchString:
                         self.cache = self.cache[:self.queriesIndex + 1]
 
