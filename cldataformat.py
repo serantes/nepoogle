@@ -501,44 +501,44 @@ class cDataFormat():
 
         if listType == 'audio':
             output += "<b>Audio player</b><br />\n" \
-                        "<audio id=\"aplayer\" " \
+                        "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
-                            % url
+                            % (listType, url)
 
         elif listType == 'video':
             output += "<b>Video player</b><br />\n" \
-                        "<video id=\"vplayer\" " \
+                        "<video id=\"%splayer\" " \
                             "src=\"file://%s\" %s controls preload>No video support</video><br />\n" \
-                            % (url, self.htmlVideoSize)
+                            % (listType, url, self.htmlVideoSize)
 
         if self.playlistShowWithOneElement or len(data) > 1:
-            output += "<img onclick='playTrack(-1)' style='margin:2px' src='file://%s'>" \
-                        "<img onclick='playTrack(-2)' style='margin:2px' src='file://%s'>" \
-                        "<img onclick='playTrack(-3)' style='margin:2px' src='file://%s'>" \
-                        "<img onclick='playTrack(-4)' style='margin:2px' src='file://%s'>" \
+            output += "<img onclick='%(type)splayTrack(-1)' style='margin:2px' src='file://%(f)s'>" \
+                        "<img onclick='%(type)splayTrack(-2)' style='margin:2px' src='file://%(p)s'>" \
+                        "<img onclick='%(type)splayTrack(-3)' style='margin:2px' src='file://%(n)s'>" \
+                        "<img onclick='%(type)splayTrack(-4)' style='margin:2px' src='file://%(l)s'>" \
                         "<br />" \
-                        % (self.iconPlaylistFirst, self.iconPlaylistPrevious, self.iconPlaylistNext, self.iconPlaylistLast)
+                         % {"type": listType, "f": self.iconPlaylistFirst, "p": self.iconPlaylistPrevious, "n": self.iconPlaylistNext, "l": self.iconPlaylistLast}
             output += "<b>Playlist</b>:<br />\n" \
                         "<script>\n" \
-                        "var currItem = 0;\n" \
-                        "var playerVolume = 0;\n" \
-                        "var totalItems = %s;\n" \
-                        "var playList = new Array();\n" % i
+                        "var %(type)scurrItem = 0;\n" \
+                        "var %(type)splayerVolume = 0;\n" \
+                        "var %(type)stotalItems = %(i)s;\n" \
+                        "var %(type)splayList = new Array();\n" % {"type": listType, "i": i}
 
-            output += "document.write(\"<div id='playlist' style='overflow: auto; height: 250px; width: 100%;'>\")\n"
+            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; width: 100%%;'>\")\n" % {"type": listType}
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
-                output += "playList[%s] = [\"%s\", \"%s\"]\n" % (i, item[2], item[3])
+                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2], item[3])
                 iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("'", "&#39;").replace('"', "&quot;")}
                 iconRun = iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("'", "&#39;").replace('"', "&quot;")}
                 iconDir = iconDir.replace('"', "'")
                 row = "<tr>"
-                row += "<td width='30px'><button onclick='playTrack(%(i)s)' type='btnTrack%(i)s'>" \
-                            "%(trackNumber)02d</button></td>" % {"i": i, "trackNumber": i + 1 }
-                row += "<td id='track%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='playTrack(%(i)s)'>" \
-                            "%(title)s</td>" % {"color": "LightBlue", "i": i, "title": item[3]}
+                row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
+                            "%(trackNumber)02d</button></td>" % {"type": listType, "i": i, "trackNumber": i + 1 }
+                row += "<td id='%(type)strack%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='%(type)splayTrack(%(i)s)'>" \
+                            "%(title)s</td>" % {"type": listType, "color": "LightBlue", "i": i, "title": item[3]}
                 row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s</td>" \
                             % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir}
                 row += "</tr>"
@@ -548,68 +548,64 @@ class cDataFormat():
             output += "document.write(\"</table>\")\n"
             output += "document.write(\"</div>\")\n"
 
-            if listType == "audio":
-                output += "var player = document.getElementById('aplayer');\n"
-                
-            else:
-                output += "var player = document.getElementById('vplayer');\n"
+            output += "var %(type)splayer = document.getElementById('%(type)splayer');\n" % {"type": listType}
 
-            output += "playerVolume = 0.7;\n"
-            output += "player.volume = playerVolume;\n"
+            output += "%(type)splayerVolume = 0.7;\n" % {"type": listType}
+            output += "%(type)splayer.volume = %(type)splayerVolume;\n" % {"type": listType}
                 
             output += \
-                "player.addEventListener('play', function () {\n" \
+                "%(type)splayer.addEventListener('play', function () {\n" \
                 "    oldTrackOffsetTop = 0;" \
-                "    for ( var i = 0; i < totalItems; i++ ) {\n" \
-                "        player.volume = playerVolume;\n" \
-                "        var track = document.getElementById('track' + i);\n" \
-                "        if (i == currItem) {\n" \
-                "            track.style.fontWeight = 'bold';\n" \
-                "            scrollTop = document.getElementById('playlist').scrollTop;" \
-                "            if (track.offsetTop >  scrollTop + 200 || track.offsetTop < scrollTop + 50) {document.getElementById('playlist').scrollTop = oldTrackOffsetTop;}" \
+                "    for ( var i = 0; i < %(type)stotalItems; i++ ) {\n" \
+                "        %(type)splayer.volume = %(type)splayerVolume;\n" \
+                "        var %(type)strack = document.getElementById('%(type)strack' + i);\n" \
+                "        if (i == %(type)scurrItem) {\n" \
+                "            %(type)strack.style.fontWeight = 'bold';\n" \
+                "            scrollTop = document.getElementById('%(type)splaylist').scrollTop;" \
+                "            if (%(type)strack.offsetTop >  scrollTop + 200 || %(type)strack.offsetTop < scrollTop + 50) {document.getElementById('%(type)splaylist').scrollTop = oldTrackOffsetTop;}" \
                 "        } else {\n" \
-                "            track.style.fontWeight = 'normal';\n" \
+                "            %(type)strack.style.fontWeight = 'normal';\n" \
                 "        }\n" \
-                "        oldTrackOffsetTop = track.offsetTop" \
+                "        oldTrackOffsetTop = %(type)strack.offsetTop" \
                 "    }\n" \
-                "    player.volume = playerVolume;\n" \
-                "    //window.alert(player.volume);\n" \
-                "} );\n"
+                "    %(type)splayer.volume = %(type)splayerVolume;\n" \
+                "    //window.alert(%(type)splayer.volume);\n" \
+                "} );\n" % {"type": listType}
 
             output += \
-                "player.addEventListener('ended', function () {\n" \
-                "    currItem += 1;\n" \
-                "    if (currItem < totalItems) {\n" \
-                "        player.setAttribute('src', playList[currItem][0]);\n" \
-                "        player.play();\n" \
+                "%(type)splayer.addEventListener('ended', function () {\n" \
+                "    %(type)scurrItem += 1;\n" \
+                "    if (%(type)scurrItem < %(type)stotalItems) {\n" \
+                "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                "        %(type)splayer.play();\n" \
                 "    } else {\n" \
-                "        currItem = currItem - 1;\n" \
-                "        var track = document.getElementById('track' + currItem);\n" \
-                "        track.style.fontWeight = 'normal';\n" \
-                "        currItem = 0;\n" \
-                "        player.setAttribute('src', playList[currItem][0]);\n" \
+                "        %(type)scurrItem = %(type)scurrItem - 1;\n" \
+                "        var %(type)strack = document.getElementById('%(type)strack' + %(type)scurrItem);\n" \
+                "        %(type)strack.style.fontWeight = 'normal';\n" \
+                "        %(type)scurrItem = 0;\n" \
+                "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
                 "    }\n" \
-                "} );\n"
+                "} );\n" % {"type": listType}
 
             output += \
-                "player.addEventListener('volumechange', function() {\n" \
-                "    playerVolume = player.volume;\n" \
-                "} );\n"
+                "%(type)splayer.addEventListener('volumechange', function() {\n" \
+                "    %(type)splayerVolume = %(type)splayer.volume;\n" \
+                "} );\n" % {"type": listType}
 
             output += \
-                "function playTrack(track) {\n" \
+                "function %(type)splayTrack(track) {\n" \
                 "    if (track == -1) { track = 0 };\n" \
-                "    if (track == -2) { track = currItem - 1 };\n" \
-                "    if (track == -3) { track = currItem + 1 };\n" \
-                "    if (track == -4) { track = playList.length - 1 };\n" \
+                "    if (track == -2) { track = %(type)scurrItem - 1 };\n" \
+                "    if (track == -3) { track = %(type)scurrItem + 1 };\n" \
+                "    if (track == -4) { track = %(type)splayList.length - 1 };\n" \
                 "    if (track <= 0) { track = 0 };\n" \
-                "    if (track >= playList.length) { track = playList.length - 1 };\n" \
-                "    <!--if (currItem != track) {-->\n" \
-                "        currItem = track;\n" \
-                "        player.setAttribute('src', playList[currItem][0]);\n" \
-                "        player.play();\n" \
+                "    if (track >= %(type)splayList.length) { track = %(type)splayList.length - 1 };\n" \
+                "    <!--if (%(type)scurrItem != track) {-->\n" \
+                "        %(type)scurrItem = track;\n" \
+                "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                "        %(type)splayer.play();\n" \
                 "    <!--}-->;\n" \
-                "}\n"
+                "}\n" % {"type": listType}
 
             output += "</script>\n"
 
