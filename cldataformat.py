@@ -640,27 +640,20 @@ class cDataFormat():
                     value += column
 
             if uri != "":
-                #if INTERNAL_RESOURCE:
                 # There is a segmentation fault using Nepomuk.Resource() in ssh.
                 if INTERNAL_RESOURCE_FORCED_IN_CONSOLE or INTERNAL_RESOURCE:
                     resource = cResource(uri)
-                    altLabel = resource.property(NOC('nao:altLabel')).toString()
-                    fullname = resource.property(NOC('nco:fullname')).toString()
-                    identifier = resource.property(NOC('nao:identifier')).toString()
-                    itemType = toUnicode(resource.type().split('#')[1])
-                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                    title = resource.property(NOC('nie:title')).toString()
-                    url = resource.property(NOC('nie:url')).toString()
 
                 else:
                     resource = Nepomuk.Resource(uri)
-                    altLabel = resource.property(NOC('nao:altLabel')).toString()
-                    fullname = resource.property(NOC('nco:fullname')).toString()
-                    identifier = resource.property(NOC('nao:identifier')).toString()
-                    itemType = toUnicode(resource.type().split('#')[1])
-                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                    title = resource.property(NOC('nie:title')).toString()
-                    url = resource.property(NOC('nie:url')).toString()
+                    
+                altLabel = resource.property(NOC('nao:altLabel')).toString()
+                fullname = resource.property(NOC('nco:fullname')).toString()
+                identifier = resource.property(NOC('nao:identifier')).toString()
+                itemType = toUnicode(resource.type().split('#')[1])
+                prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                title = resource.property(NOC('nie:title')).toString()
+                url = resource.property(NOC('nie:url')).toString()
 
                 fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
                 fullTitle = fullTitle.strip().replace("  ", " - ")
