@@ -1,10 +1,12 @@
-v0.9.2 -- 2012/04/06
--BUG: Fixed a mad playlist when audio and a video playlist are both displayed in the same result page.
+v0.9.3 -- 2012/xx/xx
+
+v0.9.2 -- 2012/05/06
+-BUG: Fixed a mad playlist when audio and a video playlists are both displayed in the same result page.
 -BUG: Fixed a not working query with one term using e2 query engine.
 -BUG: Fixed a segmentation fault using Nepoogle on a ssh session.
 -BUG: Fixed an unicode bug sorting files in the playlist.
--BUG: Fixed an unicode bug with commant --tags.
--BUG: Fixed miscalculated episode numbers when there is more than one season displaying "tv show" records in the result view.
+-BUG: Fixed an unicode bug with command --tags.
+-BUG: Fixed miscalculated episode numbers when there are more than one season displaying "tv show" records in the result view.
 
 v0.9.1 -- 2012/04/01
 -BUG: Fixed all know problems related to float values.
