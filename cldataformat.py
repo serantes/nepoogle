@@ -66,7 +66,7 @@ class cDataFormat():
     videojsEnabled = False
 
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
-    supportedImageFormats = QImageReader.supportedImageFormats()
+    supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
     supportedVideoFormats = ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "webm", "wmv")
     
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
