@@ -87,8 +87,9 @@ class cDataFormat():
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
+    iconSystemSearchWeb = KIconLoader().iconPath('edit-web-search', KIconLoader.Small)
 
-    htmlPageHeader = "<html>\n" \
+    htmlHeader = "<html>\n" \
                         "<head>\n" \
                         "<title>%(title)s</title>\n" \
                         "<style type=\"text/css\">" \
@@ -106,10 +107,10 @@ class cDataFormat():
                             "p_style": "font-size:small;", \
                             "tr_style": "font-size:small;" \
                             }
-    htmlPageFooter = "</body>\n" \
+    htmlFooter = "</body>\n" \
                         "</html>"
 
-    htmlProgramInfo =  PROGRAM_HTML_POWERED
+    htmlProgramInfo = PROGRAM_HTML_POWERED
                             
     htmlTableHeader = "<table style=\"text-align:left; width: 100%;\" " \
                             "border=\"1\" cellpadding=\"1\" cellspacing=\"0\">" \
@@ -174,6 +175,9 @@ class cDataFormat():
     htmlLinkSearchRender = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" " \
                                 "style=\"width: 14px; height: 14px;\" " \
                                 " src=\"file://%s\">" % (iconSystemSearch)
+    htmlLinkSearchWebRender = "<img align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" " \
+                                "style=\"width: 14px; height: 14px;\" " \
+                                " src=\"file://%s\">" % (iconSystemSearchWeb)
     htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
@@ -668,7 +672,7 @@ class cDataFormat():
                 line += ", Unknown"
 
             if line != '':
-                print toUtf8(line)
+                print(toUtf8(line))
                 #text += line + '\n'
 
         return text
@@ -690,6 +694,11 @@ class cDataFormat():
             href = "href=\"query:/contact:+\'%s\'\"" % par1
             value = self.htmlLinkSearchRender
 
+        elif id == 'googlesearch':
+            title = "title=\"Search for &quot;%s&quot; using Google\"" % par1
+            href = "href=\"http://www.google.com:/search?q=%%22%s%%22&ie=UTF-8&oe=UTF-8\'\"" % par1.replace(' ', '+')
+            value = self.htmlLinkSearchWebRender
+            
         elif id == 'navigator':
             return "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
                                     self.htmlLinkNavigatePrevious, \
@@ -1150,7 +1159,7 @@ class cDataFormat():
 
         htmlQueryTime = time.time()
 
-        text = self.htmlPageHeader % ("Query results", "")
+        text = self.htmlHeader % ("Query results", "")
         text += self.htmlTableHeader
         if vartype(param1) == "list":
             #self.renderedDataText = ""
@@ -1225,8 +1234,11 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        text += self.htmlProgramInfo \
-                    + self.htmlPageFooter
+
+        text += "<div class=\"bottom\" style=\"clear: both;\">\n" \
+                    + self.htmlProgramInfo \
+                    + "</div>\n" \
+                    + self.htmlFooter
 
         return text
 
@@ -1250,7 +1262,7 @@ class cDataFormat():
         rowsToRender = self.renderSize
 
         script = ""
-        output = self.htmlPageHeader % ('Playlist viewer', script) \
+        output = self.htmlHeader % ('Playlist viewer', script) \
                     + '<b title=\"Título\"><h2>Playlist viewer</b>&nbsp;</h2>\n<hr>\n'
 
         output = toUnicode(output)
@@ -1309,8 +1321,10 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        output += self.htmlProgramInfo \
-                    + self.htmlPageFooter
+        output += "<div class=\"bottom\" style=\"clear: both;\">\n" \
+                    + self.htmlProgramInfo \
+                    + "</div>\n" \
+                    + self.htmlFooter
 
         if stdout:
             print toUtf8(output)
@@ -1321,8 +1335,6 @@ class cDataFormat():
 
         
     def formatResourceInfo(self, uri = "", knownShortcuts = [], ontologyValueTypes = [], stdout = False):
-        #TODO: by jhuebner
-        #TODO: in a 16:9 screen try to put the preview in the right and not in the bottom.
         if uri == "":
             return self.renderedDataText
 
@@ -1342,10 +1354,13 @@ class cDataFormat():
         if self.videojsEnabled:
             script += "<link href=\"http://vjs.zencdn.net/c/video-js.css\" rel=\"stylesheet\" type=\"text/css\">\n" \
                         "<script src=\"http://vjs.zencdn.net/c/video.js\"></script>\n"
-                            
-        output = self.htmlPageHeader % ('Resource viewer', script) \
-                    + '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2>\n<hr>\n' \
+
+        output = self.htmlHeader % ('Resource viewer', script)
+        output += "<div class=\"top\" style=\"static: top;\">\n"
+        output += '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
                         % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
+        output += "</div>\n"
+        output += "<div class=\"data\" style=\"float: left; width: 500px;\">\n<hr>"
         output += self.htmlViewerTableHeader
 
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
@@ -1447,6 +1462,9 @@ class cDataFormat():
 
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
+
+                elif currOnt == 'nco:fullname':
+                    value = value + ' ' + self.htmlRenderLink('googlesearch', value)
 
                 else:
                     if fileExists(value):
@@ -1566,10 +1584,12 @@ class cDataFormat():
             else:
                 output += item[1]
             
-        output += self.htmlViewerTableFooter + "\n<hr>\n"
+        output += self.htmlViewerTableFooter
+        output += "</div>\n"
 
         if len(audios) + len(images) + len(videos) > 0:
-            output += "<h3><b>Preview</b></h3>\n"
+            output += "<div class=\"preview\" style=\"float: left;\">"
+            output += "<hr><h3><b>Preview</b></h3>\n"
 
         # Resource images.
         if len(images) > 0:
@@ -1584,10 +1604,11 @@ class cDataFormat():
                     output += '<img title=\"%(url)s\" style=\"height:auto;width:400px;scalefit=1\" src=\"%(url)s\"><br />\n' \
                                 % {'url': url}
                 output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
-                output += '\n<hr>\n'
+                #output += "\n</div>\n"
 
         # Resource audios.
         if len(audios) > 0:
+            #output += "<div class=\"preview\" style=\"float: left;\">"
             # Dirty hack for support covers and playlist in nmm:MusicAlbum.
             if defaultType == "nmm:MusicAlbum":
                 coverUrl = "file://" + self.iconNoCover
@@ -1608,13 +1629,21 @@ class cDataFormat():
                     output += "<br />\n"
 
             output += self.buildPlaylist(audios, 'audio')
+            #output += "\n</div>\n"
 
         # Resource videos.
         if len(videos) > 0:
+            #output += "<div class=\"preview\" style=\"float: left;\">"
             output += self.buildPlaylist(videos, 'video')
+            #output += "\n</div>\n"
 
-        output += self.htmlProgramInfo \
-                    + self.htmlPageFooter
+        if len(audios) + len(images) + len(videos) > 0:
+            output += "\n</div>\n"
+            
+        output += "<div class=\"bottom\" style=\"clear: both;\">\n" \
+                    + self.htmlProgramInfo \
+                    + "</div>\n" \
+                    + self.htmlFooter
 
         if stdout:
             print toUtf8(output)

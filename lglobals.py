@@ -35,7 +35,7 @@ PROGRAM_VERSION_VERSION = 'v0.9.3git'
 PROGRAM_VERSION_DATE = '2012-xx-xx'
 PROGRAM_AUTHOR_NAME = 'Ignacio Serantes'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
-PROGRAM_HTML_POWERED = "<br />--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
+PROGRAM_HTML_POWERED = "<hr>--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
                         % {'name': PROGRAM_NAME, \
                             'version': PROGRAM_VERSION_VERSION, \
                             'date': PROGRAM_VERSION_DATE \
