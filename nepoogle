@@ -183,15 +183,15 @@ class cWebView(QWebView):
 
 
     #def acceptNavigationRequest(frame, request, navigationType):
-        #print "acceptNavigationRequest", frame, request, navigationType
+        #print("acceptNavigationRequest", frame, request, navigationType)
     
     
     #def createWindow(self, type):
-        #print "createWindow", type
+        #print("createWindow", type)
 
         
     #def customContextMenuRequested(self, pos):
-    #    print 'customContextMenuRequested'
+    #    print('customContextMenuRequested')
 
         
     #def contextMenuEvent(self, event):
@@ -205,10 +205,10 @@ class cWebView(QWebView):
 
 
     #def openLinkInNewWindow(self, url):
-    #    print url
+    #    print(url)
 
     #def triggerPageAction(action, checked):
-    #    print checked, action
+    #    print(checked, action)
         
 #
 # Nepoogle class
@@ -381,12 +381,12 @@ class Nepoogle(QWidget):
 
 
     #def downloadLinkToDisk(self, checked):
-    #    print "downloadLinkToDisk", checked
+    #    print("downloadLinkToDisk", checked)
     #    pass
 
 
     def downloadRequested(self, request):
-        #print "downloadRequested", request.url().toString()
+        #print("downloadRequested", request.url().toString())
         url = toUnicode(request.url().toString())
         if url != "":
             if url[:9] == 'nepomuk:/':
@@ -403,27 +403,27 @@ class Nepoogle(QWidget):
                 url = ''
 
             if url != '':
-                print toUtf8(url)
+                print(toUtf8(url))
                 subprocess.Popen([PROGRAM_URL, "--gui", toUtf8(url)])
 
         
     def unsupportedContent(self, request):
-        #print "downloadRequested", request.url().toString()
+        #print("downloadRequested", request.url().toString())
         QMessageBox.warning(self, '%s - %s' % (PROGRAM_NAME, _("warning")), "Option not available yet.")
 
 
     def openLink(self, checked):
-        #print "openLink", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl())
+        #print("openLink", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl()))
         url = toUnicode(self.wvOutput.page().currentFrame().requestedUrl())
         if url.toString() != "":
             self.linkClicked(url, True)
 
         
     def openLinkInNewWindow(self, checked):
-        #print "openLinkInNewWindow", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl())
+        #print("openLinkInNewWindow", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl()))
         url = toUnicode(self.wvOutput.page().currentFrame().requestedUrl().toString())
         if url != "":
-            print toUtf8(url)
+            print(toUtf8(url))
             if url[:9] == 'nepomuk:/':
                 pass
 
@@ -442,19 +442,19 @@ class Nepoogle(QWidget):
 
         
     def loadFinished(self, ok):
-        #print 'loadFinished:', ok
+        #print('loadFinished:', ok)
         self.repaint()
         if self.pendingQuery:
             self.execQuery()
 
             
     def loadProgress(self, progress):
-        #print 'loadProgress:', progress
+        #print('loadProgress:', progress)
         pass
 
         
     def loadStarted(self):
-        #print 'loadStarted', self.wvOutput.url().toString()
+        #print('loadStarted', self.wvOutput.url().toString())
         pass
 
 
@@ -504,7 +504,7 @@ class Nepoogle(QWidget):
     
     def linkClicked(self, url, forceExec = False):
         url = toUnicode(url.toString())
-        print toUtf8(url)
+        print(toUtf8(url))
         
         if url[:8] == 'delete:/':
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -659,7 +659,7 @@ class Nepoogle(QWidget):
 
     
     def goBackward(self):
-        #print "Go backward"
+        #print("Go backward")
         refresh = False
         searchText = self.leSearch.text()
         #if not searchText[:3] in ("e0 ", "e2 "):
@@ -689,7 +689,7 @@ class Nepoogle(QWidget):
             
         
     def goForward(self):
-        #print "Go forward"
+        #print("Go forward")
         if (self.queriesIndex < (len(self.cache) - 1)):
             self.queriesIndex += 1
             self.setCursor(Qt.BusyCursor)
@@ -1239,7 +1239,7 @@ class Nepoogle(QWidget):
             #text += '</tr>\n'
 
             #if stdout:
-                #print toUtf8(text)
+                #print(toUtf8(text))
 
             #self.renderedRows += 1
 
@@ -1254,11 +1254,11 @@ class Nepoogle(QWidget):
         #text += self.htmlTableFooter
         #text += self.htmlTime % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
         #if stdout:
-            #print toUtf8(text)
+            #print(toUtf8(text))
 
         #result += text + self.htmlFooter
         #if stdout:
-            #print toUtf8(result)
+            #print(toUtf8(result))
     
         #return result
 
@@ -1345,7 +1345,7 @@ class Nepoogle(QWidget):
                     oNQP = None
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
-                        print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+                        print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
                     query = hackQueryParser(query, 'e0')
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
@@ -1357,7 +1357,7 @@ class Nepoogle(QWidget):
                     query = hackQueryParser(query, 'e2')
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
-                        print toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+                        print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
@@ -1469,10 +1469,10 @@ def hackQueryParser(query = '', hackLevel = 'e2'):
     
   
 def buildHelp():
-    print "%(name)s %(version)s (%(date)s)\n" \
-              % {'name': PROGRAM_NAME, 'version': PROGRAM_VERSION_VERSION, 'date': PROGRAM_VERSION_DATE}
+    print("%(name)s %(version)s (%(date)s)\n" \
+              % {'name': PROGRAM_NAME, 'version': PROGRAM_VERSION_VERSION, 'date': PROGRAM_VERSION_DATE})
               
-    print "Usage: %s [command ] [query]\n" \
+    print("Usage: %s [command ] [query]\n" \
           "\n" \
           "commands:\n" \
           "  --help           -- Shows this help\n" \
@@ -1482,7 +1482,7 @@ def buildHelp():
           "\n" \
           "query:\n" \
           "  Query syntax documentation is available in the gui mode help\n" \
-          % PROGRAM_NAME
+          % PROGRAM_NAME)
   
 
 def main(args):
@@ -1531,7 +1531,7 @@ def main(args):
                 gui = False
 
             else:
-                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                print("ERROR: Unknown parameter \"%s\".\n" % parameter)
                 buildHelp()
                 quit()
                 
@@ -1550,7 +1550,7 @@ def main(args):
                 verboseMode = False
 
             else:
-                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                print("ERROR: Unknown parameter \"%s\".\n" % parameter)
                 buildHelp()
                 quit()
                 
@@ -1569,7 +1569,7 @@ def main(args):
                 displayResults = False
 
             else:
-                print "ERROR: Unknown parameter \"%s\".\n" % parameter
+                print("ERROR: Unknown parameter \"%s\".\n" % parameter)
                 buildHelp()
                 quit()
 
@@ -1618,7 +1618,7 @@ def main(args):
             #searchString = searchString[3:]
 
         output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
-        print toUtf8(output)
+        print(toUtf8(output))
         
         #if True:
         try:
@@ -1632,7 +1632,7 @@ def main(args):
                     oNQP = None
                     if verboseMode:
                         # Improve a little bit readability.
-                        print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+                        print(toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
                         
                     query = hackQueryParser(query, 'e0')
                     data, structure, time = oSparql.executeQuery(query)
@@ -1644,7 +1644,7 @@ def main(args):
                     query = hackQueryParser(query, 'e2')
                     if verboseMode:
                         # Improve a little bit readability.
-                        print toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
+                        print(toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
                     data, structure, time = oSparql.executeQuery(query)
 
@@ -1725,7 +1725,7 @@ def main(args):
                                 'date': PROGRAM_VERSION_DATE \
                                 }
 
-        print toUtf8(output)
+        print(toUtf8(output))
         
 
 if __name__=="__main__":
