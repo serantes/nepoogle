@@ -49,7 +49,7 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
                         _CONST_ICON_SYSTEM_RUN)
 
 class cDataFormat():
-        
+
     columnsCount = 3
     data = []
     enableImageViewer = True
@@ -68,7 +68,7 @@ class cDataFormat():
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
     supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
     supportedVideoFormats = ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "webm", "wmv")
-    
+
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.Small)
@@ -111,7 +111,7 @@ class cDataFormat():
                         "</html>"
 
     htmlProgramInfo = PROGRAM_HTML_POWERED
-                            
+
     htmlTableHeader = "<table style=\"text-align:left; width: 100%;\" " \
                             "border=\"1\" cellpadding=\"1\" cellspacing=\"0\">" \
                         "<tbody>\n"
@@ -130,13 +130,13 @@ class cDataFormat():
                                 "border=\"0\" cellpadding=\"3\" cellspacing=\"0\">" \
                                 "<tbody>\n"
     htmlViewerTableFooter = "</tbody></table>\n"
-    
+
     htmlStyleIcon = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
     htmlStyleNavigate  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
 
     htmlStadistics = "%(records)s records found in %(seconds).4f seconds." \
                         "&nbsp;HTML visualization builded in %(sechtml).2f seconds." \
-                        
+
     htmlLinkDelete = "<a title=\"Delete\" href=\"delete:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
                             + "</a>"
@@ -181,7 +181,7 @@ class cDataFormat():
     htmlLinkSystemRun = "<a title=\"Open file %(uri)s\" href=\"run:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
-                        
+
     htmlVideoSize = "height=\"360\" width=\"640\""
 
     #TODO: columnsformat. This is linked to self.columnsCount.
@@ -329,15 +329,15 @@ class cDataFormat():
 
         if len(data) < 1:
             return ""
-        
+
         data = sorted(data, key=lambda item: item[0])
         i = 0
         playList = []
         output = ""
-        oldTitle = ["", "", ""]
+        oldTitle = ["", "", 0]
         oldPerformer = ["", ""]
         albumYear = None
-        
+
         for item in data:
             sortColumn = ""
             url = item[0]
@@ -416,7 +416,7 @@ class cDataFormat():
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
                     if albumTitle == None:
-                        oldTitle = ["", "", ""]
+                        oldTitle = ["", "", 0]
 
                     elif not (oldTitle[1] == albumTitle):
                         oldTitle = [resUri, albumTitle, albumYear]
@@ -448,12 +448,12 @@ class cDataFormat():
                 trackName = trackName.replace('"', '&quot;')
                 if self.playlistDescendingOrderInAlbumYear:
                     sortAdjustment = 9999
-                    
+
                 else:
                     sortAdjustment = 0
 
                 sortColumn = "%s_%s_%s" % (oldTitle[2] - sortAdjustment, oldTitle[1], sortColumn)
-                        
+
             elif listType == 'video':
                 # Title.
                 trackName = self.readProperty(res, 'nie:title', 'str')
@@ -496,9 +496,9 @@ class cDataFormat():
                             sortColumn = dummyVal + sortColumn
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
                                             % {"uri": resTmp.uri(), "title": dummyVal, "trackName": trackName}
-                            
+
                 trackName = trackName.replace('"', '&quot;')
-                
+
             playList += [[item[1], i, url, trackName, sortColumn]]
             i += 1
 
@@ -560,7 +560,7 @@ class cDataFormat():
 
             output += "%(type)splayerVolume = 0.7;\n" % {"type": listType}
             output += "%(type)splayer.volume = %(type)splayerVolume;\n" % {"type": listType}
-                
+
             output += \
                 "%(type)splayer.addEventListener('play', function () {\n" \
                 "    oldTrackOffsetTop = 0;" \
@@ -618,10 +618,10 @@ class cDataFormat():
             output += "</script>\n"
 
             #print '<html>\n<body>\n' + toUtf8(output) + '\n</body>\n</html>'
-            
+
         return output
 
-   
+
     def formatAsText(self, data = [], structure = [], queryTime = 0, stdout = False):
         text = ""
         numColumns = len(structure)
@@ -640,7 +640,7 @@ class cDataFormat():
                 else:
                     if value != "":
                         value += ', '
-                    
+
                     value += column
 
             if uri != "":
@@ -650,7 +650,7 @@ class cDataFormat():
 
                 else:
                     resource = Nepomuk.Resource(uri)
-                    
+
                 altLabel = resource.property(NOC('nao:altLabel')).toString()
                 fullname = resource.property(NOC('nco:fullname')).toString()
                 identifier = resource.property(NOC('nao:identifier')).toString()
@@ -670,7 +670,7 @@ class cDataFormat():
                 for i in range(0, numColumns):
                     if line != "":
                         line += ", "
-                        
+
                     line += "%s" % row[i]
 
                 line += ", Unknown"
@@ -680,7 +680,7 @@ class cDataFormat():
                 #text += line + '\n'
 
         return text
-        
+
 
     def htmlRenderLink(self, id = 'uri', par1 = '', par2 = ''):
         if id == 'uri':
@@ -702,7 +702,7 @@ class cDataFormat():
             title = "title=\"Search for &quot;%s&quot; using Google\"" % par1
             href = "href=\"http://www.google.com:/search?q=%%22%s%%22&ie=UTF-8&oe=UTF-8\'\"" % par1.replace(' ', '+')
             value = self.htmlLinkSearchWebRender
-            
+
         elif id == 'navigator':
             return "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
                                     self.htmlLinkNavigatePrevious, \
@@ -828,7 +828,7 @@ class cDataFormat():
             result = value
 
         return result
-        
+
 
     def readProperty(self, resource, propertyOntology, propertyType = "str"):
         try:
@@ -849,7 +849,7 @@ class cDataFormat():
 
         return result
 
-        
+
     def readValues(self, resource, valuesName):
         values = []
         if valuesName[:7].lower() == "sparql:":
@@ -863,7 +863,7 @@ class cDataFormat():
 
                 else:
                     query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
-                
+
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
                 while queryResultSet.next():
@@ -920,12 +920,12 @@ class cDataFormat():
                 #values = []
 
         return values
-        
+
 
     def processFormatPattern(self, pattern):
         pattern = toUnicode(pattern)
         data = pattern
-        
+
         variablesTmp = re.findall('\{(.*?)\}', pattern)
         sparqlItems = re.findall('\{SPARQL\}(.*?)\{/SPARQL\}', pattern)
         variables = []
@@ -950,7 +950,7 @@ class cDataFormat():
 
         return data, variables, optionals, optionalsEmpty
 
-        
+
     def formatResource(self, resource, pattern):
         # Variables substitution.
         data, variables, optionals, optionalsEmpty = self.processFormatPattern(pattern)
@@ -969,7 +969,7 @@ class cDataFormat():
 
                 elif item == "of":
                     addOpenFile = True
-                    
+
                 elif item == "ol":
                     addOpenLocation = True
 
@@ -994,7 +994,7 @@ class cDataFormat():
                     #TODO: this must be improved.
                     if (fmtValue[-1].lower() == 'd'):
                         fmtValueToNumber = True
-                        
+
                     for value in values:
                         if value[1] != "":
                             if fmtValueToNumber:
@@ -1021,11 +1021,11 @@ class cDataFormat():
 
                 if len(value) == 1:
                     displayValue += [""]
-                    
+
                 if addLink:
                     if value[1] == "":
                         displayValue = value[0]
-                        
+
                     else:
                         if value[1][:17] == "[<b>Unplugged</b>":
                             tmpSplit = value[1].split("]")
@@ -1033,7 +1033,7 @@ class cDataFormat():
                             displayValue = ""
                             for i in range(1, len(tmpSplit)):
                                 displayValue += ']' + tmpSplit[i]
-                            
+
                         else:
                             displayValue = value[1]
                             if addLinkOpenFile:
@@ -1052,7 +1052,7 @@ class cDataFormat():
 
                 if addOpenKIO:
                     formatValue += " " + self.htmlLinkOpenKIO % {"uri": KIOName + ":/" + value[1]}
-                    
+
                 if addSearch:
                     formatValue += " " + self.htmlLinkSearch % {"uri": "%s:+'%s'" % (searchTerm, value[1])}
 
@@ -1091,8 +1091,8 @@ class cDataFormat():
             data = data.replace("%[" + optionals[i] + "%]", optionals[i])
 
         return data.strip()
-        
-        
+
+
     def getResourceIcons(self, uri, iconsAssociated):
         icons = ""
         for i in _CONST_ICONS_LIST:
@@ -1116,7 +1116,7 @@ class cDataFormat():
                 #pass
 
         return icons
-        
+
 
     def formatHtmlLine(self, uri):
         if INTERNAL_RESOURCE:
@@ -1124,12 +1124,12 @@ class cDataFormat():
 
         else:
             resource = Nepomuk.Resource(uri)
-        
+
         itemType = NOCR(resource.type())
         idx = lindex(self.ontologyFormat, itemType, column = 0)
         if (idx == None):
             idx = 0
-        
+
         isValid = False
         for i in range(1, self.columnsCount + 1):
             exec "pattern = self.ontologyFormat[%s][%s]" % (idx, i)
@@ -1143,7 +1143,7 @@ class cDataFormat():
                 else:
                     exec "column%s = self.formatResource(resource, pattern)" % i
                     isValid = True
-                    
+
         if isValid:
             #TODO: columnsformat, this must be automatic.
             line = self.htmlTableRow % (column1, column2, column3)
@@ -1313,7 +1313,7 @@ class cDataFormat():
         else:
             if len(audios) > 0:
                 output += self.buildPlaylist(audios, 'audio')
-                
+
             for item in images:
                 lines += u"Image: %s<br />\n" % item[0]
 
@@ -1337,7 +1337,7 @@ class cDataFormat():
 
         return output
 
-        
+
     def formatResourceInfo(self, uri = "", knownShortcuts = [], ontologyValueTypes = [], stdout = False):
         if uri == "":
             return self.renderedDataText
@@ -1378,7 +1378,7 @@ class cDataFormat():
                 currOnt = NOCR(data["ont"].toString())
                 if currOnt in self.hiddenOntologies:
                     continue
-                
+
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
@@ -1387,7 +1387,7 @@ class cDataFormat():
 
                     #else:
                     resource = Nepomuk.Resource(value)
-                        
+
                     value = ''
                     if resource.hasType(NOC('nao:Tag', True)):
                         #altLabels = QStringListToString(resource.altLabels())
@@ -1533,7 +1533,7 @@ class cDataFormat():
 
                 #else:
                 res = Nepomuk.Resource(resUri)
-                    
+
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 val = toUnicode(res.genericLabel())
                 if res.hasProperty(NOC('nie:url')):
@@ -1541,7 +1541,7 @@ class cDataFormat():
 
                 else:
                     url = None
-                    
+
                 reverseResourcesItems += [[resUri, NOCR(data["ont"].toString()), val, url]]
 
             tmpOutput = ''
@@ -1554,15 +1554,15 @@ class cDataFormat():
                             tmpOutput = tmpOutput.replace('</a><', '</a>, <')
                             reverseResourcesList[-1][1] = reverseResourcesList[-1][1] + tmpOutput
                             tmpOutput = ""
-                            
+
                         reverseResourcesList += [[item[1], '\n<hr>\n<tr><td valign=\"top\" width=\"100px\"><b title=\"%s\">%s</b>:</td><td>' \
                                     % (item[1], ontologyToHuman(item[1], True))]]
                         oldOnt = item[1]
 
                     tmpOutput += '<!-- ' + item[2] + '-->' \
                                     + self.htmlRenderLink('uri', item[0], item[2])
-                                    
-                    url = item[3] 
+
+                    url = item[3]
                     if ((url != None) and fileExists(url)):
                         ext = os.path.splitext(url)[1][1:].lower()
                         if ext in self.supportedImageFormats:
@@ -1576,7 +1576,7 @@ class cDataFormat():
                         elif ext in self.supportedVideoFormats:
                             if lindex(videos, url) == None:
                                 videos += [[url, item[0]]]
-                                
+
                 tmpOutput = tmpOutput.replace('</a><', '</a>, <')
                 reverseResourcesList[-1][1] = reverseResourcesList[-1][1] + tmpOutput + '</td></tr>\n'
 
@@ -1584,10 +1584,10 @@ class cDataFormat():
             if defaultType == "nmm:MusicAlbum" and item[0] in ("nmm:musicAlbum", "_no_nao:hasSubResource"):
                 # Don't print for music albums this reverse resources.
                 pass
-                
+
             else:
                 output += item[1]
-            
+
         output += self.htmlViewerTableFooter
         output += "</div>\n"
 
@@ -1643,7 +1643,7 @@ class cDataFormat():
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
-            
+
         output += "<div class=\"bottom\" style=\"clear: both;\">\n" \
                     + self.htmlProgramInfo \
                     + "</div>\n" \
@@ -1656,7 +1656,7 @@ class cDataFormat():
 
         return output
 
-        
+
     def formatData(self, data = [], structure = [], queryTime = 0, stdout = False):
         if self.outFormat == 1:
             return self.formatAsText(data = [], structure = [], queryTime = 0, stdout = False)
@@ -1666,5 +1666,5 @@ class cDataFormat():
 
         else:
             return ""
-        
+
 #END cldataformat.py
