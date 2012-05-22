@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
@@ -91,7 +91,7 @@ from lglobals import *
 _ = gettext.gettext
 
 #IF BUILD
-#INCLUDE lfunctions.py 
+#INCLUDE lfunctions.py
 #ELSE
 from lfunctions import *
 #ENDIF
@@ -111,11 +111,11 @@ from cldataformat import *
 #class nCompleter(QCompleter):
 
     #separator = " "
-    
+
     #def __init__(self, *args):
 
         #super(nCompleter, self).__init__(*args)
-        
+
         #model = QStringListModel()
         #wordList = [ \
                     #u"and", u"or",\
@@ -148,11 +148,11 @@ from cldataformat import *
         #self.setModel(model)
         #self.setCaseSensitivity(Qt.CaseInsensitive);
         #self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
-        
+
         ##self.setCompletionMode(QCompleter.PopupCompletion)
         ##self.setCompletionMode(QCompleter.InlineCompletion)
 
-        
+
     #def pathFromIndex(self, index):
         #path = QCompleter.pathFromIndex(self, index)
 
@@ -162,7 +162,7 @@ from cldataformat import *
 
         #return path
 
-        
+
     #def splitPath(self, path):
         #path = str(path.split(self.separator)[-1]).lstrip(self.separator)
         #return [path]
@@ -175,7 +175,7 @@ class cWebView(QWebView):
 
     def __init__(self, *args):
         super(cWebView, self).__init__(*args)
-      
+
         #self.setContextMenuPolicy(Qt.PreventContextMenu)
         #self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
@@ -184,16 +184,16 @@ class cWebView(QWebView):
 
     #def acceptNavigationRequest(frame, request, navigationType):
         #print("acceptNavigationRequest", frame, request, navigationType)
-    
-    
+
+
     #def createWindow(self, type):
         #print("createWindow", type)
 
-        
+
     #def customContextMenuRequested(self, pos):
     #    print('customContextMenuRequested')
 
-        
+
     #def contextMenuEvent(self, event):
     #    if False:
     #        self.popMenu = QMenu(self)
@@ -209,7 +209,7 @@ class cWebView(QWebView):
 
     #def triggerPageAction(action, checked):
     #    print(checked, action)
-        
+
 #
 # Nepoogle class
 #
@@ -269,7 +269,7 @@ class Nepoogle(QWidget):
     htmlTableFooter = "</tbody></table>\n"
     #htmlTime = "<br />\n%(records)s records found in %(seconds).4f seconds. \
                 #HTML visualization builded in %(sechtml).4f seconds."
-                
+
 
     #htmlLinkDolphin = "<a href=\"dolp:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
                         #% ('%s', htmlImgStyle, 'open with Dolphin', iconFileManager)
@@ -317,7 +317,7 @@ class Nepoogle(QWidget):
         self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
         #self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbBackward, SIGNAL("clicked()"), self.goBackward)
-    
+
         self.pbForward = QPushButton(self)
         self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
@@ -357,7 +357,7 @@ class Nepoogle(QWidget):
         self.connect(self.wvOutput.page(), SIGNAL("downloadRequested(const QNetworkRequest&)"), self.downloadRequested)
         self.connect(self.wvOutput.page(), SIGNAL("unsupportedContent(QNetworkReply*)"), self.unsupportedContent)
         self.wvOutput.page().setForwardUnsupportedContent(True)
-        
+
         self.grid = QGridLayout()
         self.grid.setSpacing(10)
         #self.grid.addWidget(self.leSearch, 1, 1)
@@ -375,7 +375,7 @@ class Nepoogle(QWidget):
 
         self.leSearch.setSelection(0,999)
         self.leSearch.setFocus()
-        
+
         if searchString == '':
             self.execQuery('--help')
 
@@ -406,7 +406,7 @@ class Nepoogle(QWidget):
                 print(toUtf8(url))
                 subprocess.Popen([PROGRAM_URL, "--gui", toUtf8(url)])
 
-        
+
     def unsupportedContent(self, request):
         #print("downloadRequested", request.url().toString())
         QMessageBox.warning(self, '%s - %s' % (PROGRAM_NAME, _("warning")), "Option not available yet.")
@@ -418,7 +418,7 @@ class Nepoogle(QWidget):
         if url.toString() != "":
             self.linkClicked(url, True)
 
-        
+
     def openLinkInNewWindow(self, checked):
         #print("openLinkInNewWindow", checked, toUtf8(self.wvOutput.page().currentFrame().requestedUrl()))
         url = toUnicode(self.wvOutput.page().currentFrame().requestedUrl().toString())
@@ -440,19 +440,19 @@ class Nepoogle(QWidget):
             if url != '':
                 subprocess.Popen([PROGRAM_URL, "--gui", toUtf8(url)])
 
-        
+
     def loadFinished(self, ok):
         #print('loadFinished:', ok)
         self.repaint()
         if self.pendingQuery:
             self.execQuery()
 
-            
+
     def loadProgress(self, progress):
         #print('loadProgress:', progress)
         pass
 
-        
+
     def loadStarted(self):
         #print('loadStarted', self.wvOutput.url().toString())
         pass
@@ -491,7 +491,7 @@ class Nepoogle(QWidget):
 
             #else
                 #pass
-                
+
         elif event.key() == Qt.Key_Escape:
             self.close()
 
@@ -501,14 +501,14 @@ class Nepoogle(QWidget):
         #else
             #pass
 
-    
+
     def linkClicked(self, url, forceExec = False):
         url = toUnicode(url.toString())
         print(toUtf8(url))
-        
+
         if url[:8] == 'delete:/':
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:            
+            if reply == QMessageBox.Yes:
                 subprocess.Popen(['kioclient', 'move', url[8:], 'trash:/'])
                 self.pendingQuery = True
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -548,7 +548,7 @@ class Nepoogle(QWidget):
                     #pass
 
                 self.linkClicked(QUrl(self.navigationData[idx][0]), False)
-            
+
         elif url[:9] == 'nepomuk:/':
             self.leSearch.setText(url)
             self.pendingQuery = True
@@ -574,10 +574,10 @@ class Nepoogle(QWidget):
 
             elif len(urlElements) == 1:
                 tmpUrl = "'" + urlElements[0] + "'"
-                
+
             else:
                 pass
-                
+
             self.leSearch.setText(tmpUrl)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -657,14 +657,14 @@ class Nepoogle(QWidget):
             # In KDE we trust.
             subprocess.Popen(["kioclient", "exec", url])
 
-    
+
     def goBackward(self):
         #print("Go backward")
         refresh = False
         searchText = self.leSearch.text()
         #if not searchText[:3] in ("e0 ", "e2 "):
         #    searchText = "e1 " + searchText
-            
+
         if self.queriesIndex >= 0 and searchText != self.cache[self.queriesIndex].searchString:
             refresh = True
 
@@ -678,7 +678,7 @@ class Nepoogle(QWidget):
             searchString = self.cache[self.queriesIndex].searchString
             #if searchString[:3] == "e1 ":
             #    searchString = searchString[3:]
-                
+
             self.leSearch.setText(searchString)
             self.pendingQuery = False
             self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
@@ -686,8 +686,8 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
             self.navigationData = self.cache[self.queriesIndex].data
-            
-        
+
+
     def goForward(self):
         #print("Go forward")
         if (self.queriesIndex < (len(self.cache) - 1)):
@@ -704,7 +704,7 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
             self.navigationData = self.cache[self.queriesIndex].data
-        
+
 
     def buildHelp(self, oSparqlBuilder):
         commands = '<p><b>Commands</b>:\n<ul>\n'
@@ -720,11 +720,11 @@ class Nepoogle(QWidget):
             if fmtOntology.find('%') >= 0:
                 fmtOntology = fmtOntology.replace('%', '')
                 info += ' (using percent encoding)'
-                                
+
             if fmtOntology.find('_') >= 0:
                 fmtOntology = fmtOntology.replace('_', '')
                 info += ' (using optionals to negate)'
-              
+
             shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
                                 % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': fmtOntology, 'info': info}
 
@@ -873,7 +873,7 @@ class Nepoogle(QWidget):
 
         return output
 
-        
+
     def htmlRenderLink(self, id = 'uri', par1 = '', par2 = ''):
         if id == 'uri':
             title = "title=\"%s\"" % par1
@@ -911,7 +911,7 @@ class Nepoogle(QWidget):
             href = "href=\"query:/hasTag:+\'%s\'\"" % par1
             value = self.htmlLinkSearch
 
-        # This is an exception.    
+        # This is an exception.
         elif id == 'unplugged':
             if par1 == '':
                 return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
@@ -930,13 +930,13 @@ class Nepoogle(QWidget):
                             par1, \
                             '/' + '/'.join(par2[8:].split('/')[1:]) \
                             )
-                        
+
         elif id == 'url':
             title = "title=\"%s\"" % par1
             href = "href=\"%s\"" % par1
             value = par2
             #TODO: añadir un icono que indique que es un enlace externo.
-            
+
         else:
             return ''
 
@@ -950,7 +950,7 @@ class Nepoogle(QWidget):
         #if data == []:
             #if self.resultData == []:
                 #return ""
-                
+
             #data = self.resultData
 
         #if structure == []:
@@ -959,10 +959,10 @@ class Nepoogle(QWidget):
         #if knownShortcuts == []:
             #if vartype(self.sparql) != "NoneType":
                 #knownShortcuts = self.sparql.shortcuts
-        
+
         #if queryTime == None:
             #queryTime = self.resultTime
-                
+
         #result = self.htmlHeader % {'title': 'Querying Nepomuk', 'script': ""}
         #result += self.htmlTableHeader % {'border': 1, 'cellpadding': 3}
 
@@ -972,23 +972,23 @@ class Nepoogle(QWidget):
         ## Evitar que queden unos pocos registros.
         #if ((len(data) - self.renderedRows - renderSize) <= (self.renderSize / 3)):
             #renderSize = len(data) - self.renderedRows
-        
+
         #resources = []
         #if self.renderedRows <= 0:
             #text = ''
 
         #else:
             #text = self.renderedCache
-            
+
         #for i in range(self.renderedRows, min(len(data), renderSize + self.renderedRows)):
             #item = data[i]
             #text += '<tr>'
-                        
+
             #resRow = []
             #for subItem in item:
                 #if subItem == '':
                     #continue
-                  
+
                 #if (subItem[:7] == 'file://'):
                     #subItem = fromPercentEncoding(subItem)
                     #resRow += [['file', subItem]]
@@ -1016,7 +1016,7 @@ class Nepoogle(QWidget):
                     #resRow += [['', subItem]]
 
             #resources += [resRow]
-            
+
         #itemType = ''
         #for row in resources:
             #links = ''
@@ -1030,7 +1030,7 @@ class Nepoogle(QWidget):
                 #if item[0] == 'nepomuk':
                     #nepomukResource = Nepomuk.Resource(item[1])
                     #itemType = toUnicode(nepomukResource.resourceType().toString().split('#')[1])
-                    
+
                     #htmlstr = self.htmlLinkProperties % (item[1])
                     #htmlstr += ' ' + self.htmlLinkRemove % (item[1])
                     #if links == '':
@@ -1074,7 +1074,7 @@ class Nepoogle(QWidget):
                         #textData += '<br />'
 
                     #textData += self.htmlRenderLink('url', item[1], os.path.basename(item[1]))
-                        
+
                 ## Special, to control properties.
                 #elif item[0][:6] == 'ont://':
                     #itemType = ontologyToHuman(item[0][6:])
@@ -1110,7 +1110,7 @@ class Nepoogle(QWidget):
                             #if nepomukResource != None:
                                 #textData += self.htmlRenderLink('uri', nepomukResource.uri(), item[1]) \
                                                 #+ ' ' + self.htmlRenderLink('tag', item[1])
-                                            
+
                         #else:
                             ##TODO: mal hack, esto es confuso, mirar de arreglarlo.
                             #if structure[i] == 'title':
@@ -1118,7 +1118,7 @@ class Nepoogle(QWidget):
 
                             #elif structure[i] == '_n_f_t_m_ex_':
                                 #textData = item[1]
-                                
+
                             #else:
                                 #textData += '%s: %s' % (ontologyToHuman(structure[i]), item[1])
 
@@ -1142,7 +1142,7 @@ class Nepoogle(QWidget):
                         #textData = textData.replace('<em>', '').replace('</em>', '')
                         #textData = self.htmlRenderLink('uri', nepomukResource.uri(), textData) \
                                     #+ ' ' + self.htmlRenderLink('album', textData)
-                        
+
                         #query = 'select distinct ?performer ?name\n' \
                                 #'where {\n' \
                                     #'   ?uri nmm:musicAlbum <%s> .\n' \
@@ -1156,30 +1156,30 @@ class Nepoogle(QWidget):
                             #while performers.next():
                                 #if additionalData != '':
                                     #additionalData += ', '
-                                    
+
                                 #additionalData += self.htmlRenderLink('uri', performers["performer"].toString(), performers["name"].toString()) \
                                                     #+ ' ' + self.htmlRenderLink('performer', performers["name"].toString())
-                                                    
+
                         #if additionalData != '':
                             #additionalData = '<br />%s: ' % _('Performer') + additionalData
 
                         #textData += additionalData
-                        
+
                         #links += ' ' + self.htmlLinkDolphin % (nepomukResource.uri())
                         #links += ' ' + self.htmlLinkKonqueror % (nepomukResource.uri())
-                    
+
                     #elif itemTypeLower == 'musicpiece':
                         ## Title:, disc and track before title.
                         #trackNumber = nepomukResource.property(NOC('nmm:trackNumber')).toString()
                         #if len(trackNumber) < 2:
                             #trackNumber = '0' + trackNumber
-                            
+
                         #discNumber = nepomukResource.property(NOC('nmm:setNumber')).toString()
                         #if discNumber != '':
                             #discNumber += 'x'
-                            
+
                         #textData = textData.replace('<br /><em>', '<br />%s: <em>%s%s - ' % (_('Title'), discNumber, trackNumber))
-                        
+
                         ## Album title.
                         #tmpUri = nepomukResource.property(NOC('nmm:musicAlbum')).toString()
                         #query = 'select distinct ?title\n' \
@@ -1250,7 +1250,7 @@ class Nepoogle(QWidget):
                         #% (self.renderSize, self.renderedRows, len(data))
             #text += self.htmlLinks % ''
 
-        
+
         #text += self.htmlTableFooter
         #text += self.htmlTime % {'records': len(data), 'seconds': queryTime, 'sechtml': time.time() - htmlQueryTime}
         #if stdout:
@@ -1259,7 +1259,7 @@ class Nepoogle(QWidget):
         #result += text + self.htmlFooter
         #if stdout:
             #print(toUtf8(result))
-    
+
         #return result
 
 
@@ -1268,7 +1268,7 @@ class Nepoogle(QWidget):
             searchString = searchString.replace("--m0:", "--playlist url:-inst performer:")
 
         return searchString
-        
+
 
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
@@ -1277,7 +1277,7 @@ class Nepoogle(QWidget):
 
         self.renderedRows = 0
         self.renderedCache = ''
-        
+
         self.resultData = []
         self.resultStructure = []
         self.resultTime = None
@@ -1290,7 +1290,7 @@ class Nepoogle(QWidget):
         try:
             if self.clearResourceManagerCache:
                 Nepomuk.ResourceManager.instance().clearCache()
-                
+
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
                 if self.queryMethod in ("manual", "refresh"):
@@ -1329,7 +1329,7 @@ class Nepoogle(QWidget):
 
                     else:
                         self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
-              
+
             elif searchString != '':
                 searchString = self.processMacros(searchString)
                 if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
@@ -1368,7 +1368,7 @@ class Nepoogle(QWidget):
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
-                    
+
                 oDataFormat = cDataFormat(searchString, self.model)
                 if self.sparql.externalParameters == ['playlist']:
                     output = oDataFormat.formatAsHtmlPlaylist(self.resultData, self.resultStructure, self.resultTime)
@@ -1395,7 +1395,7 @@ class Nepoogle(QWidget):
 
         #try:
         #    pass
-        
+
         except:
             msgError = "%s" % sys.exc_info()[1]
             if msgError == 'help':
@@ -1447,7 +1447,7 @@ def hackQueryParser(query = '', hackLevel = 'e2'):
 
     if query.find("?v5 ") == -1:
         # Don't change queries with only one item.
-        return query    
+        return query
 
     if hackLevel.lower() == 'e2':
         query = query.replace(' ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> ?v1 . FILTER(?v1>0) .', '')
@@ -1466,12 +1466,12 @@ def hackQueryParser(query = '', hackLevel = 'e2'):
         query = "SELECT DISTINCT ?r " + query[query.find("where"):]
 
     return query
-    
-  
+
+
 def buildHelp():
     print("%(name)s %(version)s (%(date)s)\n" \
               % {'name': PROGRAM_NAME, 'version': PROGRAM_VERSION_VERSION, 'date': PROGRAM_VERSION_DATE})
-              
+
     print("Usage: %s [command ] [query]\n" \
           "\n" \
           "commands:\n" \
@@ -1483,7 +1483,7 @@ def buildHelp():
           "query:\n" \
           "  Query syntax documentation is available in the gui mode help\n" \
           % PROGRAM_NAME)
-  
+
 
 def main(args):
     #appName = PROGRAM_NAME
@@ -1509,7 +1509,7 @@ def main(args):
     #options.add("--stdout", ki18n("force stdout in console mode"))
     #options.add("--nostdout", ki18n("force no stdout in gui mode"))
     #KCmdLineArgs.addCmdLineOptions(options)
-    
+
     displayResults = None
     gui = not sys.stdout.isatty()
     verboseMode = None
@@ -1521,7 +1521,7 @@ def main(args):
         if parameter.lower() == '--help':
             buildHelp()
             quit()
-        
+
         elif parameter.lower()[:5] == '--gui':
             paramValue = parameter.lower()[5:]
             if paramValue == "" or paramValue == "=on":
@@ -1534,18 +1534,18 @@ def main(args):
                 print("ERROR: Unknown parameter \"%s\".\n" % parameter)
                 buildHelp()
                 quit()
-                
+
             continue
-        
+
         elif parameter.lower()[:9] == '--verbose':
             paramValue = parameter.lower()[9:]
             if paramValue == '':
                 if verboseMode == None:
                     verboseMode = True
-                    
+
             elif paramValue == '=on':
                 verboseMode = True
-                
+
             elif paramValue == '=off':
                 verboseMode = False
 
@@ -1553,9 +1553,9 @@ def main(args):
                 print("ERROR: Unknown parameter \"%s\".\n" % parameter)
                 buildHelp()
                 quit()
-                
+
             continue
-        
+
         elif parameter.lower()[:9] == '--results':
             paramValue = parameter.lower()[9:]
             if paramValue == '':
@@ -1579,10 +1579,10 @@ def main(args):
             j = parameter.rfind(':')
             if j >= 0:
                 parameter = parameter[:j+1] + '"' + parameter[j+1:] + '"'
-                
+
             else:
                 parameter = '"' + parameter + '"'
-            
+
         parameters += parameter + ' '
 
     searchString = parameters.strip()
@@ -1596,7 +1596,7 @@ def main(args):
 
         #if searchString != '':
         #    window.execQuery()
-        
+
         app = QApplication(args)
         nepoogle = Nepoogle(None, searchString, verboseMode)
         nepoogle.show()
@@ -1604,7 +1604,7 @@ def main(args):
 
         if searchString != '':
             nepoogle.execQuery()
-            
+
         sys.exit(app.exec_())
 
     else:
@@ -1619,7 +1619,7 @@ def main(args):
 
         output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
         print(toUtf8(output))
-        
+
         #if True:
         try:
             warningsList = []
@@ -1633,7 +1633,7 @@ def main(args):
                     if verboseMode:
                         # Improve a little bit readability.
                         print(toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
-                        
+
                     query = hackQueryParser(query, 'e0')
                     data, structure, time = oSparql.executeQuery(query)
 
@@ -1660,7 +1660,7 @@ def main(args):
                 if displayResults in (None, True):
                     oDataFormat = cDataFormat(searchString)
                     oDataFormat.formatAsText(data, structure, time)
-                    
+
                 output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
                             "--\n" \
                             "Powered by %(name)s %(version)s (%(date)s)" \
@@ -1670,7 +1670,7 @@ def main(args):
                                 'version': PROGRAM_VERSION_VERSION, \
                                 'date': PROGRAM_VERSION_DATE \
                                 }
-                                
+
                 # Handle possible warnings.
                 warningMsg = ""
                 for warning in warningsList:
@@ -1691,7 +1691,7 @@ def main(args):
 
                 if warningMsg != "":
                     output += '\n\nWARNING: ' + toUtf8(warningMsg)
-                    
+
             else:
                 raise Exception('Please, type something.')
 
@@ -1726,11 +1726,11 @@ def main(args):
                                 }
 
         print(toUtf8(output))
-        
+
 
 if __name__=="__main__":
     display = os.getenv("DISPLAY")
     if display == None:
         os.putenv("DISPLAY", ":0")
-        
+
     main(sys.argv)

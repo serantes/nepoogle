@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
@@ -36,7 +36,7 @@ _ = gettext.gettext
 # Program functions.
 try:
     gSysEncoding = os.environ["LANG"].split(".")[1]
-    
+
 except:
     gSysEncoding = 'utf-8' # Forcing UTF-8.
 
@@ -50,7 +50,7 @@ def addLinksToText(text = ''):
 
     return text
 
-    
+
 def fileExists(fileName = ''):
     if fileName == '':
         return False
