@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
@@ -113,7 +113,7 @@ ontologyTypes = [ \
                     ['nmm:tracknumber', 'number'], \
                     ['nuao:usagecount', 'number'] \
                 ]
-                
+
 ontologiesInfo = []
 
 def NOC(name = '', returnQUrl = False):
@@ -122,7 +122,7 @@ def NOC(name = '', returnQUrl = False):
     if date != None:
         if date[:7] == "http://":
             value = "%s/%s#%s" % (date, ontology, property)
-            
+
         else:
             value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
 
@@ -167,7 +167,7 @@ def ontologyToHuman(ontology = '', reverse = False):
         result = ontologyInfo(ontology)
         if result != [] and result[1] != "":
             return result[1]
-        
+
     try:
         ontology = ontology.split(':')[1]
 
@@ -264,7 +264,7 @@ def ontologyInfo(ontology = '', model = None):
 
     if i == None:
         return [shortOnt, shortOnt, "string"]
-        
+
     else:
         return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
 
@@ -287,7 +287,7 @@ class cResource():
     ontologyType = None
     stdout = False
     valUri = None
-    
+
     def __init__(self, uri = None):
 
         if uri != None:
@@ -332,25 +332,25 @@ class cResource():
 
                 elif valueType == 'date':
                     exec("self." + name + " += [\"" + value + "\"]")
-                    
+
                 elif valueType == 'dateTime':
                     exec("self." + name + " += ['" + value + "']")
-                    
+
                 elif valueType == 'int' or valueType == 'integer' or valueType == 'nonNegativeInteger':
                     exec("self." + name + " += [" + value + "]")
-                    
+
                 elif valueType == 'float':
                     exec("self." + name + " += [" + value + "]")
-                    
+
                 elif valueType == 'duration':
                     exec("self." + name + " += [" + value + "]")
-                    
+
                 elif valueType == 'size':
                     exec("self." + name + " += [" + value + "]")
-                    
+
                 elif valueType == 'string':
                     exec("self." + name + " += [\"" + value.replace('"', '\\"').replace("\n", "\\\n'").replace("\r", "\\\r'") + "\"]")
-                    
+
                 else:
                     exec("self." + name + " += [\"" + value + "\"]")
 
@@ -385,7 +385,7 @@ class cResource():
                 result = values[0]
                 for i in range(1, len(values)):
                     result += ", " + values[i]
-                
+
             except:
                 result = ""
 
@@ -404,15 +404,15 @@ class cResource():
 
         return values
 
-        
+
     def resourceType(self):
         return QVariant(self.typeValue)
 
-        
+
     def type(self):
         return self.typeValue
-        
-    
+
+
     def uri(self):
         return self.valUri
 
@@ -422,7 +422,7 @@ class cResource():
         #key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
         return uri.toString() in self.__dict__["_ov_rdf_1_type"]
 
-        
+
     def hasProperty(self, uri):
         ontology = NOCR(uri)
         key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
@@ -434,7 +434,7 @@ class cResource():
             result = False
 
         return result
-        
+
 
     def genericLabel(self):
         #ontology = "nao:prefLabel"
@@ -446,8 +446,8 @@ class cResource():
             result = ""
 
         return result
-        
-    
+
+
 class cSparqlBuilder():
 
     _private_main_header = \
@@ -496,7 +496,7 @@ class cSparqlBuilder():
     engine = 0 # 0- Nepomuk.QueryParse(), 1- v1, 2- v2
 
     externalParameters = []
-    
+
     #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
     #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
     # 'nmm:genre', 'nmm:releaseDate', ''
@@ -518,7 +518,7 @@ class cSparqlBuilder():
     resultsetOffset = 0
     sortSuffix = '_sort'
     stdoutQuery = False
-    
+
     shortcuts = [ \
                     #TODO: singulares y plurales para todo
                     ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
@@ -579,7 +579,7 @@ class cSparqlBuilder():
     visibilityFilter = "nao:userVisible 1 ."
 
     warningsList = []
-    
+
 
     def __init__(self):
         pass
@@ -609,7 +609,7 @@ class cSparqlBuilder():
                         print toUtf8(query)
 
                     return query
-                    
+
                 else:
                     self.tempData = self.commands[idx][1]
 
@@ -713,7 +713,7 @@ class cSparqlBuilder():
     def buildDateFilter(self, val, var, op):
         if op == "==":
             op = "="
-            
+
         dateType = None
         val = val.upper()
         typeMark = val[-1]
@@ -746,13 +746,13 @@ class cSparqlBuilder():
 
             elif typeMark == "D":
                 dateFilter = "FILTER(bif:dayofmonth(?x%s) %s %s) . }\n" % (var, op, val)
-                
+
             else:
                 raise Exception("Can't recognized <b>%s</b> as date format." % self.command)
 
         except:
             dateFilter =  "FILTER(xsd:date(?x%s) %s \"%s\"^^xsd:date) . }\n" % (var, op, val)
-        
+
         return dateFilter
 
 
@@ -771,12 +771,12 @@ class cSparqlBuilder():
 
         else:
             return "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': var, 'op': op, 'val': val}
-        
+
 
     def buildTimeFilter(self, val, var, op):
         if op == "==":
             op = "="
-            
+
         dateType = None
         val = val.upper()
         typeMark = val[-1]
@@ -848,10 +848,10 @@ class cSparqlBuilder():
             ontologyElements = item.split("->")
             if item.find('?x0') >= 0:
                 i = 1
-                
+
             else:
                 i = 0
-                
+
             optionalUsage = False
             for ontology in ontologyElements:
                 ontology = ontology.strip()
@@ -912,7 +912,7 @@ class cSparqlBuilder():
 
                 elif ((valType == "date") or (valType == "datep")):
                     filterExpression = self.buildDateFilter(val, i, operator)
-                
+
                 elif ((valType == "datetime") or (valType == "datetimep")):
                     filterExpression = self.buildDateFilter(val, i, operator)
 
@@ -926,9 +926,9 @@ class cSparqlBuilder():
                     valTerms = val.split("/")
                     if (len(valTerms) > 1):
                         val = float(valTerms[0])/float(valTerms[1])
-                            
+
                     filterExpression = self.buildFloatFilter(val, i, operator)
-                    
+
                 elif valType == "exposuretime":
                     valTerms = val.split("/")
                     if (len(valTerms) > 1):
@@ -942,7 +942,7 @@ class cSparqlBuilder():
                         val = float(valTerms[0])/float(valTerms[1])
 
                     filterExpression = self.buildFloatFilter(val, i, operator)
-                    
+
                 else:
                     val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
                     if operator == "==":
@@ -1099,7 +1099,7 @@ class cSparqlBuilder():
             else:
                 if self.visibilityFilter != '':
                     text += "  ?x0 %s\n" % (self.visibilityFilter)
-                                    
+
                 items = typeFilters[0].split("=")
                 if len(items) > 1:
                     text += "  ?x0 %(ontology1)s %(ontology2)s .\n" \
@@ -1119,7 +1119,7 @@ class cSparqlBuilder():
             if text != "":
                 if self.visibilityFilter != '':
                     text += "  ?x0 %s\n" % (self.visibilityFilter)
-                    
+
                 else:
                     text = ""
 
@@ -1268,7 +1268,7 @@ class cSparqlBuilder():
 
         if string[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
             string = string[3:]
-        
+
         items = self.split(string)
         #print toUtf8(string)
         #print toUtf8(items)
@@ -1299,7 +1299,7 @@ class cSparqlBuilder():
                 while True:
                     if item == "":
                         item = ".*"
-                    
+
                     if item[0] in ('"', "'") and item[-1] in ('"', "'"):
                         parts = [item[1:-1], '', '']
 
@@ -1340,7 +1340,7 @@ class cSparqlBuilder():
                         operator = "<"
                         if (len(data) > 2) and (data[2] == "="):
                             data = "<" + data[3:]
-                            
+
                         else:
                             data = "<=" + data[2:]
                 #Hack operador negativo.
@@ -1414,11 +1414,11 @@ class cSparqlBuilder():
         # ¿Es un comando?
         if commandsFound > 1:
             raise Exception(_("Syntax error, only one command by query."))
-        
+
         elif commandsFound == 1:
             dummy = command.split(':')
             command = dummy[0]
-            
+
             # Commands that don't support filters.
             if command in ("--playlist"):
                 if (len(dummy) > 1):
@@ -1448,7 +1448,7 @@ class cSparqlBuilder():
 
     def executeQuery(self, query = []):
         model = Nepomuk.ResourceManager.instance().mainModel()
-        
+
         queryTime = time.time()
         result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         queryTime = time.time() - queryTime
