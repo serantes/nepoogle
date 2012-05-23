@@ -53,7 +53,7 @@ class cDataFormat():
     columnsCount = 3
     data = []
     enableImageViewer = True
-    hiddenOntologies = ["nao:userVisible"]
+    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
     model = None
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
@@ -214,6 +214,10 @@ class cDataFormat():
                                 "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber|f%02d} - {nie:title}</em><br />" \
                                 "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
                                 "%[<b>Performer</b>: {SPARQL}SELECT DISTINCT '%(nmm:performer)s' as ?uri ?value WHERE { <%(nmm:performer)s> nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nmm:TVSeason", \
+                            "<b>Title</b>: {nmm:seasonOf->nie:title|l} <br /><b>Season</b>: {nmm:seasonNumber|l}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
@@ -499,7 +503,7 @@ class cDataFormat():
 
                 trackName = trackName.replace('"', '&quot;')
 
-            playList += [[item[1], i, url, trackName, sortColumn]]
+            playList += [[item[1], i, url.replace("'", "\\\'").replace('"', "\\\""), trackName, sortColumn]]
             i += 1
 
         playList = sorted(playList, key=lambda item: toUtf8(item[4]))
@@ -570,7 +574,9 @@ class cDataFormat():
                 "        if (i == %(type)scurrItem) {\n" \
                 "            %(type)strack.style.fontWeight = 'bold';\n" \
                 "            scrollTop = document.getElementById('%(type)splaylist').scrollTop;" \
-                "            if (%(type)strack.offsetTop >  scrollTop + 200 || %(type)strack.offsetTop < scrollTop + 50) {document.getElementById('%(type)splaylist').scrollTop = oldTrackOffsetTop;}" \
+                "            if (%(type)strack.offsetTop >  scrollTop + 200 || %(type)strack.offsetTop < scrollTop + 50) {\n" \
+                "                document.getElementById('%(type)splaylist').scrollTop = oldTrackOffsetTop;\n" \
+                "            }\n" \
                 "        } else {\n" \
                 "            %(type)strack.style.fontWeight = 'normal';\n" \
                 "        }\n" \
