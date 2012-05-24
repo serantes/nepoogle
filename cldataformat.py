@@ -503,7 +503,7 @@ class cDataFormat():
 
                 trackName = trackName.replace('"', '&quot;')
 
-            playList += [[item[1], i, url.replace("'", "\\\'").replace('"', "\\\""), trackName, sortColumn]]
+            playList += [[item[1], i, url, trackName, sortColumn]]
             i += 1
 
         playList = sorted(playList, key=lambda item: toUtf8(item[4]))
@@ -515,7 +515,7 @@ class cDataFormat():
             output += "<b>Audio player</b><br />\n" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
-                            % (listType, url)
+                            % (listType, url.replace("\"", "&quot;").replace("#", "%23"))
 
         elif listType == 'video':
             output += "<b>Video player</b><br />\n" \
@@ -541,10 +541,10 @@ class cDataFormat():
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
-                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2], item[3])
-                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("'", "&#39;").replace('"', "&quot;")}
+                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23"), item[3])
+                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23")}
                 iconRun = iconRun.replace('"', "'")
-                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("'", "&#39;").replace('"', "&quot;")}
+                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23")}
                 iconDir = iconDir.replace('"', "'")
                 row = "<tr>"
                 row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
@@ -567,20 +567,20 @@ class cDataFormat():
 
             output += \
                 "%(type)splayer.addEventListener('play', function () {\n" \
-                "    oldTrackOffsetTop = 0;" \
+                "    oldTrackOffsetTop = 0;\n" \
                 "    for ( var i = 0; i < %(type)stotalItems; i++ ) {\n" \
                 "        %(type)splayer.volume = %(type)splayerVolume;\n" \
                 "        var %(type)strack = document.getElementById('%(type)strack' + i);\n" \
                 "        if (i == %(type)scurrItem) {\n" \
                 "            %(type)strack.style.fontWeight = 'bold';\n" \
-                "            scrollTop = document.getElementById('%(type)splaylist').scrollTop;" \
+                "            scrollTop = document.getElementById('%(type)splaylist').scrollTop;\n" \
                 "            if (%(type)strack.offsetTop >  scrollTop + 200 || %(type)strack.offsetTop < scrollTop + 50) {\n" \
                 "                document.getElementById('%(type)splaylist').scrollTop = oldTrackOffsetTop;\n" \
                 "            }\n" \
                 "        } else {\n" \
                 "            %(type)strack.style.fontWeight = 'normal';\n" \
                 "        }\n" \
-                "        oldTrackOffsetTop = %(type)strack.offsetTop" \
+                "        oldTrackOffsetTop = %(type)strack.offsetTop\n" \
                 "    }\n" \
                 "    %(type)splayer.volume = %(type)splayerVolume;\n" \
                 "    //window.alert(%(type)splayer.volume);\n" \
