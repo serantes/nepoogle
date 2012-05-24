@@ -197,6 +197,10 @@ class cDataFormat():
                             "{pimo:tagLabel|l}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nao:Agent", \
+                            "{uri|l|of}%[<br /><b>Identifier</b>: {nao:identifier}%] %[<b>Label</b>: {nao:prefLabel}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
