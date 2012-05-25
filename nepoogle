@@ -1371,7 +1371,10 @@ class Nepoogle(QWidget):
 
                 oDataFormat = cDataFormat(searchString, self.model)
                 if self.sparql.externalParameters == ['playlist']:
-                    output = oDataFormat.formatAsHtmlPlaylist(self.resultData, self.resultStructure, self.resultTime)
+                    output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
+
+                elif self.sparql.externalParameters == ['playmixed']:
+                    output = oDataFormat.formatAsHtmlPlaylist('playmixed', self.resultData, self.resultStructure, self.resultTime)
 
                 else:
                     output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)

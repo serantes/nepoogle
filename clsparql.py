@@ -482,6 +482,7 @@ class cSparqlBuilder():
                 [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
                 [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
+                [_('--playmixed'), ['playmixed', [], [], []]], \
                 [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--tags'), ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
@@ -619,7 +620,8 @@ class cSparqlBuilder():
             if self.tempData[0] == 'help':
                 raise Exception(self.tempData[0])
 
-            elif self.tempData[0] == 'playlist':
+            #elif self.tempData[0] == 'playlist':
+            elif self.tempData[0] in ('playlist', 'playmixed'):
                 self.externalParameters = [self.tempData[0]]
                 self.tempData = ['', [], [], []]
 
@@ -1406,7 +1408,7 @@ class cSparqlBuilder():
             raise Exception(_("Syntax error, please check your search text."))
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
-            if command != '--playlist':
+            if command not in ('--playlist', '--playmixed'):
                 allFilters = []
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
@@ -1419,7 +1421,7 @@ class cSparqlBuilder():
             command = dummy[0]
 
             # Commands that don't support filters.
-            if command in ("--playlist"):
+            if command in ("--playlist", "--playmixed"):
                 if (len(dummy) > 1):
                     raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % command)
 
@@ -1438,7 +1440,7 @@ class cSparqlBuilder():
                 allFilters = []
 
         # Commands associated to queries.
-        if ((len(allFilters) == 0) and (command in ("--playlist"))):
+        if ((len(allFilters) == 0) and (command in ("--playlist", "--playmixed"))):
             raise Exception(_("Syntax error, command <b>%s</b> require an associated query.") % command)
 
         self.command = command

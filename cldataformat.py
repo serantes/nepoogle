@@ -361,6 +361,9 @@ class cDataFormat():
                 trackNumber = self.readProperty(res, 'nmm:trackNumber', 'int')
                 discNumber = self.readProperty(res, 'nmm:setNumber', 'int')
                 trackName = self.readProperty(res, 'nie:title', 'str')
+                if trackName == "":
+                    trackName = os.path.basename(url)
+
                 trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                 % {"uri": item[1], "title": trackName}
                 if trackNumber != None:
@@ -1167,7 +1170,7 @@ class cDataFormat():
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
-        if self.searchString.find('--playlist') >= 0:
+        if ((self.searchString.find('--playlist') >= 0) or (self.searchString.find('--playmixed') >= 0)):
             return self.formatAsHtmlPlaylist()
 
         htmlQueryTime = time.time()
@@ -1256,7 +1259,7 @@ class cDataFormat():
         return text
 
 
-    def formatAsHtmlPlaylist(self, param1 = None, structure = [], queryTime = 0, stdout = False):
+    def formatAsHtmlPlaylist(self, mode = 'playlist', param1 = None, structure = [], queryTime = 0, stdout = False):
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
@@ -1320,6 +1323,11 @@ class cDataFormat():
             output += "<b>There is no multimedia data to display.</b>\n"
 
         else:
+            if (mode == 'playmixed'):
+                mode = 'playlist'
+                audios += videos
+                videos = []
+
             if len(audios) > 0:
                 output += self.buildPlaylist(audios, 'audio')
 
