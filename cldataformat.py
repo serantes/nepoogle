@@ -388,7 +388,7 @@ class cDataFormat():
                     for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                         tmpCoverUrl = trackUrl + '/' + coverName
                         if fileExists(tmpCoverUrl):
-                            coverUrl = tmpCoverUrl.replace("'", "&#39;")
+                            coverUrl = tmpCoverUrl.replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F").replace("#", "%23")
                             break
 
                 # Performer.
@@ -1633,7 +1633,7 @@ class cDataFormat():
                 for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                     tmpCoverUrl = url + '/' + coverName
                     if fileExists(tmpCoverUrl):
-                        coverUrl = tmpCoverUrl
+                        coverUrl = tmpCoverUrl.replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F").replace("#", "%23")
                         break
 
                 if coverUrl != None:
