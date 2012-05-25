@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
-#*   nepoogle - build script                                               *
+#*   nepoogle - build script.                                              *
 #*                                                                         *
 #*   Copyright (C) 2011 Ignacio Serantes <kde@aynoa.net>                   *
 #*                                                                         *
@@ -22,7 +22,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import os, sys
+import os, stat, sys
 
 def addFile(outFile, fileName):
     if not os.path.exists(fileName):
@@ -66,7 +66,7 @@ def build(inFileName = '', outFileName = ''):
             elif line.strip() == "#ELSE":
                 currExp = "ELSE"
                 continue
-                
+
             elif line.strip() == "#ENDIF":
                 currExp = ""
                 continue
@@ -85,12 +85,27 @@ def build(inFileName = '', outFileName = ''):
 
     except:
         raise
-    
+
     finally:
         inFile.close()
         outFile.close()
 
-    
+    try:
+        fd = os.open(outFileName, os.O_RDONLY )
+
+        try:
+            # Change permissions.
+            os.fchmod(fd, stat.S_IREAD + stat.S_IWRITE + stat.S_IEXEC + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH + stat.S_IXOTH)
+
+        finally:
+            os.close(fd)
+
+    except:
+        raise
+
+
+
+
 inFileName = sys.argv[1]
 outFileName = sys.argv[2]
 
