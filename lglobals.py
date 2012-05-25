@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
-#*   nepoogle - functions library                                          *
+#*   nepoogle - globals library.                                           *
 #*                                                                         *
 #*   Copyright (C) 2011-2012 Ignacio Serantes <kde@aynoa.net>              *
 #*                                                                         *

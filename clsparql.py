@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #***************************************************************************
-#*   cSparqlBuilder - a SPARQL query builder                               *
+#*   nepoogle - SPARQL library.                                            *
 #*                                                                         *
 #*   Copyright (C) 2011-2012 Ignacio Serantes <kde@aynoa.net>              *
 #*                                                                         *
