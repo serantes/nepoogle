@@ -84,4 +84,4 @@ else:
 
     else:
         build(inFileName, outFileName)
-        print " >>> \"%s\" file has been builded." % outFileName
+        print " >>> \"%s\" file has been built." % outFileName
