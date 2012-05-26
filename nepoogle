@@ -655,7 +655,8 @@ class Nepoogle(QWidget):
 
         else:
             # In KDE we trust.
-            subprocess.Popen(["kioclient", "exec", url])
+            # Seems like there is a problem with character ?.
+            subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
 
 
     def goBackward(self):

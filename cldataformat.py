@@ -390,7 +390,7 @@ class cDataFormat():
                     for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                         tmpCoverUrl = trackUrl + '/' + coverName
                         if fileExists(tmpCoverUrl):
-                            coverUrl = tmpCoverUrl.replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F").replace("#", "%23")
+                            coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
                             break
 
                 # Performer.
@@ -415,7 +415,7 @@ class cDataFormat():
                         performer = ["", ""]
 
                 # Album title.
-                albumTitle = ["", "", ""]
+                albumTitle = ["", "", 0]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
                     if INTERNAL_RESOURCE:
@@ -433,7 +433,7 @@ class cDataFormat():
                         albumTitle = [resUri, albumTitle, albumYear]
 
                     else:
-                        albumTitle = ["", "", ""]
+                        albumTitle = ["", "", 0]
 
                 # Final track name building.
                 if albumTitle[1] != "":
@@ -521,7 +521,7 @@ class cDataFormat():
             output += "<b>Audio player</b><br />\n" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
-                            % (listType, url.replace("\"", "&quot;").replace("#", "%23"))
+                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"))
 
         elif listType == 'video':
             output += "<b>Video player</b><br />\n" \
@@ -547,10 +547,10 @@ class cDataFormat():
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
-                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23"), item[3])
-                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23")}
+                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
+                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")}
                 iconRun = iconRun.replace('"', "'")
-                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23")}
+                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")}
                 iconDir = iconDir.replace('"', "'")
                 row = "<tr>"
                 row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
@@ -1640,7 +1640,7 @@ class cDataFormat():
                 for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                     tmpCoverUrl = url + '/' + coverName
                     if fileExists(tmpCoverUrl):
-                        coverUrl = tmpCoverUrl.replace("'", "&#39;").replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F").replace("#", "%23")
+                        coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
                         break
 
                 if coverUrl != None:

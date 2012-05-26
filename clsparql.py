@@ -620,7 +620,6 @@ class cSparqlBuilder():
             if self.tempData[0] == 'help':
                 raise Exception(self.tempData[0])
 
-            #elif self.tempData[0] == 'playlist':
             elif self.tempData[0] in ('playlist', 'playmixed'):
                 self.externalParameters = [self.tempData[0]]
                 self.tempData = ['', [], [], []]
