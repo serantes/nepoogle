@@ -712,7 +712,7 @@ class cDataFormat():
 
         elif id == 'googlesearch':
             title = "title=\"Search for &quot;%s&quot; using Google\"" % par1
-            href = "href=\"http://www.google.com:/search?q=%%22%s%%22&ie=UTF-8&oe=UTF-8\'\"" % par1.replace(' ', '+')
+            href = "href=\"googlesearch:/%%22%s%%22\"" % par1.replace(' ', '+')
             value = self.htmlLinkSearchWebRender
 
         elif id == 'navigator':

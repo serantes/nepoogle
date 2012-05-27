@@ -520,6 +520,10 @@ class Nepoogle(QWidget):
         elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
 
+        elif url[:14] == 'googlesearch:/':
+            url = "http://www.google.com:/search?q=%s&ie=UTF-8&oe=UTF-8" % url[14:].replace("?", "%3F")
+            subprocess.Popen(["kioclient", "exec", url])
+
         elif url[:6] == 'konq:/':
             subprocess.Popen(['konqueror', url[6:]])
 
