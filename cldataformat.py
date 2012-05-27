@@ -527,7 +527,7 @@ class cDataFormat():
             output += "<b>Video player</b><br />\n" \
                         "<video id=\"%splayer\" " \
                             "src=\"file://%s\" %s controls preload>No video support</video><br />\n" \
-                            % (listType, url, self.htmlVideoSize)
+                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"), self.htmlVideoSize)
 
         if self.playlistShowWithOneElement or len(data) > 1:
             output += "<img onclick='%(type)splayTrack(-1)' style='margin:2px' src='file://%(f)s'>" \
