@@ -1420,6 +1420,12 @@ class cDataFormat():
                     elif resource.hasType(NOC('nmm:MusicAlbum', True)):
                         ontLabel = currOnt + '->nie:title'
 
+                    elif resource.type() == NOC('nmm:TVSeason'):
+                        ontLabel = currOnt + '->nmm:seasonNumber'
+                        seasonNumber = "%d" % self.readProperty(resource, 'nmm:seasonNumber', 'int')
+                        value = '<!--' + toUnicode(seasonNumber) + '-->' \
+                                    + self.htmlRenderLink('uri', resource.uri(), seasonNumber)
+
                     elif resource.hasType(NOC('rdfs:Resource', True)):
                         ontLabel = ''
                         ext = os.path.splitext(toUnicode(resource.genericLabel()))[1][1:].lower()
@@ -1552,12 +1558,17 @@ class cDataFormat():
                 res = Nepomuk.Resource(resUri)
 
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
-                val = toUnicode(res.genericLabel())
-                if res.hasProperty(NOC('nie:url')):
-                    url = toUnicode(res.property(NOC('nie:url')).toString())
+                url = None
+                if res.type() == NOC('nmm:TVSeason'):
+                    val = "%d" % self.readProperty(res, 'nmm:seasonNumber', 'int')
 
                 else:
-                    url = None
+                    val = toUnicode(res.genericLabel())
+                    if res.hasProperty(NOC('nie:url')):
+                        url = toUnicode(res.property(NOC('nie:url')).toString())
+
+                    else:
+                        url = None
 
                 reverseResourcesItems += [[resUri, NOCR(data["ont"].toString()), val, url]]
 
