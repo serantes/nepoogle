@@ -91,13 +91,13 @@ def fromPercentEncoding(url = ''):
 def getThumbnailUrl(url = ''):
     thumbName = md5.new(QFile.encodeName(KUrl(url).url())).hexdigest() + ".png"
     thumbPath = QDir.homePath() + "/.thumbnails/"
-    result = "file://" + thumbPath + "large/" + thumbName
-    if not fileExists(result):
-        result = "file://" + thumbPath + "normal/" + thumbName
-        if not fileExists(result):
-            result = None
+    result = thumbPath + "large/" + thumbName
+    if not os.path.exists(result):
+        result = thumbPath + "normal/" + thumbName
+        if not os.path.exists(result):
+            return None
 
-    return result
+    return "file://" + result
 
 
 def iif(condition = True, value = '', optionalValue = ''):
