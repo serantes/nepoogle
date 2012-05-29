@@ -22,7 +22,8 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, os, re, sys
+import datetime, md5, os, re, sys
+from PyKDE4.kdecore import *
 
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
@@ -85,6 +86,18 @@ def fromPercentEncoding(url = ''):
     qurl.setEncodedUrl(toUtf8(qurl.toString()))
     qurl.setEncodedUrl(toUtf8(qurl.toString()))
     return toUnicode(qurl.toString())
+
+
+def getThumbnailUrl(url = ''):
+    thumbName = md5.new(QFile.encodeName(KUrl(url).url())).hexdigest() + ".png"
+    thumbPath = QDir.homePath() + "/.thumbnails/"
+    result = "file://" + thumbPath + "large/" + thumbName
+    if not fileExists(result):
+        result = "file://" + thumbPath + "normal/" + thumbName
+        if not fileExists(result):
+            result = None
+
+    return result
 
 
 def iif(condition = True, value = '', optionalValue = ''):

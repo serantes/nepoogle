@@ -79,6 +79,7 @@ class cDataFormat():
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
     iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.Small)
     iconNoCover = KIconLoader().iconPath('audio-x-generic', KIconLoader.Desktop)
+    iconNoVideoThumbnail = KIconLoader().iconPath('video-x-generic', KIconLoader.Desktop)
     iconPlaylistFirst = KIconLoader().iconPath('go-first-view', KIconLoader.Small)
     iconPlaylistPrevious = KIconLoader().iconPath('go-previous-view', KIconLoader.Small)
     iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
@@ -465,6 +466,14 @@ class cDataFormat():
                 sortColumn = "%s_%s_%s" % (oldTitle[2] - sortAdjustment, oldTitle[1], sortColumn)
 
             elif listType == 'video':
+                # thumbnail
+                thumbnailUrl = None
+                if res.hasProperty(NOC('nie:url')):
+                    thumbnailUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
+
+                    if thumbnailUrl == None:
+                        thumbnailUrl = "file://" + self.iconNoVideoThumbnail
+
                 # Title.
                 trackName = self.readProperty(res, 'nie:title', 'str')
                 if ((trackName == None) or (trackName == "")):
@@ -506,6 +515,12 @@ class cDataFormat():
                             sortColumn = dummyVal + sortColumn
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
                                             % {"uri": resTmp.uri(), "title": dummyVal, "trackName": trackName}
+
+                if thumbnailUrl != None:
+                    trackName = "<img width=48 style='float:left; " \
+                                    "vertical-align:text-bottom; margin:2px' " \
+                                    "src='%s'>" % (thumbnailUrl) \
+                                + trackName
 
                 trackName = trackName.replace('"', '&quot;')
 
