@@ -275,7 +275,7 @@ def toN3(url = ''):
     else:
         result = QUrl(url).toEncoded()
 
-    return result
+    return result.replace('?', '%3f')
 
 # A experimental, and not using, class.
 class cResource():
@@ -1205,8 +1205,64 @@ class cSparqlBuilder():
         return ontType
 
 
+    def crappyNormalizer(self, string):
+        # Space normalization.
+        splitString = string.split(" ")
+        print splitString
+        normString1 = []
+        quoteChar = None
+        for string in splitString:
+            if quoteChar == None:
+                if string.find('\"') >= 0:
+                    quoteChar = '"'
+                    normString1 += [string]
+                    continue
+
+                elif string.find("'") >= 0:
+                    quoteChar = "'"
+                    normString1 += [string]
+                    continue
+
+            if quoteChar == None:
+                normString1 += ['']
+
+            if normString1[-1] == "":
+                normString1[-1] += string
+
+            else:
+                normString1[-1] += " " + string
+
+            if quoteChar != None and string.find(quoteChar) >= 0:
+                quoteChar = None
+
+        # And and commands normalization.
+        normString2 = []
+        normString3 = []
+        for string in normString1:
+            if normString2 == []:
+                normString2 = [string]
+
+            else:
+                if string.lower()[:2] == "--":
+                    normString3 += [string]
+
+                elif string.lower() != "or":
+                    normString2 += ['and', string]
+
+        normString2 = normString3 + normString2
+
+        # Parenthesis normalization.
+        normString3 = []
+        for string in normString2:
+            normString3 += [string]
+
+        print  " ".join(normString3)
+        return " ".join(normString3)
+
+
     def split(self, string = ''):
         #print string
+        #string = self.crappyNormalizer(string)
         specialChars = [":", "+", "-", ">", "<", "="]
         results = []
         if string != '':
