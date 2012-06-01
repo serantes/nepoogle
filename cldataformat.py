@@ -50,6 +50,7 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
 class cDataFormat():
 
     columnsCount = 3
+    coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
     enableImageViewer = True
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
@@ -378,24 +379,10 @@ class cDataFormat():
                     albumYear = 0
 
                 sortColumn = trackName
-
-                # Cover.
                 coverUrl = None
-                if res.hasProperty(NOC('nie:url')):
-                    coverUrl = "file://" + self.iconNoCover
-                    trackUrl = toUnicode(self.readProperty(res, 'nie:url', 'str'))
-                    if trackUrl[:7] != "file://":
-                        trackUrl = "file://" + trackUrl
-
-                    trackUrl = os.path.dirname(trackUrl)
-                    for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-                        tmpCoverUrl = trackUrl + '/' + coverName
-                        if fileExists(tmpCoverUrl):
-                            coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                            break
 
                 # Performer.
-                performer = ["", ""]
+                performer = [None, ""]
                 if res.hasProperty(NOC('nmm:performer')):
                     resUri = res.property(NOC('nmm:performer')).toString()
                     if INTERNAL_RESOURCE:
@@ -406,7 +393,7 @@ class cDataFormat():
 
                     performer = self.readProperty(resTmp, 'nco:fullname', 'str')
                     if performer == None:
-                        oldPerformer = ["", ""]
+                        oldPerformer = [None, ""]
 
                     elif not (oldPerformer[1] == performer):
                         oldPerformer = [resUri, performer]
@@ -416,7 +403,7 @@ class cDataFormat():
                         performer = ["", ""]
 
                 # Album title.
-                albumTitle = ["", "", 0]
+                albumTitle = [None, "", 0]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
                     if INTERNAL_RESOURCE:
@@ -427,7 +414,7 @@ class cDataFormat():
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
                     if albumTitle == None:
-                        oldTitle = ["", "", 0]
+                        oldTitle = [None, "", 0]
 
                     elif not (oldTitle[1] == albumTitle):
                         oldTitle = [resUri, albumTitle, albumYear]
@@ -444,17 +431,49 @@ class cDataFormat():
                                     % {"uri": oldPerformer[0], "title": oldPerformer[1]}
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
                                     % (linkTitle, linkPerformer, trackName)
-                    if coverUrl != None:
+
+                    # Cover.
+                    if res.hasProperty(NOC('nie:url')):
+                        trackUrl = toUnicode(self.readProperty(res, 'nie:url', 'str'))
+                        if trackUrl[:7] != "file://":
+                            trackUrl = "file://" + trackUrl
+
+                        trackUrl = os.path.dirname(trackUrl)
+                        for coverName in self.coverFileNames:
+                            tmpCoverUrl = trackUrl + '/' + coverName
+                            if fileExists(tmpCoverUrl):
+                                coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                                break
+
+                        # If there is no cover, or thumbnail then default cover is displayed.
+                        if coverUrl == None:
+                            coverUrl = "file://" + self.iconNoCover
+
                         trackName = "<img width=48 style='float:left; " \
                                         "vertical-align:text-bottom; margin:2px' " \
                                         "src='%s'>" % (coverUrl) \
                                     + trackName
 
-                else:
-                    if performer[1] != "":
-                        linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                        % {"uri": performer[0], "title": performer[1]}
-                        trackName = "<em>%s</em><br />%s" % (linkPerformer, trackName)
+                elif performer[1] != "":
+                    linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                    % {"uri": performer[0], "title": performer[1]}
+                    trackName = "<em>%s</em><br />%s" % (linkPerformer, trackName)
+
+                elif (albumTitle[0] == performer[0] == None):
+                    # Probably a video or a music file without tags. Use a thumbnail is exists.
+                    if coverUrl == None:
+                        tmpCoverUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
+                        if tmpCoverUrl != None:
+                            coverUrl = tmpCoverUrl
+
+                    # If there is no thumbnail then default image is displayed.
+                    if coverUrl == None:
+                        coverUrl = "file://" + self.iconNoCover
+
+                    trackName = "<img width=48 style='float:left; " \
+                                    "vertical-align:text-bottom; margin:2px' " \
+                                    "src='%s'>" % (coverUrl) \
+                                + trackName
 
                 trackName = trackName.replace('"', '&quot;')
                 if self.playlistDescendingOrderInAlbumYear:
@@ -466,7 +485,7 @@ class cDataFormat():
                 sortColumn = "%s_%s_%s" % (oldTitle[2] - sortAdjustment, oldTitle[1], sortColumn)
 
             elif listType == 'video':
-                # thumbnail
+                # Thumbnail.
                 thumbnailUrl = None
                 if res.hasProperty(NOC('nie:url')):
                     thumbnailUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
