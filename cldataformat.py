@@ -226,7 +226,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
                             "{nie:title|l|s:tvserie|ok:tvshow}" \
-                                "%[<br /><b>Last viewed episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                "%[<br /><b>Last watched episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
                                 "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
@@ -237,7 +237,7 @@ class cDataFormat():
                         ["nmm:TVShow", \
                             "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
                                 "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
-                                "%[ <b>Viewed</b>: {nuao:usageCount} times%]", \
+                                "%[ <b>Watched</b>: {nuao:usageCount} times%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
@@ -501,10 +501,10 @@ class cDataFormat():
                         sortColumn = dummyVal + sortColumn
                         trackName = dummyVal + trackName
 
-                    # Viewed?.
+                    # Watched?.
                     if res.hasProperty(NOC('nuao:usageCount')):
                         if res.property(NOC('nuao:usageCount')).toString() == '1':
-                            trackName += ' <b><em>(viewed)</em></b>'
+                            trackName += ' <b><em>(watched)</em></b>'
 
                     # Series title.
                     if res.hasProperty(NOC('nmm:series')):
