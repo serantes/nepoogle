@@ -114,6 +114,7 @@ ontologyTypes = [ \
                 ]
 
 ontologiesInfo = []
+ontologiesRank = []
 
 def NOC(name = '', returnQUrl = False):
     ontology, property = name.strip().split(':')
@@ -207,7 +208,11 @@ def ontologyInfo(ontology = '', model = None):
         return ["", "", ""]
 
     if (model == None):
-        model = Nepomuk.ResourceManager.instance().mainModel()
+        if DO_NOT_USE_NEPOMUK:
+            model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+        else:
+            model = Nepomuk.ResourceManager.instance().mainModel()
 
     # Ontology cleanup because sometimes has additional information as
     # suffix like in nmm:musicAlbum=?x0.
@@ -281,13 +286,20 @@ def toN3(url = ''):
 class cResource():
 
     data = None
-    model = Nepomuk.ResourceManager.instance().mainModel()
+    model = None
     ovPrefix = "_ov_"
     ontologyType = None
     stdout = False
+    typeValue = None
     valUri = None
 
     def __init__(self, uri = None):
+
+        if DO_NOT_USE_NEPOMUK:
+            self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+        else:
+            self.model = Nepomuk.ResourceManager.instance().mainModel()
 
         if uri != None:
             self.valUri = uri
@@ -353,25 +365,8 @@ class cResource():
                 else:
                     exec("self." + name + " += [\"" + value + "\"]")
 
-        #TODO: try calculate this value.
-        #self.typeValue = Nepomuk.Resource(uri).resourceType().toString()
-        query = "SELECT DISTINCT ?val\n" \
-                "WHERE {\n" \
-                    "\t<" + uri + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?val .\n"\
-                "}\n" \
-                "ORDER BY ?val"
-        if self.stdout:
-            print toUtf8(query)
+        self.typeValue = None
 
-        self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
-        if self.data.isValid():
-            while self.data.next():
-                tmpOntType = self.data["val"].toString()
-                if tmpOntType != "http://www.w3.org/2000/01/rdf-schema#Resource":
-                    ontType = tmpOntType
-
-        self.typeValue = ontType
 
     def getValue(self, ontology = None):
         if ontology == None:
@@ -405,10 +400,56 @@ class cResource():
 
 
     def resourceType(self):
+        if self.typeValue == None:
+            self.type()
+
         return QVariant(self.typeValue)
 
 
     def type(self):
+        if self.typeValue == None:
+            global ontologiesRank
+
+            query = "SELECT DISTINCT ?val\n" \
+                    "WHERE {\n" \
+                        "\t<" + self.valUri + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?val .\n"\
+                    "}\n" \
+                    "ORDER BY ?val"
+            if self.stdout:
+                print toUtf8(query)
+
+            self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
+            ontValue = 999999
+            if self.data.isValid():
+                while self.data.next():
+                    currOntType = self.data["val"].toString()
+                    i = lindex(ontologiesRank, currOntType, column = 0)
+                    if i == None:
+                        query = "SELECT DISTINCT COUNT(*) AS ?val\n" \
+                                "WHERE {\n" \
+                                    "\t?r rdfs:subClassOf <%s> .\n" \
+                                "}\n" % currOntType
+                        if self.stdout:
+                            print toUtf8(query)
+
+                        self.dataAux = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        currOntValue = 999999
+                        if self.dataAux.isValid():
+                            while self.dataAux.next():
+                                currOntValue = int(self.dataAux["val"].toString())
+
+                        ontologiesRank += [[currOntType, currOntValue]]
+
+                    else:
+                        currOntValue = ontologiesRank[i][1]
+
+                    if (currOntValue < ontValue):
+                        ontType = currOntType
+                        ontValue = currOntValue
+
+            self.typeValue = ontType
+
         return self.typeValue
 
 
@@ -480,6 +521,7 @@ class cSparqlBuilder():
                 [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
                 [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
                 [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
+                [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode .\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s) AS ?season MIN(?e) AS ?episode ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
                 [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--playmixed'), ['playmixed', [], [], []]], \
@@ -1235,19 +1277,40 @@ class cSparqlBuilder():
             if quoteChar != None and string.find(quoteChar) >= 0:
                 quoteChar = None
 
-        # And and commands normalization.
+        # And operator, commands and parenthesis normalization.
         normString2 = []
         normString3 = []
         for string in normString1:
-            if normString2 == []:
-                normString2 = [string]
+            if (string[:2] == "--"):
+                normString3 += [string]
+                continue
 
-            else:
-                if string.lower()[:2] == "--":
-                    normString3 += [string]
+            elif string[:1] in ('(', ')'):
+                if len(string) > 1:
+                    normString2 += [string[:1], string[1:]]
 
-                elif string.lower() != "or":
-                    normString2 += ['and', string]
+                else:
+                    normString2 += [string[:1]]
+                continue
+
+            elif string[-1] in (')'):
+                normString2 += [string[:-1], string[-1]]
+                continue
+
+            elif (string.lower() == "and"):
+                normString2 += [string]
+                continue
+
+            elif (string.lower() != "or"):
+                lastElement = None
+                if (len(normString2) > 1):
+                    lastElement = normString2[-1]
+
+                print lastElement
+                if lastElement not in (None, "or", "and"):
+                    normString2 += ['and']
+
+            normString2 += [string]
 
         normString2 = normString3 + normString2
 
@@ -1256,7 +1319,10 @@ class cSparqlBuilder():
         for string in normString2:
             normString3 += [string]
 
-        print  " ".join(normString3)
+        print('1', normString1)
+        print('2', normString2)
+        print('3', normString3)
+        print(" ".join(normString3))
         return " ".join(normString3)
 
 
@@ -1503,11 +1569,19 @@ class cSparqlBuilder():
 
 
     def executeQuery(self, query = []):
-        model = Nepomuk.ResourceManager.instance().mainModel()
+        try:
+            if DO_NOT_USE_NEPOMUK:
+                model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
-        queryTime = time.time()
-        result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        queryTime = time.time() - queryTime
+            else:
+                model = Nepomuk.ResourceManager.instance().mainModel()
+
+            queryTime = time.time()
+            result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            queryTime = time.time() - queryTime
+
+        except:
+            raise Exception("Seems like Nepomuk is not running.")
 
         structure = []
         data = []
