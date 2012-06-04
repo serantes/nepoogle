@@ -302,7 +302,11 @@ class Nepoogle(QWidget):
 
         self.verboseMode = verboseMode
 
-        self.model = Nepomuk.ResourceManager.instance().mainModel()
+        if DO_NOT_USE_NEPOMUK:
+            self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+        else:
+            self.model = Nepomuk.ResourceManager.instance().mainModel()
 
         #self.setGeometry(300, 300, 250, 150)
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
@@ -1294,7 +1298,7 @@ class Nepoogle(QWidget):
 
         #if True:
         try:
-            if self.clearResourceManagerCache:
+            if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
                 Nepomuk.ResourceManager.instance().clearCache()
 
             self.sparql = cSparqlBuilder()

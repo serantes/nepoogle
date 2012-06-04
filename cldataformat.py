@@ -321,7 +321,11 @@ class cDataFormat():
     def __init__(self, searchString = "", model = None):
         self.searchString = searchString
         if model == None:
-            self.model = Nepomuk.ResourceManager.instance().mainModel()
+            if DO_NOT_USE_NEPOMUK:
+                self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+            else:
+                self.model = Nepomuk.ResourceManager.instance().mainModel()
 
         else:
             self.model = model
@@ -1165,7 +1169,7 @@ class cDataFormat():
 
 
     def formatHtmlLine(self, uri):
-        if INTERNAL_RESOURCE:
+        if INTERNAL_RESOURCE_IN_RESULTS_LIST:
             resource = cResource(uri)
 
         else:

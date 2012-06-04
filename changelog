@@ -1,4 +1,10 @@
-v0.9.3 -- 2012/xx/xx
+v0.9.3 -- 2012/06/01
+-BUG: Fixed problem with NEF images preview.
+-BUG: Fixed several encoding bugs.
+-CHANGE: kext:unixFileGroup, kext:unixFileMode and kext:unixFileOwner properties are hidden by default.
+-CHANGE: Images in resource viewer are displayed in the right if there is enought space.
+-CHANGE: Minor visualization improvements.
+-NEW: --playmixed is a new command to generate a mixed playlist with audio files and audio tracks from videos.
 
 v0.9.2 -- 2012/05/06
 -BUG: Fixed a mad playlist when audio and a video playlists are both displayed in the same result page.
