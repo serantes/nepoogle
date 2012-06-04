@@ -236,6 +236,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:TVShow", \
+                            "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nmm:series ?series . ?series nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
                             "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
                                 "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
                                 "%[ <b>Watched</b>: {nuao:usageCount} times%]", \
@@ -1008,7 +1009,7 @@ class cDataFormat():
         for variable in variables:
             variable = toUnicode(variable)
             elements = variable.split("|")
-            addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = False
+            addImage = addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = False
             KIOName = ""
             for item in elements:
                 if item == "l" or item[:1] == "l":
@@ -1016,6 +1017,9 @@ class cDataFormat():
                     addLinkOpenFile = (item[1:].find("f") >= 0)
                     addLinkOpenLocation = (item[1:].find("l") >= 0)
                     addLinkDelete = (item[1:].find("d") >= 0)
+
+                elif item == "i":
+                    addImage = True
 
                 elif item == "of":
                     addOpenFile = True
@@ -1096,6 +1100,9 @@ class cDataFormat():
                                 displayValue += " " + self.htmlLinkDelete % {"uri": value[1]}
 
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
+
+                elif addImage:
+                    formatValue += "<img title=\"%s\" src=\"%s\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 100%%;\"><br />" % (value[1], value[1])
 
                 else:
                     formatValue += value[1]
