@@ -420,7 +420,7 @@ class cResource():
 
             self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
-            ontValue = 999999
+            ontValue = 0
             if self.data.isValid():
                 while self.data.next():
                     currOntType = self.data["val"].toString()
@@ -428,13 +428,13 @@ class cResource():
                     if i == None:
                         query = "SELECT DISTINCT COUNT(*) AS ?val\n" \
                                 "WHERE {\n" \
-                                    "\t?r rdfs:subClassOf <%s> .\n" \
+                                    "\t<%s> rdfs:subClassOf ?r .\n" \
                                 "}\n" % currOntType
                         if self.stdout:
                             print toUtf8(query)
 
                         self.dataAux = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-                        currOntValue = 999999
+                        currOntValue = 0
                         if self.dataAux.isValid():
                             while self.dataAux.next():
                                 currOntValue = int(self.dataAux["val"].toString())
@@ -444,7 +444,7 @@ class cResource():
                     else:
                         currOntValue = ontologiesRank[i][1]
 
-                    if (currOntValue < ontValue):
+                    if (currOntValue > ontValue):
                         ontType = currOntType
                         ontValue = currOntValue
 
