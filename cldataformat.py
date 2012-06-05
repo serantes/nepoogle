@@ -358,7 +358,7 @@ class cDataFormat():
             if url[:7] != "file://":
                 url = "file://" + url
 
-            if INTERNAL_RESOURCE:
+            if False and INTERNAL_RESOURCE:
                 res = cResource(item[1])
 
             else:
@@ -390,7 +390,7 @@ class cDataFormat():
                 performer = [None, ""]
                 if res.hasProperty(NOC('nmm:performer')):
                     resUri = res.property(NOC('nmm:performer')).toString()
-                    if INTERNAL_RESOURCE:
+                    if False and INTERNAL_RESOURCE:
                         resTmp = cResource(resUri)
 
                     else:
@@ -411,7 +411,7 @@ class cDataFormat():
                 albumTitle = [None, "", 0]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     resUri = res.property(NOC('nmm:musicAlbum')).toString()
-                    if INTERNAL_RESOURCE:
+                    if False and INTERNAL_RESOURCE:
                         resTmp = cResource(resUri)
 
                     else:
@@ -533,7 +533,12 @@ class cDataFormat():
                     # Series title.
                     if res.hasProperty(NOC('nmm:series')):
                         resUri = res.property(NOC('nmm:series')).toString()
-                        resTmp = Nepomuk.Resource(resUri)
+                        if False and INTERNAL_RESOURCE:
+                            resTmp = cResource(resUri)
+
+                        else:
+                            resTmp = Nepomuk.Resource(resUri)
+
                         if resTmp.hasProperty(NOC('nie:title')):
                             dummyVal = resTmp.property(NOC('nie:title')).toString()
                             sortColumn = dummyVal + sortColumn
@@ -1342,7 +1347,11 @@ class cDataFormat():
             lines = u""
             for item in self.data:
                 url = title = ""
-                resource = Nepomuk.Resource(QUrl(item[0]))
+                if False and INTERNAL_RESOURCE:
+                    resource = cResource(item[0])
+
+                else:
+                    resource = Nepomuk.Resource(QUrl(item[0]))
 
                 if resource.hasProperty(nieUrl):
                     url = fromPercentEncoding(toUnicode(resource.property(nieUrl).toString().toUtf8()))
@@ -1435,7 +1444,12 @@ class cDataFormat():
             images = []
             audios = []
             videos = []
-            defaultType = NOCR(Nepomuk.Resource(uri).type())
+            if INTERNAL_RESOURCE:
+                defaultType = NOCR(cResource(uri).type())
+
+            else:
+                defaultType = NOCR(Nepomuk.Resource(uri).type())
+
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
                 if currOnt in self.hiddenOntologies:
@@ -1444,11 +1458,11 @@ class cDataFormat():
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
-                    #if INTERNAL_RESOURCE:
-                    #    resource = cResource(uri)
+                    if False and INTERNAL_RESOURCE:
+                        resource = cResource(value)
 
-                    #else:
-                    resource = Nepomuk.Resource(value)
+                    else:
+                        resource = Nepomuk.Resource(value)
 
                     value = ''
                     if resource.hasType(NOC('nao:Tag', True)):
@@ -1596,11 +1610,11 @@ class cDataFormat():
         if data.isValid():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
-                #if INTERNAL_RESOURCE:
-                #    res = cResource(resUri)
+                if False and INTERNAL_RESOURCE:
+                    res = cResource(resUri)
 
-                #else:
-                res = Nepomuk.Resource(resUri)
+                else:
+                    res = Nepomuk.Resource(resUri)
 
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 url = None
