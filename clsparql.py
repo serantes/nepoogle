@@ -115,6 +115,7 @@ ontologyTypes = [ \
 
 ontologiesInfo = []
 ontologiesRank = []
+resourcesCache = dict()
 
 def NOC(name = '', returnQUrl = False):
     ontology, property = name.strip().split(':')
@@ -142,9 +143,6 @@ def NOC(name = '', returnQUrl = False):
 
 
 def NOCR(ontology = ''):
-    if ontology == '':
-        return ""
-
     if ontology[:7] == "http://":
         return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('22-rdf-syntax-ns:', 'rdf:').replace('rdf-schema:', 'rdfs:')
 
@@ -207,13 +205,6 @@ def ontologyInfo(ontology = '', model = None):
     if (ontology == ""):
         return ["", "", ""]
 
-    if (model == None):
-        if DO_NOT_USE_NEPOMUK:
-            model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
-
-        else:
-            model = Nepomuk.ResourceManager.instance().mainModel()
-
     # Ontology cleanup because sometimes has additional information as
     # suffix like in nmm:musicAlbum=?x0.
     ontology = ontology.split("=")[0].split("->")[0]
@@ -244,6 +235,13 @@ def ontologyInfo(ontology = '', model = None):
                     #"\t%(ont)s rdfs:range ?range\n" \
                     #"\tOPTIONAL { %(ont)s rdfs:label ?label . }\n" \
                 #"}" % {"ont": ontology}
+
+        if (model == None):
+            if DO_NOT_USE_NEPOMUK:
+                model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+            else:
+                model = Nepomuk.ResourceManager.instance().mainModel()
 
         query = "SELECT ?label ?range\n" \
                 "WHERE {\n" \
@@ -282,18 +280,20 @@ def toN3(url = ''):
 
     return result.replace('?', '%3f')
 
-# A experimental, and not using, class.
+
+# An experimental readonly alternative to Nepomuk.Resource().
 class cResource():
 
+    cacheEnabled = True
     data = None
     model = None
-    ovPrefix = "_ov_"
-    ontologyType = None
+    ontologies = None
     stdout = False
     typeValue = None
     valUri = None
+    notCachedOntologies = ["nie:url"]
 
-    def __init__(self, uri = None):
+    def __init__(self, uri = None, prefechData = False):
 
         if DO_NOT_USE_NEPOMUK:
             self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -302,101 +302,126 @@ class cResource():
             self.model = Nepomuk.ResourceManager.instance().mainModel()
 
         if uri != None:
-            self.valUri = uri
-            self.read()
+            #TODO: fix this issue.
+            if vartype(uri) not in ("unicode", "string"):
+
+                if vartype(uri) == "list":
+                    uri = uri[0]
+
+                elif vartype(uri) == "QString":
+                    uri = toUnicode(uri)
+
+                else:
+                    try:
+                        uri = uri.toString()
+
+                    except:
+                        uri = None
+
+            if uri != None:
+                self.valUri = uri
+                if prefechData:
+                    self.ontologies = dict()
+                    self.read()
+
+                else:
+                    if (self.cacheEnabled and resourcesCache.has_key(self.valUri)):
+                        self.ontologies = resourcesCache[self.valUri]
+
+                    else:
+                        self.ontologies = dict()
 
 
     def __del__(self):
-        pass
+        if self.cacheEnabled:
+            resourcesCache[self.valUri] = self.ontologies
 
 
-    def read(self, uri = None):
+    def read(self, ont = None, uri = None):
         if uri == self.valUri == None:
             return False
 
         if uri == None:
             uri = self.valUri
 
-        query = "SELECT DISTINCT ?ont ?val\n" \
+        if ont == None:
+            ont = "?p"
+
+        else:
+            ont = NOCR(ont)
+
+        query = "SELECT DISTINCT %(ont)s AS ?ont ?val\n" \
                 "WHERE {\n" \
-                    "\t<" + uri + "> ?ont ?val .\n"\
-                "}\n"
+                    "\t<%(uri)s> %(ont)s ?val .\n"\
+                "}\n" % {'uri': uri, 'ont': ont}
         if self.stdout:
             print toUtf8(query)
 
         self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        value = None
         if self.data.isValid():
             while self.data.next():
                 ontology = self.data["ont"].toString()
-                name = self.ovPrefix + NOCR(ontology).replace(":", "_1_").replace("-", "_2_")
-                value = toUnicode(self.data["val"].toString())
-                if not self.__dict__.has_key(name):
-                    exec("self." + name + " = []")
+                name = NOCR(ontology)
+                #value = toUnicode(self.data["val"].toString())
+                value = self.data["val"]
+                if not self.ontologies.has_key(name):
+                    self.ontologies[name] = []
 
                 valueType = ontologyInfo(ontology)[2]
+                #print name, valueType, value.toString()
+                # Other types: "date", "dateTime", "int", "integer", "nonNegativeInteger", "float", "duration", "size"
                 if valueType == 'boolean':
-                    if value.lower() == "false" or value.lower() == "0":
-                        exec("self." + name + " += [False]")
+                    value = toUnicode(value.toString())
+                    if ((value.lower() == "false") or (value.lower() == "0")):
+                        self.ontologies[name] += [QVariant(False)]
 
                     else:
-                        exec("self." + name + " += [True]")
+                        self.ontologies[name] += [QVariant(True)]
 
-                elif valueType == 'date':
-                    exec("self." + name + " += [\"" + value + "\"]")
-
-                elif valueType == 'dateTime':
-                    exec("self." + name + " += ['" + value + "']")
-
-                elif valueType == 'int' or valueType == 'integer' or valueType == 'nonNegativeInteger':
-                    exec("self." + name + " += [" + value + "]")
-
-                elif valueType == 'float':
-                    exec("self." + name + " += [" + value + "]")
-
-                elif valueType == 'duration':
-                    exec("self." + name + " += [" + value + "]")
-
-                elif valueType == 'size':
-                    exec("self." + name + " += [" + value + "]")
-
-                elif valueType == 'string':
-                    exec("self." + name + " += [\"" + value.replace('"', '\\"').replace("\n", "\\\n'").replace("\r", "\\\r'") + "\"]")
+                #elif valueType == 'string':
+                #    self.ontologies[name] += [value.replace('"', '\\"').replace("\n", "\\\n'").replace("\r", "\\\r'")]
 
                 else:
-                    exec("self." + name + " += [\"" + value + "\"]")
+                    self.ontologies[name] += [QVariant(value.toString())]
 
-        self.typeValue = None
+
+        if ((ont != "?p") and (value == None)):
+            # There is no ontology but we must create the key for avoid recheck.
+            self.ontologies[ont] = [None]
 
 
     def getValue(self, ontology = None):
-        if ontology == None:
-            result = None
+        result = None
+        if ontology != None:
+            if not self.ontologies.has_key(ontology):
+                self.read(ontology)
 
-        else:
-            try:
-                #print ontology, "values = self." + self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
-                exec("values = self." + self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_"))
-                result = values[0]
-                for i in range(1, len(values)):
-                    result += ", " + values[i]
+            if (len(self.ontologies[ontology]) == 1):
+                result = self.ontologies[ontology][0]
 
-            except:
-                result = ""
+            else:
+                result = self.ontologies[ontology]
 
         return result
 
 
     def property(self, ontology = None):
-        return QVariant(toUnicode(str(self.getValue(NOCR(ontology)))))
+        ontology = NOCR(ontology)
+        if ontology in self.notCachedOntologies:
+            if self.ontologies.has_key(ontology):
+                del self.ontologies[ontology]
+
+        value = self.getValue(ontology)
+        #print NOCR(ontology), toUnicode(value.toString())
+        if value == None:
+            value = QVariant(u"")
+
+        return value
 
 
     def getAllValues(self):
-        values = []
-        for name in self.__dict__.keys():
-            if name[0:len(self.ovPrefix)] == self.ovPrefix:
-                values += [[name.replace(self.ovPrefix, "").replace("_1_", ":").replace("_2_", "-"), self.__dict__[name]]]
-
-        return values
+        return self.ontologies.items()
 
 
     def resourceType(self):
@@ -458,32 +483,38 @@ class cResource():
 
 
     def hasType(self, uri):
-        #ontology = "rdf:type"
-        #key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
-        return uri.toString() in self.__dict__["_ov_rdf_1_type"]
+        if not self.ontologies.has_key("rdf:type"):
+            self.read("rdf:type")
+
+        return uri in self.ontologies["rdf:type"]
 
 
     def hasProperty(self, uri):
-        ontology = NOCR(uri)
-        key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
-        try:
-            value = self.__dict__[key]
-            result = True
+        uri = NOCR(uri)
+        if not self.ontologies.has_key(uri):
+            self.read(uri)
 
-        except:
-            result = False
-
-        return result
+        return self.ontologies[uri] != None
 
 
     def genericLabel(self):
-        #ontology = "nao:prefLabel"
-        #key = self.ovPrefix + ontology.replace(":", "_1_").replace("-", "_2_")
-        try:
-            result = self.__dict__["_ov_nao_1_prefLabel"][0]
+        result = self.getValue("nao:prefLabel")
 
-        except:
-            result = ""
+        if result == None:
+            result = self.getValue("nfo:fileName")
+            if result == None:
+                result = self.getValue("nie:url")
+                if result == None:
+                    result = self.getValue("nfo:hashValue")
+                    if result == None:
+                        # self.valUri is not a QString().
+                        return self.valUri
+
+        if result == None:
+            result = u""
+
+        else:
+            result = toUnicode(result.toString())
 
         return result
 
@@ -1319,10 +1350,10 @@ class cSparqlBuilder():
         for string in normString2:
             normString3 += [string]
 
-        print('1', normString1)
-        print('2', normString2)
-        print('3', normString3)
-        print(" ".join(normString3))
+        print '1', normString1
+        print '2', normString2
+        print '3', normString3
+        print " ".join(normString3)
         return " ".join(normString3)
 
 
