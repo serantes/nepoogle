@@ -85,6 +85,7 @@ class cDataFormat():
     iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
     iconPlaylistLast = KIconLoader().iconPath('go-last-view', KIconLoader.Small)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
+    iconReindex = KIconLoader().iconPath('nepomuk', KIconLoader.Small)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
     iconSystemSearchWeb = KIconLoader().iconPath('edit-web-search', KIconLoader.Small)
@@ -1249,9 +1250,8 @@ class cDataFormat():
 
         text = self.htmlHeader % ("Query results", "")
         text += self.htmlTableHeader
+
         if vartype(param1) == "list":
-            #self.renderedDataText = ""
-            #self.renderedDataRows = 0
             if self.data == []:
                 self.data = list(param1)
                 self.structure = list(structure)
@@ -1260,13 +1260,17 @@ class cDataFormat():
 
         else:
             if param1 == "all":
-                rowsToRender = len(self.data)
+                rowsToRender = len(self.data) # No calculations, a number that always work.
 
             elif param1 == "more":
                 rowsToRender = self.renderSize
 
             else:
                 rowsToRender = 0
+
+        # If remains less than self.renderSize half then renders all.
+        if ((len(self.data) - self.renderedDataRows - rowsToRender) < (self.renderSize / 2)):
+            rowsToRender = len(self.data) # No calculations, a number that always work.
 
         if self.renderedDataRows < len(self.data):
             numColumns = len(self.structure)
@@ -1311,11 +1315,14 @@ class cDataFormat():
 
                 self.renderedDataRows += 1
 
-        text += self.renderedDataText
+        rowNavigation = ""
         if self.renderedDataRows < len(self.data):
-            text += '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
+            rowNavigation = '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
                     '<td>%s of %s records</td><td></td><tr>' \
                         % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data))
+
+
+        text += rowNavigation +  self.renderedDataText + rowNavigation
 
         text += self.htmlTableFooter
         text += "<br />\n" + self.htmlStadistics \
@@ -1370,7 +1377,6 @@ class cDataFormat():
             for item in self.data:
                 url = title = ""
                 if INTERNAL_RESOURCE:
-                    #TODO: fix this case
                     resource = cResource(item[0])
 
                 else:
@@ -1455,7 +1461,7 @@ class cDataFormat():
 
         output = self.htmlHeader % ('Resource viewer', script)
         output += "<div class=\"top\" style=\"static: top;\">\n"
-        output += '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
+        output += '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
                         % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
         output += "</div>\n"
         output += "<div class=\"data\" style=\"float: left; width: 500px;\">\n<hr>"
@@ -1482,7 +1488,6 @@ class cDataFormat():
                 value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
                     if INTERNAL_RESOURCE:
-                        #TODO: fix this case
                         resource = cResource(value)
 
                     else:
@@ -1570,6 +1575,12 @@ class cDataFormat():
                     else:
                         value += self.htmlRenderLink('url', url, url)
 
+                    # Adding reindex button to navigator bar.
+                    output = output.replace("<reindex />", \
+                                            "&nbsp;<a title=\"Reindex file\" href=\"reindex:/%(url)s\"><img %(style)s title=\"Reindex file\" src=\"file://%(icon)s\"></a>" \
+                                            % {"style": self.htmlStyleNavigate, "url": url, "icon": self.iconReindex}
+                                        )
+
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
 
@@ -1635,7 +1646,6 @@ class cDataFormat():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
                 if INTERNAL_RESOURCE:
-                    #TODO: fix this case
                     res = cResource(resUri)
 
                 else:
