@@ -48,7 +48,6 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
                         _CONST_ICON_SYSTEM_RUN)
 
 class cDataFormat():
-
     columnsCount = 3
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
@@ -358,7 +357,7 @@ class cDataFormat():
             if url[:7] != "file://":
                 url = "file://" + url
 
-            if False and INTERNAL_RESOURCE:
+            if INTERNAL_RESOURCE_IN_PLAYLIST:
                 res = cResource(item[1])
 
             else:
@@ -389,11 +388,18 @@ class cDataFormat():
                 # Performer.
                 performer = [None, ""]
                 if res.hasProperty(NOC('nmm:performer')):
-                    resUri = res.property(NOC('nmm:performer')).toString()
-                    if False and INTERNAL_RESOURCE:
+                    if INTERNAL_RESOURCE_IN_PLAYLIST:
+                        resUri = res.property(NOC('nmm:performer'))
+                        if vartype(resUri) == "list":
+                            resUri = resUri[0].toString()
+
+                        else:
+                            resUri.toString()
+
                         resTmp = cResource(resUri)
 
                     else:
+                        resUri = res.property(NOC('nmm:performer')).toString()
                         resTmp = Nepomuk.Resource(resUri)
 
                     performer = self.readProperty(resTmp, 'nco:fullname', 'str')
@@ -410,14 +416,22 @@ class cDataFormat():
                 # Album title.
                 albumTitle = [None, "", 0]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
-                    resUri = res.property(NOC('nmm:musicAlbum')).toString()
-                    if False and INTERNAL_RESOURCE:
+                    if INTERNAL_RESOURCE_IN_PLAYLIST:
+                        resUri = res.property(NOC('nmm:musicAlbum'))
+                        if vartype(resUri) == "list":
+                            resUri = resUri[0].toString()
+
+                        else:
+                            resUri.toString()
+
                         resTmp = cResource(resUri)
 
                     else:
+                        resUri = res.property(NOC('nmm:musicAlbum')).toString()
                         resTmp = Nepomuk.Resource(resUri)
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
+
                     if albumTitle == None:
                         oldTitle = [None, "", 0]
 
@@ -532,11 +546,18 @@ class cDataFormat():
 
                     # Series title.
                     if res.hasProperty(NOC('nmm:series')):
-                        resUri = res.property(NOC('nmm:series')).toString()
-                        if False and INTERNAL_RESOURCE:
+                        if INTERNAL_RESOURCE:
+                            resUri = res.property(NOC('nmm:series'))
+                            if vartype(resUri) == "list":
+                                resUri = resUri[0].toString()
+
+                            else:
+                                resUri.toString()
+
                             resTmp = cResource(resUri)
 
                         else:
+                            resUri = res.property(NOC('nmm:series')).toString()
                             resTmp = Nepomuk.Resource(resUri)
 
                         if resTmp.hasProperty(NOC('nie:title')):
@@ -888,17 +909,16 @@ class cDataFormat():
 
     def readProperty(self, resource, propertyOntology, propertyType = "str"):
         try:
-            if (propertyType == "str"):
-                result = resource.property(NOC(propertyOntology)).toString()
+            result = resource.property(NOC(propertyOntology))
+            if result != None:
+                if (propertyType == "int"):
+                    result = int(result.toString())
 
-            elif (propertyType == "int"):
-                result = int(resource.property(NOC(propertyOntology)).toString())
+                elif (propertyType == "year"):
+                    result = int(result.toString()[:4])
 
-            elif (propertyType == "year"):
-                result = int(resource.property(NOC(propertyOntology)).toString()[:4])
-
-            else:
-                result = resource.property(NOC(propertyOntology)).toString()
+                else:
+                    result = result.toString()
 
         except:
             result = None
@@ -956,11 +976,6 @@ class cDataFormat():
 
                 else:
                     propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
-                    #TODO: Some special formats, this must be improved.
-                    #if elements[0] in ("nmm:trackNumber", "nmm:season", "nmm:episodeNumber"):
-                    #    if len(propertyValue) < 2:
-                    #        propertyValue = "0" + propertyValue
-
                     if elements[0] == "nie:url":
                         #propertyValue = fromPercentEncoding(propertyValue)
                         if propertyValue[:8] == "filex://":
@@ -1187,7 +1202,12 @@ class cDataFormat():
         else:
             resource = Nepomuk.Resource(uri)
 
-        itemType = NOCR(resource.type())
+        if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE and not INTERNAL_RESOURCE_IN_RESULTS_LIST:
+            itemType = NOCR(cResource(uri).type())
+
+        else:
+            itemType = NOCR(resource.type())
+
         idx = lindex(self.ontologyFormat, itemType, column = 0)
         if (idx == None):
             idx = 0
@@ -1212,6 +1232,8 @@ class cDataFormat():
 
         else:
             line = ""
+
+        resource = None
 
         return line
 
@@ -1347,7 +1369,8 @@ class cDataFormat():
             lines = u""
             for item in self.data:
                 url = title = ""
-                if False and INTERNAL_RESOURCE:
+                if INTERNAL_RESOURCE:
+                    #TODO: fix this case
                     resource = cResource(item[0])
 
                 else:
@@ -1444,7 +1467,7 @@ class cDataFormat():
             images = []
             audios = []
             videos = []
-            if INTERNAL_RESOURCE:
+            if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
                 defaultType = NOCR(cResource(uri).type())
 
             else:
@@ -1458,7 +1481,8 @@ class cDataFormat():
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
                 if value[:9] == 'nepomuk:/':
-                    if False and INTERNAL_RESOURCE:
+                    if INTERNAL_RESOURCE:
+                        #TODO: fix this case
                         resource = cResource(value)
 
                     else:
@@ -1610,7 +1634,8 @@ class cDataFormat():
         if data.isValid():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
-                if False and INTERNAL_RESOURCE:
+                if INTERNAL_RESOURCE:
+                    #TODO: fix this case
                     res = cResource(resUri)
 
                 else:
