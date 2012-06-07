@@ -349,7 +349,7 @@ class cDataFormat():
         playList = []
         output = ""
         oldTitle = ["", "", 0]
-        oldPerformer = ["", ""]
+        oldPerformers = []
         albumYear = None
 
         for item in data:
@@ -386,50 +386,41 @@ class cDataFormat():
                 sortColumn = trackName
                 coverUrl = None
 
-                # Performer.
-                performer = [None, ""]
+                # Performers.
+                performers = []
                 if res.hasProperty(NOC('nmm:performer')):
                     if INTERNAL_RESOURCE_IN_PLAYLIST:
-                        resUri = res.property(NOC('nmm:performer'))
-                        if vartype(resUri) == "list":
-                            resUri = resUri[0].toString()
+                        resUris = res.property(NOC('nmm:performer'))
+                        if vartype(resUris) != "list":
+                            resUris = [resUris]
+
+                    else:
+                        resUris = res.property(NOC('nmm:performer')).toStringList()
+
+                    for itemUri in resUris:
+                        if INTERNAL_RESOURCE_IN_PLAYLIST:
+                            resTmp = cResource(itemUri)
 
                         else:
-                            resUri.toString()
+                            resTmp = Nepomuk.Resource(itemUri)
 
-                        resTmp = cResource(resUri)
+                        fullName = self.readProperty(resTmp, 'nco:fullname', 'str')
+                        if fullName != None:
+                            performers += [[itemUri, fullName]]
 
-                    else:
-                        resUri = res.property(NOC('nmm:performer')).toString()
-                        resTmp = Nepomuk.Resource(resUri)
-
-                    performer = self.readProperty(resTmp, 'nco:fullname', 'str')
-                    if performer == None:
-                        oldPerformer = [None, ""]
-
-                    elif not (oldPerformer[1] == performer):
-                        oldPerformer = [resUri, performer]
-                        performer = [resUri, performer]
-
-                    else:
-                        performer = ["", ""]
+                if performers != oldPerformers:
+                    oldPerformers = sorted(performers, key=lambda item: toUtf8(item[1]))
 
                 # Album title.
                 albumTitle = [None, "", 0]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     if INTERNAL_RESOURCE_IN_PLAYLIST:
                         resUri = res.property(NOC('nmm:musicAlbum'))
-                        if vartype(resUri) == "list":
-                            resUri = resUri[0].toString()
-
-                        else:
-                            resUri.toString()
-
                         resTmp = cResource(resUri)
 
                     else:
-                        resUri = res.property(NOC('nmm:musicAlbum')).toString()
-                        resTmp = Nepomuk.Resource(resUri)
+                        resUri = res.property(NOC('nmm:musicAlbum')).toStringList()
+                        resTmp = Nepomuk.Resource(resUri[0])
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
@@ -447,10 +438,16 @@ class cDataFormat():
                 if albumTitle[1] != "":
                     linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
                                     % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
-                    linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                    % {"uri": oldPerformer[0], "title": oldPerformer[1]}
+                    linkPerformers = ""
+                    for performer in oldPerformers:
+                        if linkPerformers != "":
+                            linkPerformers += ",&nbsp;"
+
+                        linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                        % {"uri": performer[0], "title": performer[1]}
+
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
-                                    % (linkTitle, linkPerformer, trackName)
+                                    % (linkTitle, linkPerformers, trackName)
 
                     # Cover.
                     if res.hasProperty(NOC('nie:url')):
@@ -549,17 +546,11 @@ class cDataFormat():
                     if res.hasProperty(NOC('nmm:series')):
                         if INTERNAL_RESOURCE:
                             resUri = res.property(NOC('nmm:series'))
-                            if vartype(resUri) == "list":
-                                resUri = resUri[0].toString()
-
-                            else:
-                                resUri.toString()
-
                             resTmp = cResource(resUri)
 
                         else:
-                            resUri = res.property(NOC('nmm:series')).toString()
-                            resTmp = Nepomuk.Resource(resUri)
+                            resUri = res.property(NOC('nmm:series')).toStringList()
+                            resTmp = Nepomuk.Resource(resUri[0])
 
                         if resTmp.hasProperty(NOC('nie:title')):
                             dummyVal = resTmp.property(NOC('nie:title')).toString()
