@@ -303,12 +303,12 @@ class cResource():
 
         if uri != None:
             #TODO: fix this issue.
+            if vartype(uri) == "list":
+                 uri = uri[0]
+
             if vartype(uri) not in ("unicode", "string"):
 
-                if vartype(uri) == "list":
-                    uri = uri[0]
-
-                elif vartype(uri) == "QString":
+                if (vartype(uri) == "QString"):
                     uri = toUnicode(uri)
 
                 else:
