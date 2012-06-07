@@ -408,8 +408,12 @@ class cDataFormat():
                         if fullName != None:
                             performers += [[itemUri, fullName]]
 
-                if performers != oldPerformers:
-                    oldPerformers = sorted(performers, key=lambda item: toUtf8(item[1]))
+                performers = sorted(performers, key=lambda item: toUtf8(item[1]))
+                if performers == oldPerformers:
+                    performers = []
+
+                else:
+                    oldPerformers = list(performers)
 
                 # Album title.
                 albumTitle = [None, "", 0]
@@ -419,8 +423,8 @@ class cDataFormat():
                         resTmp = cResource(resUri)
 
                     else:
-                        resUri = res.property(NOC('nmm:musicAlbum')).toStringList()
-                        resTmp = Nepomuk.Resource(resUri[0])
+                        resUri = res.property(NOC('nmm:musicAlbum')).toStringList()[0]
+                        resTmp = Nepomuk.Resource(resUri)
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
@@ -430,6 +434,7 @@ class cDataFormat():
                     elif not (oldTitle[1] == albumTitle):
                         oldTitle = [resUri, albumTitle, albumYear]
                         albumTitle = [resUri, albumTitle, albumYear]
+                        performers = list(oldPerformers)
 
                     else:
                         albumTitle = ["", "", 0]
@@ -439,7 +444,7 @@ class cDataFormat():
                     linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
                                     % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
                     linkPerformers = ""
-                    for performer in oldPerformers:
+                    for performer in performers:
                         if linkPerformers != "":
                             linkPerformers += ",&nbsp;"
 
@@ -471,12 +476,18 @@ class cDataFormat():
                                         "src='%s'>" % (coverUrl) \
                                     + trackName
 
-                elif performer[1] != "":
-                    linkPerformer = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                    % {"uri": performer[0], "title": performer[1]}
-                    trackName = "<em>%s</em><br />%s" % (linkPerformer, trackName)
+                elif performers != []:
+                    linkPerformers = ""
+                    for performer in performers:
+                        if linkPerformers != "":
+                            linkPerformers += ",&nbsp;"
 
-                elif (albumTitle[0] == performer[0] == None):
+                        linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                        % {"uri": performer[0], "title": performer[1]}
+
+                    trackName = "<em>%s</em><br />%s" % (linkPerformers, trackName)
+
+                elif (albumTitle[0] == None) or (oldPerformers == []):
                     # Probably a video or a music file without tags. Use a thumbnail is exists.
                     if coverUrl == None:
                         tmpCoverUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
@@ -549,8 +560,8 @@ class cDataFormat():
                             resTmp = cResource(resUri)
 
                         else:
-                            resUri = res.property(NOC('nmm:series')).toStringList()
-                            resTmp = Nepomuk.Resource(resUri[0])
+                            resUri = res.property(NOC('nmm:series')).toStringList()[0]
+                            resTmp = Nepomuk.Resource(resUri)
 
                         if resTmp.hasProperty(NOC('nie:title')):
                             dummyVal = resTmp.property(NOC('nie:title')).toString()
