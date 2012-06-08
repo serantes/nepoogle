@@ -328,11 +328,17 @@ class Nepoogle(QWidget):
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbForward, SIGNAL("clicked()"), self.goForward)
 
+        self.pbHelp = QPushButton(self)
+        self.pbHelp.setIcon(QIcon(KIconLoader().loadIcon('help-contents',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.connect(self.pbHelp, SIGNAL("clicked()"), self.showHelp)
+
         self.hbl = QHBoxLayout()
         self.hbl.setSpacing(1)
         self.hbl.addWidget(self.pbBackward)
         self.hbl.addWidget(self.pbForward)
         self.hbl.addWidget(self.leSearch)
+        self.hbl.addWidget(self.pbHelp)
 
         self.wvOutput = cWebView(self)
         self.connect(self.wvOutput, SIGNAL("linkClicked(const QUrl&)"), self.linkClicked)
@@ -717,6 +723,13 @@ class Nepoogle(QWidget):
             self.leSearch.readOnly = False
             self.repaint()
             self.navigationData = self.cache[self.queriesIndex].data
+
+
+    def showHelp(self):
+        self.leSearch.setText("--help")
+        self.pendingQuery = False
+        self.wvOutput.setHtml(self.buildHelp(self.sparql))
+        self.repaint()
 
 
     def buildHelp(self, oSparqlBuilder):
