@@ -546,6 +546,7 @@ class cSparqlBuilder():
                 [_('--directors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
                 [_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
+                [_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
                 [_('--help'), ['help', [], [], []]], \
@@ -614,7 +615,7 @@ class cSparqlBuilder():
                     ['nfo:duration', _('duration'), _('du')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
-                    ['nmm:genre', _('genre'), _('ge')], \
+                    ['!nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('height')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
@@ -926,6 +927,7 @@ class cSparqlBuilder():
                 i = 0
 
             optionalUsage = False
+            subqueryUsage = False
             for ontology in ontologyElements:
                 ontology = ontology.strip()
 
@@ -944,13 +946,17 @@ class cSparqlBuilder():
                     operator = '='
 
                 valType = ""
-                if ontology[0] == '%':
+                if ontology[0] == "%":
                     ontology = ontology[1:]
                     val = toN3(val)
 
-                elif ontology[0] == '_':
+                elif ontology[0] == "_":
                     ontology = ontology[1:]
-                    optionalUsage = optionalUsage or (operator == '!=')
+                    optionalUsage = optionalUsage or (operator == "!=")
+
+                elif ontology[0] == "!":
+                    ontology = ontology[1:]
+                    subqueryUsage = subqueryUsage or (operator == "!=")
 
                 valType = self.ontologyVarType(ontology)
                 #optionalUsage = (optionalUsage and (operator == '!='))
@@ -1029,13 +1035,17 @@ class cSparqlBuilder():
                             filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
                                                     % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
 
+                        elif subqueryUsage:
+                            filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
+                                                    % {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+
                         else:
                             filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
 
                     else:
                         filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
 
-            if optionalUsage:
+            if optionalUsage or subqueryUsage:
                         #"      }\n" \
                         #"    ))\n" \
                         #"    &&\n" \
