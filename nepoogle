@@ -747,6 +747,10 @@ class Nepoogle(QWidget):
                 fmtOntology = fmtOntology.replace('%', '')
                 info += ' (using percent encoding)'
 
+            elif fmtOntology.find('!') >= 0:
+                fmtOntology = fmtOntology.replace('!', '')
+                info += ' (supports duplicated properties)'
+
             if fmtOntology.find('_') >= 0:
                 fmtOntology = fmtOntology.replace('_', '')
                 info += ' (using optionals to negate)'
@@ -1291,7 +1295,7 @@ class Nepoogle(QWidget):
 
     def processMacros(self, searchString = ""):
         if searchString.find("--m0:") >= 0:
-            searchString = searchString.replace("--m0:", "--playlist url:-inst performer:")
+            searchString = searchString.replace("--m0:", "--playlist genre:-instrumental performer:")
 
         return searchString
 
