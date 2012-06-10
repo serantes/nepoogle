@@ -226,7 +226,8 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
-                            "{nie:title|l|s:tvserie|ok:tvshow}" \
+                                "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
+                                "{nie:title|l|s:tvserie|ok:tvshow}" \
                                 "%[<br /><b>Last watched episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
