@@ -1023,27 +1023,28 @@ class cSparqlBuilder():
                     filterExpression = self.buildFloatFilter(val, i, operator)
 
                 else:
-                    val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
                     if operator == "==":
                         filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
 
-                    elif operator == "=":
-                        filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
-
-                    elif operator == "!=":
-                        if optionalUsage:
-                            filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
-                                                    % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
-
-                        elif subqueryUsage:
-                            filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
-                                                    % {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
-
-                        else:
-                            filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
-
                     else:
-                        filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
+			val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
+			if operator == "=":
+			    filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+
+			elif operator == "!=":
+			    if optionalUsage:
+				filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
+							% {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+
+			    elif subqueryUsage:
+				filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
+							% {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+
+			    else:
+				filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+
+			else:
+			    filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
 
             if optionalUsage or subqueryUsage:
                         #"      }\n" \
