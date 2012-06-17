@@ -624,6 +624,7 @@ class cSparqlBuilder():
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
+                    # Renamed from aa albumartist.
                     ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
                     ['nuao:usageCount', _('playcount'), _('pc')], \
