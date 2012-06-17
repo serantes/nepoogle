@@ -600,10 +600,10 @@ class cSparqlBuilder():
                     #['nmm:actor->nco:fullname', _('actors', _('acs'], \
                     #  optional { ?x0 nmm:actor ?x00 . ?x00 nco:fullname ?fullname . }
                     #  HAVING (REGEX(?fullname, '', 'i'))
+                    ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa')], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
-                    ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('artistalbum'), _('aa')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
                     ['nao:created', _('created'), _('cd')], \
@@ -624,6 +624,7 @@ class cSparqlBuilder():
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
+                    ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
                     ['nuao:usageCount', _('playcount'), _('pc')], \
                     ['nao:prefLabel', _('preflabel'), _('pl')], \

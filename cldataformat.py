@@ -210,7 +210,8 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
-                            "{nie:title|l|s:album}<br />" \
+                            "{nie:title|l|s:album}" \
+				"%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
                                 "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
@@ -417,7 +418,7 @@ class cDataFormat():
                     oldPerformers = list(performers)
 
                 # Album title.
-                albumTitle = [None, "", 0]
+                albumTitle = [None, "", 0, ""]
                 if res.hasProperty(NOC('nmm:musicAlbum')):
                     if INTERNAL_RESOURCE_IN_PLAYLIST:
                         resUri = res.property(NOC('nmm:musicAlbum'))
@@ -430,20 +431,55 @@ class cDataFormat():
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
                     if albumTitle == None:
-                        oldTitle = [None, "", 0]
+                        oldTitle = [None, "", 0, ""]
 
                     elif not (oldTitle[1] == albumTitle):
-                        oldTitle = [resUri, albumTitle, albumYear]
-                        albumTitle = [resUri, albumTitle, albumYear]
+			# Obtain album artists.
+			albumArtists = []
+			if resTmp.hasProperty(NOC('nmm:albumArtist')):
+			    if INTERNAL_RESOURCE_IN_PLAYLIST:
+				resUris = resTmp.property(NOC('nmm:albumArtist'))
+				if vartype(resUris) != "list":
+				    resUris = [resUris]
+
+			    else:
+				resUris = resTmp.property(NOC('nmm:albumArtist')).toStringList()
+
+			    for itemUri in resUris:
+				if INTERNAL_RESOURCE_IN_PLAYLIST:
+				    resTmp2 = cResource(itemUri)
+
+				else:
+				    resTmp2 = Nepomuk.Resource(itemUri)
+
+				fullName = self.readProperty(resTmp2, 'nco:fullname', 'str')
+				if fullName != None:
+				    albumArtists += [[itemUri, fullName]]
+
+			albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
+			linkAlbumArtists = ""
+			for artist in albumArtists:
+			    if linkAlbumArtists != "":
+				linkAlbumArtists += ",&nbsp;"
+
+			    linkAlbumArtists += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+					    % {"uri": artist[0], "title": artist[1]}
+
+                        oldTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
+                        albumTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
+                        print albumTitle
                         performers = list(oldPerformers)
 
                     else:
-                        albumTitle = ["", "", 0]
+                        albumTitle = ["", "", 0, ""]
 
                 # Final track name building.
                 if albumTitle[1] != "":
                     linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
                                     % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
+		    if albumTitle[3] != "":
+			linkTitle += " by " + albumTitle[3]
+                                    
                     linkPerformers = ""
                     for performer in performers:
                         if linkPerformers != "":
