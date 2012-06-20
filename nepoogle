@@ -693,6 +693,13 @@ class Nepoogle(QWidget):
         #Qt::KeyboardModifiers QDropEvent::keyboardModifiers () const
         #Qt::MouseButtons QDropEvent::mouseButtons () const
         #QWidget * QDropEvent::source () const para controlar el d&d sobre si mismo.
+
+	# Query para obtener las propiedades "oficiales".
+	# SELECT * WHERE { ?r rdfs:domain %s .}
+
+	# Query para obtener qué puede ser un resource.
+	#SELECT * WHERE { ?r rdfs:range %s . }
+        
         if event.mimeData().hasUrls():
             uri = toUnicode(self.leSearch.text()).strip()
             if not uri[:13] == "nepomuk:/res/":
@@ -704,13 +711,18 @@ class Nepoogle(QWidget):
                 url = toUnicode(url.toString())
                 print("url: %s" % toUtf8(url))
 
-                addAsDepiction = False
-                ext = os.path.splitext(url)[1][1:].lower()
-                if ((ext != '') and fileExists(url)):
-                    if ext in supportedImageFormats:
-                        addAsDepiction = True
+                dropType = None
+                if dropType == None:
+		    ext = os.path.splitext(url)[1][1:].lower()
+		    if ((ext != '') and fileExists(url)):
+			if ext in supportedImageFormats:
+			    dropType = "image"
 
-                if addAsDepiction:
+                if dropType == None:
+		    if url[:13] == "nepomuk:/res/":
+			dropType = "resource"
+
+                if dropType == "image":
                     reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % url, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if reply == QMessageBox.Yes:
                         subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
@@ -722,11 +734,64 @@ class Nepoogle(QWidget):
                                             ])
                         mustRefresh = True
 
+                elif dropType == "resource":
+		    if self.model == None:
+			return False
+
+		    if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+			resource = cResource(url)
+
+		    else:
+			resource = Nepomuk.Resource(url)
+
+		    resourceMainType = NOCR(resource.type())
+		    resourceGenericLabel = resource.genericLabel()
+			
+                    query = 'SELECT DISTINCT ?r\n' \
+                            'WHERE {\n' \
+                                '\t?r rdfs:range %s .\n' \
+                            '}\n' \
+                            % (resourceMainType)
+                    values  = []
+                    queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                    if queryResultSet.isValid():
+                        while queryResultSet.next():
+                            values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+
+		    if values != []:
+			parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select ontology")]
+			status = "on"
+			values = sorted(values)
+			for value in values:
+			    parameters += [value, value, status]
+			    if status == "on":
+				status = "off"
+
+			dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+			dialogProcess.wait()
+			ontology = dialogProcess.stdout.readline().strip()
+
+			if ontology != "":
+			    reply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?\n\n" % (resourceGenericLabel, ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+			    if reply == QMessageBox.Yes:
+				print("Add property: %s, %s, %s" % (uri, ontology, url))
+				subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+							"org.kde.nepomuk.DataManagement.addProperty", \
+							    uri, \
+							    ontology, \
+							    url, \
+							    PROGRAM_NAME
+						    ])
+				mustRefresh = True
+
+		    else:	    
+			QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
+
         else:
             print("Not supported: %s" % toUtf8(event.mimeData().text()))
 
         if mustRefresh:
-            time.sleep(1)
+            time.sleep(SLEEP_AFTER_UPDATE)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
