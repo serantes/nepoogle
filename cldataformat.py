@@ -1545,7 +1545,7 @@ class cDataFormat():
 
         output = self.htmlHeader % ('Resource viewer', script)
         output += "<div class=\"top\" style=\"static: top;\">\n"
-        output += '<b title=\"%(uri)s\"><h2>Resource viewer</b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
+        output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">Resource viewer</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
                         % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
         output += "</div>\n"
         output += "<div class=\"data\" style=\"float: left; width: 500px;\">\n<hr>"
