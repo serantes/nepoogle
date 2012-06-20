@@ -502,17 +502,17 @@ class cResource():
 
         if result == None:
             result = self.getValue("nco:fullname")
-	    if result == None:
-		result = self.getValue("nie:title")
-		if result == None:
-		    result = self.getValue("nfo:fileName")
-		    if result == None:
-			result = self.getValue("nie:url")
-			if result == None:
-			    result = self.getValue("nfo:hashValue")
-			    if result == None:
-				# self.valUri is not a QString().
-				return self.valUri
+            if result == None:
+                result = self.getValue("nie:title")
+                if result == None:
+                    result = self.getValue("nfo:fileName")
+                    if result == None:
+                        result = self.getValue("nie:url")
+                        if result == None:
+                            result = self.getValue("nfo:hashValue")
+                            if result == None:
+                                # self.valUri is not a QString().
+                                return self.valUri
 
         if result == None:
             result = u""
@@ -1033,24 +1033,24 @@ class cSparqlBuilder():
                         filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
 
                     else:
-			val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
-			if operator == "=":
-			    filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+                        val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
+                        if operator == "=":
+                            filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
 
-			elif operator == "!=":
-			    if optionalUsage:
-				filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
-							% {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+                        elif operator == "!=":
+                            if optionalUsage:
+                                filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
+                                                        % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
 
-			    elif subqueryUsage:
-				filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
-							% {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
+                            elif subqueryUsage:
+                                filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
+                                                        % {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
 
-			    else:
-				filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
+                            else:
+                                filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
 
-			else:
-			    filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
+                        else:
+                            filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
 
             if optionalUsage or subqueryUsage:
                         #"      }\n" \

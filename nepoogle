@@ -537,6 +537,11 @@ class Nepoogle(QWidget):
                     self.execQuery()
                     self.pendingQuery = False
 
+        elif url[:9] == "delprop:/":
+            uri = url[9:].split("&")
+            if (len(uri) == 2):
+                self.removePropertyFromResource(uri[0], uri[1])
+
         elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
 
@@ -686,6 +691,80 @@ class Nepoogle(QWidget):
             subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
 
 
+    def removePropertyFromResource(self, uri = None, ontology = None):
+        if ((uri == None) or (ontology == None)):
+            return False
+
+        mustRefresh = False
+
+        query = 'SELECT DISTINCT ?v\n' \
+                'WHERE {\n' \
+                    '\t<%s> %s ?v .\n' \
+                '}\n' \
+                % (uri, ontology)
+
+        values  = []
+        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        if queryResultSet.isValid():
+            while queryResultSet.next():
+                values += [NOCR(toUnicode(queryResultSet["v"].toString()))]
+
+        if values != []:
+            parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select property to remove")]
+            status = "on"
+            values.sort()
+            for value in values:
+                if value[:13] == "nepomuk:/res/":
+                    if INTERNAL_RESOURCE:
+                        label = cResource(value).genericLabel()
+
+                    else:
+                        label = toUnicode(Nepomuk.Resource(value).genericLabel())
+
+                else:
+                    label = value
+
+                parameters += [value, label, status]
+                if status == "on":
+                    status = "off"
+
+            if (len(values) > 1):
+                print(parameters)
+                dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+                dialogProcess.wait()
+                value = dialogProcess.stdout.readline().strip()
+
+                try:
+                    label = parameters[parameters.index(value)+1]
+
+                except:
+                    label = value
+
+            else:
+                value = parameters[5]
+                label = parameters[6]
+
+            if value != "":
+                reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    print("Removing property: %s, %s, %s" % (uri, ontology, value))
+                    subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                                            "org.kde.nepomuk.DataManagement.removeProperty", \
+                                                uri, \
+                                                ontology, \
+                                                value, \
+                                                PROGRAM_NAME
+                                        ])
+                    mustRefresh = True
+
+        if mustRefresh:
+            time.sleep(SLEEP_AFTER_UPDATE)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
+
     def dropHandler(self, event):
         supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
         mustRefresh = False
@@ -694,12 +773,12 @@ class Nepoogle(QWidget):
         #Qt::MouseButtons QDropEvent::mouseButtons () const
         #QWidget * QDropEvent::source () const para controlar el d&d sobre si mismo.
 
-	# Query para obtener las propiedades "oficiales".
-	# SELECT * WHERE { ?r rdfs:domain %s .}
+        # Query para obtener las propiedades "oficiales".
+        # SELECT * WHERE { ?r rdfs:domain %s .}
 
-	# Query para obtener qué puede ser un resource.
-	#SELECT * WHERE { ?r rdfs:range %s . }
-        
+        # Query para obtener qué puede ser un resource.
+        #SELECT * WHERE { ?r rdfs:range %s . }
+
         if event.mimeData().hasUrls():
             uri = toUnicode(self.leSearch.text()).strip()
             if not uri[:13] == "nepomuk:/res/":
@@ -713,14 +792,14 @@ class Nepoogle(QWidget):
 
                 dropType = None
                 if dropType == None:
-		    ext = os.path.splitext(url)[1][1:].lower()
-		    if ((ext != '') and fileExists(url)):
-			if ext in supportedImageFormats:
-			    dropType = "image"
+                    ext = os.path.splitext(url)[1][1:].lower()
+                    if ((ext != '') and fileExists(url)):
+                        if ext in supportedImageFormats:
+                            dropType = "image"
 
                 if dropType == None:
-		    if url[:13] == "nepomuk:/res/":
-			dropType = "resource"
+                    if url[:13] == "nepomuk:/res/":
+                        dropType = "resource"
 
                 if dropType == "image":
                     reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % url, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -735,18 +814,18 @@ class Nepoogle(QWidget):
                         mustRefresh = True
 
                 elif dropType == "resource":
-		    if self.model == None:
-			return False
+                    if self.model == None:
+                        return False
 
-		    if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
-			resource = cResource(url)
+                    if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+                        resource = cResource(url)
 
-		    else:
-			resource = Nepomuk.Resource(url)
+                    else:
+                        resource = Nepomuk.Resource(url)
 
-		    resourceMainType = NOCR(resource.type())
-		    resourceGenericLabel = resource.genericLabel()
-			
+                    resourceMainType = NOCR(resource.type())
+                    resourceGenericLabel = resource.genericLabel()
+
                     query = 'SELECT DISTINCT ?r\n' \
                             'WHERE {\n' \
                                 '\t?r rdfs:range %s .\n' \
@@ -758,34 +837,34 @@ class Nepoogle(QWidget):
                         while queryResultSet.next():
                             values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
 
-		    if values != []:
-			parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select ontology")]
-			status = "on"
-			values = sorted(values)
-			for value in values:
-			    parameters += [value, value, status]
-			    if status == "on":
-				status = "off"
+                    if values != []:
+                        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select ontology")]
+                        status = "on"
+                        values.sort()
+                        for value in values:
+                            parameters += [value, value, status]
+                            if status == "on":
+                                status = "off"
 
-			dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-			dialogProcess.wait()
-			ontology = dialogProcess.stdout.readline().strip()
+                        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+                        dialogProcess.wait()
+                        ontology = dialogProcess.stdout.readline().strip()
 
-			if ontology != "":
-			    reply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?\n\n" % (resourceGenericLabel, ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-			    if reply == QMessageBox.Yes:
-				print("Add property: %s, %s, %s" % (uri, ontology, url))
-				subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-							"org.kde.nepomuk.DataManagement.addProperty", \
-							    uri, \
-							    ontology, \
-							    url, \
-							    PROGRAM_NAME
-						    ])
-				mustRefresh = True
+                        if ontology != "":
+                            reply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            if reply == QMessageBox.Yes:
+                                print("Adding property: %s, %s, %s" % (uri, ontology, url))
+                                subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                                                        "org.kde.nepomuk.DataManagement.addProperty", \
+                                                            uri, \
+                                                            ontology, \
+                                                            url, \
+                                                            PROGRAM_NAME
+                                                    ])
+                                mustRefresh = True
 
-		    else:	    
-			QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
+                    else:
+                        QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
 
         else:
             print("Not supported: %s" % toUtf8(event.mimeData().text()))

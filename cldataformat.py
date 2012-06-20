@@ -74,6 +74,7 @@ class cDataFormat():
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
     iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
+    iconListRemove = KIconLoader().iconPath('list-remove', KIconLoader.Small)
     iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.Small)
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
@@ -211,7 +212,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
                             "{nie:title|l|s:album}" \
-				"%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
+                                "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
                                 "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
@@ -335,62 +336,62 @@ class cDataFormat():
 
 
     def getCoverUrl(self, res = None, url = ""):
-	if res in (None, ""):
-	    return None
+        if res in (None, ""):
+            return None
 
-	if vartype(res) in ("str", "QString"):
-	    if INTERNAL_RESOURCE_IN_PLAYLIST:
-		res = cResource(res)
+        if vartype(res) in ("str", "QString"):
+            if INTERNAL_RESOURCE_IN_PLAYLIST:
+                res = cResource(res)
 
-	    else:
-		res = Nepomuk.Resource(res)
+            else:
+                res = Nepomuk.Resource(res)
 
-	coverUrl = None
-		
-	# First use nfo:depiction.
-	if res.hasProperty(NOC('nfo:depiction')):
-	    if INTERNAL_RESOURCE_IN_PLAYLIST:
-		resUris = res.property(NOC('nfo:depiction'))
-		if vartype(resUris) != "list":
-		    resUris = [resUris]
+        coverUrl = None
 
-	    else:
-		resUris = res.property(NOC('nfo:depiction')).toStringList()
+        # First use nfo:depiction.
+        if res.hasProperty(NOC('nfo:depiction')):
+            if INTERNAL_RESOURCE_IN_PLAYLIST:
+                resUris = res.property(NOC('nfo:depiction'))
+                if vartype(resUris) != "list":
+                    resUris = [resUris]
 
-	    for uri in resUris:
-		if INTERNAL_RESOURCE_IN_PLAYLIST:
-		    resTmp = cResource(uri)
+            else:
+                resUris = res.property(NOC('nfo:depiction')).toStringList()
 
-		else:
-		    resTmp = Nepomuk.Resource(uri)
+            for uri in resUris:
+                if INTERNAL_RESOURCE_IN_PLAYLIST:
+                    resTmp = cResource(uri)
 
-		coverUrl = self.readProperty(resTmp, 'nie:url', 'str')
-		if ((coverUrl != "") and fileExists(coverUrl)):
-		    coverUrl = "file://" + coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
-		    break
+                else:
+                    resTmp = Nepomuk.Resource(uri)
 
-		coverUrl = None
+                coverUrl = self.readProperty(resTmp, 'nie:url', 'str')
+                if ((coverUrl != "") and fileExists(coverUrl)):
+                    coverUrl = "file://" + coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                    break
 
-	# Let's try to locate using tracks location.
-	if coverUrl == None:
-	    #url = audios[0][0]
-	    if url[:7] != "file://":
-		url = "file://" + url
-	    url = os.path.dirname(url)
-	    for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-		coverUrl = url + '/' + coverName
-		if fileExists(coverUrl):
-		    coverUrl = coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
-		    break
-	    
-		coverUrl = None
+                coverUrl = None
 
-	# If there is no cover then defaul value is used.
-	if coverUrl == None:
-	    "file://" + self.iconNoCover
+        # Let's try to locate using tracks location.
+        if coverUrl == None:
+            #url = audios[0][0]
+            if url[:7] != "file://":
+                url = "file://" + url
+            url = os.path.dirname(url)
+            for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
+                coverUrl = url + '/' + coverName
+                if fileExists(coverUrl):
+                    coverUrl = coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                    break
 
-	return coverUrl
-            
+                coverUrl = None
+
+        # If there is no cover then defaul value is used.
+        if coverUrl == None:
+            "file://" + self.iconNoCover
+
+        return coverUrl
+
 
     def buildPlaylist(self, data = [], listType = "audio"):
         listType = listType.lower()
@@ -492,36 +493,36 @@ class cDataFormat():
                         oldTitle = [None, "", 0, ""]
 
                     elif not (oldTitle[1] == albumTitle):
-			# Obtain album artists.
-			albumArtists = []
-			if resTmp.hasProperty(NOC('nmm:albumArtist')):
-			    if INTERNAL_RESOURCE_IN_PLAYLIST:
-				resUris = resTmp.property(NOC('nmm:albumArtist'))
-				if vartype(resUris) != "list":
-				    resUris = [resUris]
+                        # Obtain album artists.
+                        albumArtists = []
+                        if resTmp.hasProperty(NOC('nmm:albumArtist')):
+                            if INTERNAL_RESOURCE_IN_PLAYLIST:
+                                resUris = resTmp.property(NOC('nmm:albumArtist'))
+                                if vartype(resUris) != "list":
+                                    resUris = [resUris]
 
-			    else:
-				resUris = resTmp.property(NOC('nmm:albumArtist')).toStringList()
+                            else:
+                                resUris = resTmp.property(NOC('nmm:albumArtist')).toStringList()
 
-			    for itemUri in resUris:
-				if INTERNAL_RESOURCE_IN_PLAYLIST:
-				    resTmp2 = cResource(itemUri)
+                            for itemUri in resUris:
+                                if INTERNAL_RESOURCE_IN_PLAYLIST:
+                                    resTmp2 = cResource(itemUri)
 
-				else:
-				    resTmp2 = Nepomuk.Resource(itemUri)
+                                else:
+                                    resTmp2 = Nepomuk.Resource(itemUri)
 
-				fullName = self.readProperty(resTmp2, 'nco:fullname', 'str')
-				if fullName != None:
-				    albumArtists += [[itemUri, fullName]]
+                                fullName = self.readProperty(resTmp2, 'nco:fullname', 'str')
+                                if fullName != None:
+                                    albumArtists += [[itemUri, fullName]]
 
-			albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
-			linkAlbumArtists = ""
-			for artist in albumArtists:
-			    if linkAlbumArtists != "":
-				linkAlbumArtists += ",&nbsp;"
+                        albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
+                        linkAlbumArtists = ""
+                        for artist in albumArtists:
+                            if linkAlbumArtists != "":
+                                linkAlbumArtists += ",&nbsp;"
 
-			    linkAlbumArtists += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-					    % {"uri": artist[0], "title": artist[1]}
+                            linkAlbumArtists += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                            % {"uri": artist[0], "title": artist[1]}
 
                         oldTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
                         albumTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
@@ -534,8 +535,8 @@ class cDataFormat():
                 if albumTitle[1] != "":
                     linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
                                     % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
-		    if albumTitle[3] != "":
-			linkTitle += " by " + albumTitle[3]
+                    if albumTitle[3] != "":
+                        linkTitle += " by " + albumTitle[3]
 
                     linkPerformers = ""
                     for performer in performers:
@@ -550,10 +551,10 @@ class cDataFormat():
 
                     # Cover.
                     coverUrl = self.getCoverUrl(albumTitle[0], toUnicode(self.readProperty(res, 'nie:url', 'str')))
-		    trackName = "<img width=48 style='float:left; " \
-				    "vertical-align:text-bottom; margin:2px' " \
-				    "src='%s'>" % (coverUrl) \
-				+ trackName
+                    trackName = "<img width=48 style='float:left; " \
+                                    "vertical-align:text-bottom; margin:2px' " \
+                                    "src='%s'>" % (coverUrl) \
+                                + trackName
 
                 elif performers != []:
                     linkPerformers = ""
@@ -1558,11 +1559,11 @@ class cDataFormat():
             audios = []
             videos = []
             if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
-		mainResource = cResource(uri)
+                mainResource = cResource(uri)
                 defaultType = NOCR(mainResource.type())
 
             else:
-		mainResource = Nepomuk.Resource(uri)
+                mainResource = Nepomuk.Resource(uri)
                 defaultType = NOCR(mainResource.type())
 
             while data.next():
@@ -1705,9 +1706,9 @@ class cDataFormat():
                     if text != '':
                         text += '</td></tr>\n'
 
-                    text += '<tr><td valign=\"top\" width=\"100px\">' \
-                            '<b title=\"%s\">%s</b>:</td><td>%s' \
-                                % (row[0], row[1], row[2])
+                    text += '<tr><td valign=\"top\" width=\"120px\">' \
+                            '<a href="delprop:/%s&%s"><img %s src=\"file://%s\"></a><b title=\"%s\">%s</b>:</td><td>%s' \
+                                % (uri, row[0], self.htmlStyleIcon, self.iconListRemove, row[0], row[1], row[2])
                     oldOnt = row[1]
 
                 else:
@@ -1808,10 +1809,10 @@ class cDataFormat():
             #output += "<div class=\"preview\" style=\"float: left;\">"
             # Dirty hack for support covers and playlist in nmm:MusicAlbum.
             if defaultType == "nmm:MusicAlbum":
-		output += "<b>Album cover</b><br />"
-		output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-				% {'url': self.getCoverUrl(mainResource, audios[0][0])}
-		output += "<br />\n"
+                output += "<b>Album cover</b><br />"
+                output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                % {'url': self.getCoverUrl(mainResource, audios[0][0])}
+                output += "<br />\n"
 
             output += self.buildPlaylist(audios, 'audio')
             #output += "\n</div>\n"
@@ -1824,9 +1825,9 @@ class cDataFormat():
 
         # Resource images.
         if len(images) > 0:
-	    if len(audios) + len(videos) > 0:
-		output += "<br />"
-		
+            if len(audios) + len(videos) > 0:
+                output += "<br />"
+
             for url in sorted(images):
                 if url[:7] != 'file://':
                     url = 'file://' + url
