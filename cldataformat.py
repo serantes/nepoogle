@@ -349,7 +349,6 @@ class cDataFormat():
 		
 	# First use nfo:depiction.
 	if res.hasProperty(NOC('nfo:depiction')):
-	    print("here")
 	    if INTERNAL_RESOURCE_IN_PLAYLIST:
 		resUris = res.property(NOC('nfo:depiction'))
 		if vartype(resUris) != "list":
