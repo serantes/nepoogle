@@ -174,11 +174,14 @@ from cldataformat import *
 #
 class cWebView(QWebView):
 
+    owner = None
+
     def __init__(self, *args):
         super(cWebView, self).__init__(*args)
 
         #self.setContextMenuPolicy(Qt.PreventContextMenu)
         #self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.owner = args[0]
         self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
         self.page().setForwardUnsupportedContent(True)
 
@@ -205,8 +208,13 @@ class cWebView(QWebView):
     #        super(cWebView, self).contextMenuEvent(event)
 
 
+    def dropEvent(self, event):
+        self.owner.dropHandler(event)
+
+
     #def openLinkInNewWindow(self, url):
     #    print(url)
+
 
     #def triggerPageAction(action, checked):
     #    print(checked, action)
@@ -345,6 +353,7 @@ class Nepoogle(QWidget):
         self.connect(self.wvOutput, SIGNAL("loadStarted()"), self.loadStarted)
         self.connect(self.wvOutput, SIGNAL("loadFinished(bool)"), self.loadFinished)
         self.connect(self.wvOutput, SIGNAL("loadProgress(int)"), self.loadProgress)
+        #self.connect(self.wvOutput, SIGNAL("dropEvent(QDropEvent*)"), self.dropHandler)
         #self.connect(self.wvOutput.page(), SIGNAL("customContextMenuRequested(const QPoint&)"), self.customContextMenuRequested)
 
         # This action has no changes.
@@ -675,6 +684,53 @@ class Nepoogle(QWidget):
             # In KDE we trust.
             # Seems like there is a problem with character ?.
             subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
+
+
+    def dropHandler(self, event):
+        supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
+        mustRefresh = False
+
+        #Qt::KeyboardModifiers QDropEvent::keyboardModifiers () const
+        #Qt::MouseButtons QDropEvent::mouseButtons () const
+        #QWidget * QDropEvent::source () const para controlar el d&d sobre si mismo.
+        if event.mimeData().hasUrls():
+            uri = toUnicode(self.leSearch.text()).strip()
+            if not uri[:13] == "nepomuk:/res/":
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only drop data in the Resource Viewer."))
+                return False
+
+            for url in event.mimeData().urls():
+
+                url = toUnicode(url.toString())
+                print("url: %s" % toUtf8(url))
+
+                addAsDepiction = False
+                ext = os.path.splitext(url)[1][1:].lower()
+                if ((ext != '') and fileExists(url)):
+                    if ext in supportedImageFormats:
+                        addAsDepiction = True
+
+                if addAsDepiction:
+                    reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % toUtf8(url), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if reply == QMessageBox.Yes:
+                        subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                                                "org.kde.nepomuk.DataManagement.addProperty", \
+                                                    uri, \
+                                                    "nfo:depiction", \
+                                                    url, \
+                                                    PROGRAM_NAME
+                                            ])
+                        mustRefresh = True
+
+        else:
+            print("Not supported: %s" % toUtf8(event.mimeData().text()))
+
+        if mustRefresh:
+            time.sleep(1)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
 
 
     def goBackward(self):
