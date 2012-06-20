@@ -334,6 +334,65 @@ class cDataFormat():
             self.model = model
 
 
+    def getCoverUrl(self, res = None, url = ""):
+	if res in (None, ""):
+	    return None
+
+	if vartype(res) in ("str", "QString"):
+	    if INTERNAL_RESOURCE_IN_PLAYLIST:
+		res = cResource(res)
+
+	    else:
+		res = Nepomuk.Resource(res)
+
+	coverUrl = None
+		
+	# First use nfo:depiction.
+	if res.hasProperty(NOC('nfo:depiction')):
+	    print("here")
+	    if INTERNAL_RESOURCE_IN_PLAYLIST:
+		resUris = res.property(NOC('nfo:depiction'))
+		if vartype(resUris) != "list":
+		    resUris = [resUris]
+
+	    else:
+		resUris = res.property(NOC('nfo:depiction')).toStringList()
+
+	    for uri in resUris:
+		if INTERNAL_RESOURCE_IN_PLAYLIST:
+		    resTmp = cResource(uri)
+
+		else:
+		    resTmp = Nepomuk.Resource(uri)
+
+		coverUrl = self.readProperty(resTmp, 'nie:url', 'str')
+		if ((coverUrl != "") and fileExists(coverUrl)):
+		    coverUrl = "file://" + coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+		    break
+
+		coverUrl = None
+
+	# Let's try to locate using tracks location.
+	if coverUrl == None:
+	    #url = audios[0][0]
+	    if url[:7] != "file://":
+		url = "file://" + url
+	    url = os.path.dirname(url)
+	    for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
+		coverUrl = url + '/' + coverName
+		if fileExists(coverUrl):
+		    coverUrl = coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+		    break
+	    
+		coverUrl = None
+
+	# If there is no cover then defaul value is used.
+	if coverUrl == None:
+	    "file://" + self.iconNoCover
+
+	return coverUrl
+            
+
     def buildPlaylist(self, data = [], listType = "audio"):
         listType = listType.lower()
         #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
@@ -491,26 +550,11 @@ class cDataFormat():
                                     % (linkTitle, linkPerformers, trackName)
 
                     # Cover.
-                    if res.hasProperty(NOC('nie:url')):
-                        trackUrl = toUnicode(self.readProperty(res, 'nie:url', 'str'))
-                        if trackUrl[:7] != "file://":
-                            trackUrl = "file://" + trackUrl
-
-                        trackUrl = os.path.dirname(trackUrl)
-                        for coverName in self.coverFileNames:
-                            tmpCoverUrl = trackUrl + '/' + coverName
-                            if fileExists(tmpCoverUrl):
-                                coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                                break
-
-                        # If there is no cover, or thumbnail then default cover is displayed.
-                        if coverUrl == None:
-                            coverUrl = "file://" + self.iconNoCover
-
-                        trackName = "<img width=48 style='float:left; " \
-                                        "vertical-align:text-bottom; margin:2px' " \
-                                        "src='%s'>" % (coverUrl) \
-                                    + trackName
+                    coverUrl = self.getCoverUrl(albumTitle[0], toUnicode(self.readProperty(res, 'nie:url', 'str')))
+		    trackName = "<img width=48 style='float:left; " \
+				    "vertical-align:text-bottom; margin:2px' " \
+				    "src='%s'>" % (coverUrl) \
+				+ trackName
 
                 elif performers != []:
                     linkPerformers = ""
@@ -1515,10 +1559,12 @@ class cDataFormat():
             audios = []
             videos = []
             if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
-                defaultType = NOCR(cResource(uri).type())
+		mainResource = cResource(uri)
+                defaultType = NOCR(mainResource.type())
 
             else:
-                defaultType = NOCR(Nepomuk.Resource(uri).type())
+		mainResource = Nepomuk.Resource(uri)
+                defaultType = NOCR(mainResource.type())
 
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
@@ -1758,8 +1804,30 @@ class cDataFormat():
             output += "<div class=\"preview\" style=\"float: left;\">"
             output += "<hr><h3><b>Preview</b></h3>\n"
 
+        # Resource audios.
+        if len(audios) > 0:
+            #output += "<div class=\"preview\" style=\"float: left;\">"
+            # Dirty hack for support covers and playlist in nmm:MusicAlbum.
+            if defaultType == "nmm:MusicAlbum":
+		output += "<b>Album cover</b><br />"
+		output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+				% {'url': self.getCoverUrl(mainResource, audios[0][0])}
+		output += "<br />\n"
+
+            output += self.buildPlaylist(audios, 'audio')
+            #output += "\n</div>\n"
+
+        # Resource videos.
+        if len(videos) > 0:
+            #output += "<div class=\"preview\" style=\"float: left;\">"
+            output += self.buildPlaylist(videos, 'video')
+            #output += "\n</div>\n"
+
         # Resource images.
         if len(images) > 0:
+	    if len(audios) + len(videos) > 0:
+		output += "<br />"
+		
             for url in sorted(images):
                 if url[:7] != 'file://':
                     url = 'file://' + url
@@ -1772,37 +1840,6 @@ class cDataFormat():
                                 % {'url': url}
                 output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
                 #output += "\n</div>\n"
-
-        # Resource audios.
-        if len(audios) > 0:
-            #output += "<div class=\"preview\" style=\"float: left;\">"
-            # Dirty hack for support covers and playlist in nmm:MusicAlbum.
-            if defaultType == "nmm:MusicAlbum":
-                coverUrl = "file://" + self.iconNoCover
-                url = audios[0][0]
-                if url[:7] != "file://":
-                    url = "file://" + url
-                url = os.path.dirname(url)
-                for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-                    tmpCoverUrl = url + '/' + coverName
-                    if fileExists(tmpCoverUrl):
-                        coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
-                        break
-
-                if coverUrl != None:
-                    output += "<b>Album cover</b><br />"
-                    output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                    % {'url': coverUrl}
-                    output += "<br />\n"
-
-            output += self.buildPlaylist(audios, 'audio')
-            #output += "\n</div>\n"
-
-        # Resource videos.
-        if len(videos) > 0:
-            #output += "<div class=\"preview\" style=\"float: left;\">"
-            output += self.buildPlaylist(videos, 'video')
-            #output += "\n</div>\n"
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
