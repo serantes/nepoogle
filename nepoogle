@@ -711,7 +711,7 @@ class Nepoogle(QWidget):
                         addAsDepiction = True
 
                 if addAsDepiction:
-                    reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % toUtf8(url), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % url, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if reply == QMessageBox.Yes:
                         subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
                                                 "org.kde.nepomuk.DataManagement.addProperty", \
