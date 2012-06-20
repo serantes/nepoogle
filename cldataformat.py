@@ -467,7 +467,6 @@ class cDataFormat():
 
                         oldTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
                         albumTitle = [resUri, albumTitle, albumYear, linkAlbumArtists]
-                        print albumTitle
                         performers = list(oldPerformers)
 
                     else:
@@ -479,7 +478,7 @@ class cDataFormat():
                                     % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
 		    if albumTitle[3] != "":
 			linkTitle += " by " + albumTitle[3]
-                                    
+
                     linkPerformers = ""
                     for performer in performers:
                         if linkPerformers != "":
