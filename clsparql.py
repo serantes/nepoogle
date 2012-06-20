@@ -501,14 +501,18 @@ class cResource():
         result = self.getValue("nao:prefLabel")
 
         if result == None:
-            result = self.getValue("nfo:fileName")
-            if result == None:
-                result = self.getValue("nie:url")
-                if result == None:
-                    result = self.getValue("nfo:hashValue")
-                    if result == None:
-                        # self.valUri is not a QString().
-                        return self.valUri
+            result = self.getValue("nco:fullname")
+	    if result == None:
+		result = self.getValue("nie:title")
+		if result == None:
+		    result = self.getValue("nfo:fileName")
+		    if result == None:
+			result = self.getValue("nie:url")
+			if result == None:
+			    result = self.getValue("nfo:hashValue")
+			    if result == None:
+				# self.valUri is not a QString().
+				return self.valUri
 
         if result == None:
             result = u""
