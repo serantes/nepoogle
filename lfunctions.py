@@ -22,7 +22,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, md5, os, re, sys
+import datetime, md5, os, re, subprocess, sys
 from PyKDE4.kdecore import *
 
 from PyQt4.QtCore import *
@@ -49,6 +49,24 @@ def addLinksToText(text = ''):
     text = patter2.sub(r'\1<a title="http:/\2" href="http:/\2" target="_blank">\3</a>', text)
 
     return text
+
+
+def dialogList(parameters = []):
+    value = label = None
+
+    if parameters != []:
+        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select property to remove")] \
+                        + parameters
+        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+        dialogProcess.wait()
+        value = dialogProcess.stdout.readline().strip()
+        try:
+            label = parameters[parameters.index(value) + 1]
+
+        except:
+            label = value
+
+    return value, label
 
 
 def fileExists(fileName = ''):
