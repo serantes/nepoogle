@@ -710,9 +710,7 @@ class Nepoogle(QWidget):
                 values += [NOCR(toUnicode(queryResultSet["v"].toString()))]
 
         if values != []:
-            parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select property to remove")]
-            status = "on"
-            values.sort()
+            resourcesList = []
             for value in values:
                 if value[:13] == "nepomuk:/res/":
                     if INTERNAL_RESOURCE:
@@ -724,27 +722,25 @@ class Nepoogle(QWidget):
                 else:
                     label = value
 
-                parameters += [value, label, status]
-                if status == "on":
-                    status = "off"
+                resourcesList += [[value, label]]
 
             if (len(values) > 1):
-                print(parameters)
-                dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-                dialogProcess.wait()
-                value = dialogProcess.stdout.readline().strip()
+                resourcesList = sorted(resourcesList, key=lambda item: item[1])
+                # Convert to 1 dimension.
+                parameters = []
+                status = "on"
+                for param in resourcesList:
+                    parameters += [param[0]] + [param[1]] + [status]
+                    if status == "on":
+                        status = "off"
 
-                try:
-                    label = parameters[parameters.index(value)+1]
-
-                except:
-                    label = value
+                value, label = dialogList(parameters)
 
             else:
-                value = parameters[5]
-                label = parameters[6]
+                value = resourcesList[0][0]
+                label = resourcesList[0][1]
 
-            if value != "":
+            if ((value != None) and (value != "")):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     print("Removing property: %s, %s, %s" % (uri, ontology, value))
@@ -785,9 +781,9 @@ class Nepoogle(QWidget):
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only drop data in the Resource Viewer."))
                 return False
 
-            for url in event.mimeData().urls():
-
-                url = toUnicode(url.toString())
+            imageReply = resourceReply = None
+            for i in range(0, len(event.mimeData().urls())):
+                url = toUnicode(event.mimeData().urls()[i].toString()).strip()
                 print("url: %s" % toUtf8(url))
 
                 dropType = None
@@ -802,12 +798,23 @@ class Nepoogle(QWidget):
                         dropType = "resource"
 
                 if dropType == "image":
-                    reply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add image as depiction?\n\n%s") % url, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    if reply == QMessageBox.Yes:
+                    if (i == 0):
+                        parameters = ["nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off", "nao:hasSymbol", "nao:hasSymbol", "off"]
+                        ontologyImages, labelImages = dialogList(parameters)
+                        if (len(event.mimeData().urls()) > 1):
+                            msgImagePronoun = "all"
+
+                        else:
+                            msgImagePronoun = "next"
+
+                        msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
+                        imageReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s images as %s?%s") % (msgImagePronoun, ontologyImages, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                    if imageReply == QMessageBox.Yes:
                         subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
                                                 "org.kde.nepomuk.DataManagement.addProperty", \
                                                     uri, \
-                                                    "nfo:depiction", \
+                                                    ontologyImages, \
                                                     url, \
                                                     PROGRAM_NAME
                                             ])
@@ -838,7 +845,7 @@ class Nepoogle(QWidget):
                             values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
 
                     if values != []:
-                        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select ontology")]
+                        parameters = []
                         status = "on"
                         values.sort()
                         for value in values:
@@ -846,18 +853,16 @@ class Nepoogle(QWidget):
                             if status == "on":
                                 status = "off"
 
-                        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-                        dialogProcess.wait()
-                        ontology = dialogProcess.stdout.readline().strip()
+                        ontologyResource, labelResource = dialogList(parameters)
 
-                        if ontology != "":
-                            reply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                            if reply == QMessageBox.Yes:
-                                print("Adding property: %s, %s, %s" % (uri, ontology, url))
+                        if ((ontologyResource == None) or (ontologyResource != "")):
+                            resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            if resourceReply == QMessageBox.Yes:
+                                print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
                                 subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
                                                         "org.kde.nepomuk.DataManagement.addProperty", \
                                                             uri, \
-                                                            ontology, \
+                                                            ontologyResource, \
                                                             url, \
                                                             PROGRAM_NAME
                                                     ])
