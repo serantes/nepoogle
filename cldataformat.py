@@ -54,6 +54,7 @@ class cDataFormat():
     enableImageViewer = True
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
     model = None
+    ontologyMusicAlbumCover = NOC('nmm:artwork')
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
@@ -346,17 +347,18 @@ class cDataFormat():
             else:
                 res = Nepomuk.Resource(res)
 
-        coverUrl = None
+        # Setting default cover.
+        coverUrl = self.iconNoCover
 
-        # First use nfo:depiction.
-        if res.hasProperty(NOC('nfo:depiction')):
+        # First try to extract this information from the resource.
+        if res.hasProperty(self.ontologyMusicAlbumCover):
             if INTERNAL_RESOURCE_IN_PLAYLIST:
-                resUris = res.property(NOC('nfo:depiction'))
+                resUris = res.property(self.ontologyMusicAlbumCover)
                 if vartype(resUris) != "list":
                     resUris = [resUris]
 
             else:
-                resUris = res.property(NOC('nfo:depiction')).toStringList()
+                resUris = res.property(self.ontologyMusicAlbumCover).toStringList()
 
             for uri in resUris:
                 if INTERNAL_RESOURCE_IN_PLAYLIST:
@@ -365,32 +367,24 @@ class cDataFormat():
                 else:
                     resTmp = Nepomuk.Resource(uri)
 
-                coverUrl = self.readProperty(resTmp, 'nie:url', 'str')
-                if ((coverUrl != "") and fileExists(coverUrl)):
-                    coverUrl = "file://" + coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                tmpCoverUrl = self.readProperty(resTmp, 'nie:url', 'str')
+                if ((tmpCoverUrl != "") and fileExists(tmpCoverUrl)):
+                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
                     break
 
-                coverUrl = None
+        # If there is no property then let's try to locate using tracks location.
+        if coverUrl == self.iconNoCover:
+            if url[:7] == "file://":
+                url = url[7:]
 
-        # Let's try to locate using tracks location.
-        if coverUrl == None:
-            #url = audios[0][0]
-            if url[:7] != "file://":
-                url = "file://" + url
             url = os.path.dirname(url)
             for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-                coverUrl = url + '/' + coverName
+                tmpCoverUrl = url + '/' + coverName
                 if fileExists(coverUrl):
-                    coverUrl = coverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
                     break
 
-                coverUrl = None
-
-        # If there is no cover then defaul value is used.
-        if coverUrl == None:
-            "file://" + self.iconNoCover
-
-        return coverUrl
+        return "file://" + coverUrl
 
 
     def buildPlaylist(self, data = [], listType = "audio"):

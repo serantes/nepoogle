@@ -51,11 +51,11 @@ def addLinksToText(text = ''):
     return text
 
 
-def dialogList(parameters = []):
+def dialogList(parameters = [], message = ""):
     value = label = None
 
     if parameters != []:
-        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", _("Select property to remove")] \
+        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", message] \
                         + parameters
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
         dialogProcess.wait()
