@@ -380,7 +380,7 @@ class cDataFormat():
             url = os.path.dirname(url)
             for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                 tmpCoverUrl = url + '/' + coverName
-                if fileExists(coverUrl):
+                if fileExists(tmpCoverUrl):
                     coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
                     break
 
