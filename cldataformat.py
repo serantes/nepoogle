@@ -1677,7 +1677,8 @@ class cDataFormat():
                     value = value + ' ' + self.htmlRenderLink('googlesearch', value)
 
                 else:
-                    if fileExists(value):
+                    # Must check for full paths to avoid file detection in execution path.
+                    if (((value[0] == "/") or (value[:7] == "file://")) and fileExists(value)):
                         ext = os.path.splitext(value)[1][1:].lower()
                         if ext != '' and ext in self.supportedImageFormats:
                             if not value in images:
