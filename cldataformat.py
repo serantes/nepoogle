@@ -54,7 +54,7 @@ class cDataFormat():
     enableImageViewer = True
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
     model = None
-    ontologyMusicAlbumCover = NOC('nmm:artwork')
+    ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
@@ -72,6 +72,7 @@ class cDataFormat():
     iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
     iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
     iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.Small)
+    iconEmblemLink = KIconLoader().iconPath('emblem-link', KIconLoader.Small)
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
     iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
@@ -1612,8 +1613,15 @@ class cDataFormat():
                         if shorcut == None:
                             shorcut = ontLabel
 
-                        value = '<!--' + toUnicode(resource.genericLabel()) + '-->' \
-                                    + self.htmlRenderLink('uri', resource.uri(), resource.genericLabel())
+                        genericLabel = toUnicode(resource.genericLabel())
+                        value = '<!--' + genericLabel + '-->' \
+                                + self.htmlRenderLink('uri', resource.uri(), genericLabel)
+                        if ((genericLabel[:7] == "http://") or (genericLabel[:8] == "https://")) \
+                                and (genericLabel.find(" ") < 0):
+                                # Seems a url so a link to the url could be great.
+                                value += " <a title=\"%s\" href=\"%s\"><img src=\"file://%s\"></a>" \
+                                            % (genericLabel, genericLabel, self.iconEmblemLink)
+
                         if ontLabel != '':
                             value += ' ' + self.htmlRenderLink('ontology', shorcut, resource.genericLabel())
 

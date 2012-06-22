@@ -751,10 +751,10 @@ class Nepoogle(QWidget):
                                                 value, \
                                                 PROGRAM_NAME
                                         ])
-                    mustRefresh = True
+                    mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
-        if mustRefresh:
-            time.sleep(SLEEP_AFTER_UPDATE)
+        if mustRefresh > 0:
+            time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -797,6 +797,10 @@ class Nepoogle(QWidget):
                     if url[:13] == "nepomuk:/res/":
                         dropType = "resource"
 
+                if dropType == None:
+                    if ((url[:7] == "http://") or (url[:8] == "https://")):
+                        dropType = "url"
+
                 if dropType == "image":
                     if (i == 0):
                         parameters = ["nao:hasSymbol", "nao:hasSymbol", "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
@@ -821,7 +825,7 @@ class Nepoogle(QWidget):
                                                     url, \
                                                     PROGRAM_NAME
                                             ])
-                        mustRefresh = True
+                        mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
                 elif dropType == "resource":
                     if self.model == None:
@@ -870,16 +874,32 @@ class Nepoogle(QWidget):
                                                         url, \
                                                         PROGRAM_NAME
                                                 ])
-                            mustRefresh = True
+                            mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
-                    else:
-                        QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
+                elif dropType == "url":
+                    urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if urlReply == QMessageBox.Yes:
+                        urlResource = Nepomuk.Resource(url)
+                        urlResource.setProperty(NOC("nie:url", True), Nepomuk.Variant(url))
+                        uriResource = Nepomuk.Resource(uri)
+                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), Nepomuk.Variant(urlResource.uri()))
+                        #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                        #                        "org.kde.nepomuk.DataManagement.addProperty", \
+                        #                            uri, \
+                        #                            ONTOLOGY_LINK, \
+                        #                            url, \
+                        #                            PROGRAM_NAME
+                        #                    ])
+                        mustRefresh = SLEEP_AFTER_UPDATE
+
+                else:
+                    QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
 
         else:
             print("Not supported: %s" % toUtf8(event.mimeData().text()))
 
-        if mustRefresh:
-            time.sleep(SLEEP_AFTER_UPDATE)
+        if mustRefresh > 0:
+            time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
