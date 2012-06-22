@@ -1677,24 +1677,28 @@ class cDataFormat():
                     value = value + ' ' + self.htmlRenderLink('googlesearch', value)
 
                 else:
-                    # Must check for full paths to avoid file detection in execution path.
-                    if (((value[0] == "/") or (value[:7] == "file://")) and fileExists(value)):
-                        ext = os.path.splitext(value)[1][1:].lower()
-                        if ext != '' and ext in self.supportedImageFormats:
-                            if not value in images:
-                                images += [value]
+                    try:
+                        # Must check for full paths to avoid file detection in execution path.
+                        if (((value[0] == "/") or (value[:7] == "file://")) and fileExists(value)):
+                            ext = os.path.splitext(value)[1][1:].lower()
+                            if ext != '' and ext in self.supportedImageFormats:
+                                if not value in images:
+                                    images += [value]
 
-                        if value[:7] != 'file://':
-                            value = 'file://' + value
+                            if value[:7] != 'file://':
+                                value = 'file://' + value
 
-                        value = '<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>' \
-                                    % {'url': value, 'name': os.path.basename(value)}
+                            value = '<a title=\"%(url)s\" href=\"%(url)s\">%(name)s</a>' \
+                                        % {'url': value, 'name': os.path.basename(value)}
 
-                    else:
-                        # No es un fichero así que añadimos los linksitem[3] si hay urls.
-                        value = value.replace("\n", "<br />")
-                        value = value.replace("\r", "<br />")
-                        value = addLinksToText(value)
+                        else:
+                            # No es un fichero así que añadimos los linksitem[3] si hay urls.
+                            value = value.replace("\n", "<br />")
+                            value = value.replace("\r", "<br />")
+                            value = addLinksToText(value)
+
+                    except:
+                        value = ""
 
                 if value != '':
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
