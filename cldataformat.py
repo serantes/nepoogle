@@ -62,6 +62,7 @@ class cDataFormat():
     renderSize = 50
     renderedDataRows = 0
     renderedDataText = ""
+    skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource")]
     structure = []
     videojsEnabled = False
 
@@ -388,6 +389,35 @@ class cDataFormat():
         return "file://" + coverUrl
 
 
+    def resourceIsA(self, uri = None):
+        if (vartype(uri) != "str"):
+            uri = toUnicode(uri.uri())
+
+        result = []
+
+        if (uri == None) or (uri == ""):
+            return ", ".join(result)
+
+        query = "SELECT DISTINCT ?p\n" \
+                "WHERE {\n" \
+                "  [] ?p <%s> .\n" \
+                "}\n" % uri
+
+        ontologies = []
+        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        if queryResultSet.isValid():
+            while queryResultSet.next():
+                ontologies += [toUnicode(queryResultSet["p"].toString())]
+
+        for ontology in ontologies:
+            if not ontology in self.skippedOntologiesInResourceIsA:
+                result += [ontologyInfo(ontology)[1]]
+
+        result.sort()
+
+        return  ", ".join(result)
+
+
     def buildPlaylist(self, data = [], listType = "audio"):
         listType = listType.lower()
         #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
@@ -460,9 +490,9 @@ class cDataFormat():
                         else:
                             resTmp = Nepomuk.Resource(itemUri)
 
-                        fullName = self.readProperty(resTmp, 'nco:fullname', 'str')
-                        if fullName != None:
-                            performers += [[itemUri, fullName]]
+                        fullname = self.readProperty(resTmp, 'nco:fullname', 'str')
+                        if fullname != None:
+                            performers += [[itemUri, fullname]]
 
                 performers = sorted(performers, key=lambda item: toUtf8(item[1]))
                 if performers == oldPerformers:
@@ -506,9 +536,9 @@ class cDataFormat():
                                 else:
                                     resTmp2 = Nepomuk.Resource(itemUri)
 
-                                fullName = self.readProperty(resTmp2, 'nco:fullname', 'str')
-                                if fullName != None:
-                                    albumArtists += [[itemUri, fullName]]
+                                fullname = self.readProperty(resTmp2, 'nco:fullname', 'str')
+                                if fullname != None:
+                                    albumArtists += [[itemUri, fullname]]
 
                         albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
                         linkAlbumArtists = ""
@@ -987,6 +1017,13 @@ class cDataFormat():
 
     def readProperty(self, resource, propertyOntology, propertyType = "str"):
         try:
+            if vartype(resource) in ("str", "QString"):
+                if INTERNAL_RESOURCE:
+                    resource = cResource(resource)
+
+                else:
+                    resource = Nepomuk.Resource(resource)
+
             result = resource.property(NOC(propertyOntology))
             if result != None:
                 if (propertyType == "int"):
@@ -996,7 +1033,7 @@ class cDataFormat():
                     result = int(result.toString()[:4])
 
                 else:
-                    result = result.toString()
+                    result = toUnicode(result.toString())
 
         except:
             result = None
@@ -1526,9 +1563,6 @@ class cDataFormat():
         if stdout:
             print toUtf8(query)
 
-        #Add depiction
-        #qdbus org.kde.NepomukStorage /datamanagement org.kde.nepomuk.DataManagement.addProperty "%(<uri>)s" "nfo:depiction" "%(pic)s" "shell"
-
         script = ""
         if self.enableImageViewer:
             script += SCRIPT_IMAGE_VIEWER
@@ -1725,6 +1759,33 @@ class cDataFormat():
             output += '<p>No data found for the uri %s.</p>\n' % uri
 
         else:
+            # Hacks for resources.
+            if defaultType == "nco:Contact":
+                # Adding the header.
+                ontologySymbol = NOC(ONTOLOGY_SYMBOL)
+                if mainResource.hasProperty(ontologySymbol):
+                    symbols = mainResource.property(ontologySymbol).toStringList()
+                    symbol = self.readProperty(symbols[0], "nie:url", "str")
+                    #symbol = symbols[0]
+                    try:
+                        if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
+                            ext = os.path.splitext(symbol)[1][1:].lower()
+                            if ext != '' and ext in self.supportedImageFormats:
+                                if symbol[:7] != 'file://':
+                                    symbol = 'file://' + symbol
+
+                                fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
+                                resourceIsA = self.resourceIsA(mainResource)
+                                output += '<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"><h2>%(fullname)s</h2><b>%(resourceIsA)s</b>' \
+                                            % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
+                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceIsA": resourceIsA}
+
+                            else:
+                                symbol = ""
+
+                    except:
+                        symbol = ""
+
             output += text
 
         # Reverse resources.
