@@ -744,12 +744,13 @@ class Nepoogle(QWidget):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     print("Removing property: %s, %s, %s" % (uri, ontology, value))
-
+                    #resource = Nepomuk.Resource(uri)
+                    #resource.removeProperty(QUrl(NOC(ontology)), Nepomuk.Variant(value))
                     subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
                                             "org.kde.nepomuk.DataManagement.removeProperty", \
                                                 uri, \
                                                 ontology, \
-                                                value, \
+                                                "%s" % value, \
                                                 PROGRAM_NAME
                                         ])
                     mustRefresh = SLEEP_AFTER_UPDATE_DBUS
@@ -867,7 +868,7 @@ class Nepoogle(QWidget):
                                                     "org.kde.nepomuk.DataManagement.addProperty", \
                                                         uri, \
                                                         ontologyResource, \
-                                                        url, \
+                                                        "%s" % url, \
                                                         PROGRAM_NAME
                                                 ])
                             mustRefresh = SLEEP_AFTER_UPDATE_DBUS
