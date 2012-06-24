@@ -1688,7 +1688,7 @@ class cDataFormat():
 
                     value = ''
                     if url[:7] == 'file://':
-                        value += url
+                        value += "<a title=\"%(url)s\" href=\"%(url)s\">%(url)s</a>" % {"url": url}
                         if (os.path.exists(url[7:]) or os.path.islink(url[7:])):
                             value += ' ' + self.htmlLinkSystemRun % {"uri": url}
                             value += ' ' + self.htmlLinkOpenLocation % {"uri": os.path.dirname(url)}
