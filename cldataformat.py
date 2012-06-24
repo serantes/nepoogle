@@ -1707,7 +1707,7 @@ class cDataFormat():
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
 
-                elif currOnt == 'nco:fullname':
+                elif (currOnt in ("nco:fullname", "nie:title")):
                     value = value + ' ' + self.htmlRenderLink('googlesearch', value)
 
                 else:
