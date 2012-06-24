@@ -1770,9 +1770,13 @@ class cDataFormat():
                 # Adding the header.
                 ontologySymbol = NOC(ONTOLOGY_SYMBOL)
                 if mainResource.hasProperty(ontologySymbol):
-                    symbols = mainResource.property(ontologySymbol).toStringList()
-                    symbol = self.readProperty(symbols[0], "nie:url", "str")
-                    #symbol = symbols[0]
+                    symbols = mainResource.property(ontologySymbol)
+                    if vartype(symbols) == "list":
+                        symbol = self.readProperty(symbols[0].toStringList()[0], "nie:url", "str")
+
+                    else:
+                        symbol = self.readProperty(symbols.toStringList()[0], "nie:url", "str")
+
                     try:
                         if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
                             ext = os.path.splitext(symbol)[1][1:].lower()
