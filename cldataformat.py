@@ -1786,10 +1786,7 @@ class cDataFormat():
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                                 'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceIsA": resourceIsA}
 
-                                print "hay symbol"
-
                             else:
-                                print "no hay symbol"
                                 symbol = ""
 
                     except:
