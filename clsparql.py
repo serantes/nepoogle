@@ -278,7 +278,7 @@ def toN3(url = ''):
     else:
         result = QUrl(url).toEncoded()
 
-    return result.replace('?', '%3f')
+    return toUnicode(result.replace('?', '%3f'))
 
 
 # An experimental readonly alternative to Nepomuk.Resource().
