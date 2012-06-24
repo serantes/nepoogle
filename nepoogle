@@ -695,7 +695,7 @@ class Nepoogle(QWidget):
         if ((uri == None) or (ontology == None)):
             return False
 
-        mustRefresh = False
+        mustRefresh = SLEEP_NO_SLEEP
 
         query = 'SELECT DISTINCT ?v\n' \
                 'WHERE {\n' \
@@ -744,6 +744,7 @@ class Nepoogle(QWidget):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     print("Removing property: %s, %s, %s" % (uri, ontology, value))
+
                     subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
                                             "org.kde.nepomuk.DataManagement.removeProperty", \
                                                 uri, \
@@ -753,7 +754,7 @@ class Nepoogle(QWidget):
                                         ])
                     mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
-        if mustRefresh > 0:
+        if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
@@ -763,7 +764,7 @@ class Nepoogle(QWidget):
 
     def dropHandler(self, event):
         supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
-        mustRefresh = False
+        mustRefresh = SLEEP_NO_SLEEP
 
         #Qt::KeyboardModifiers QDropEvent::keyboardModifiers () const
         #Qt::MouseButtons QDropEvent::mouseButtons () const
@@ -803,7 +804,7 @@ class Nepoogle(QWidget):
 
                 if dropType == "image":
                     if (i == 0):
-                        parameters = ["nao:hasSymbol", "nao:hasSymbol", "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
+                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
                             continue
@@ -818,14 +819,9 @@ class Nepoogle(QWidget):
                         imageReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyImages, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
                     if imageReply == QMessageBox.Yes:
-                        subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                                                "org.kde.nepomuk.DataManagement.addProperty", \
-                                                    uri, \
-                                                    ontologyImages, \
-                                                    url, \
-                                                    PROGRAM_NAME
-                                            ])
-                        mustRefresh = SLEEP_AFTER_UPDATE_DBUS
+                        uriResource = Nepomuk.Resource(uri)
+                        uriResource.addProperty(NOC(ontologyImages, True), Nepomuk.Variant(url))
+                        mustRefresh = SLEEP_AFTER_UPDATE
 
                 elif dropType == "resource":
                     if self.model == None:
@@ -845,7 +841,7 @@ class Nepoogle(QWidget):
                                 '\t?r rdfs:range %s .\n' \
                             '}\n' \
                             % (resourceMainType)
-                    values  = []
+                    values = []
                     queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                     if queryResultSet.isValid():
                         while queryResultSet.next():
@@ -876,6 +872,9 @@ class Nepoogle(QWidget):
                                                 ])
                             mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
+                    else:
+                        QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
+
                 elif dropType == "url":
                     urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if urlReply == QMessageBox.Yes:
@@ -883,13 +882,6 @@ class Nepoogle(QWidget):
                         urlResource.setProperty(NOC("nie:url", True), Nepomuk.Variant(url))
                         uriResource = Nepomuk.Resource(uri)
                         uriResource.addProperty(NOC(ONTOLOGY_LINK, True), Nepomuk.Variant(urlResource.uri()))
-                        #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                        #                        "org.kde.nepomuk.DataManagement.addProperty", \
-                        #                            uri, \
-                        #                            ONTOLOGY_LINK, \
-                        #                            url, \
-                        #                            PROGRAM_NAME
-                        #                    ])
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
@@ -898,7 +890,7 @@ class Nepoogle(QWidget):
         else:
             print("Not supported: %s" % toUtf8(event.mimeData().text()))
 
-        if mustRefresh > 0:
+        if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
