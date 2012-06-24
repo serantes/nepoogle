@@ -374,7 +374,7 @@ class cDataFormat():
                     tmpCoverUrl = tmpCoverUrl[7:]
 
                 if ((tmpCoverUrl != "") and fileExists(tmpCoverUrl)):
-                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
                     break
 
         # If there is no property then let's try to locate using tracks location.
@@ -386,7 +386,7 @@ class cDataFormat():
             for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
                 tmpCoverUrl = url + '/' + coverName
                 if fileExists(tmpCoverUrl):
-                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
+                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
                     break
 
         return "file://" + coverUrl
