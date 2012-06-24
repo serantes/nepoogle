@@ -1595,6 +1595,9 @@ class cDataFormat():
                 defaultType = NOCR(mainResource.type())
 
             else:
+                if nepoogle.clearResourceManagerCache:
+                    Nepomuk.ResourceManager.instance().clearCache()
+
                 mainResource = Nepomuk.Resource(uri)
                 defaultType = NOCR(mainResource.type())
 
