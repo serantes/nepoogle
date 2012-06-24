@@ -342,8 +342,8 @@ class cDataFormat():
         if res in (None, ""):
             return None
 
-        if vartype(res) in ("str", "QString"):
-            if INTERNAL_RESOURCE_IN_PLAYLIST:
+        if vartype(res) in ("str", "QString", "QVariant"):
+            if INTERNAL_RESOURCE:
                 res = cResource(res)
 
             else:
@@ -354,7 +354,7 @@ class cDataFormat():
 
         # First try to extract this information from the resource.
         if res.hasProperty(self.ontologyMusicAlbumCover):
-            if INTERNAL_RESOURCE_IN_PLAYLIST:
+            if INTERNAL_RESOURCE:
                 resUris = res.property(self.ontologyMusicAlbumCover)
                 if vartype(resUris) != "list":
                     resUris = [resUris]
@@ -363,13 +363,16 @@ class cDataFormat():
                 resUris = res.property(self.ontologyMusicAlbumCover).toStringList()
 
             for uri in resUris:
-                if INTERNAL_RESOURCE_IN_PLAYLIST:
+                if INTERNAL_RESOURCE:
                     resTmp = cResource(uri)
 
                 else:
                     resTmp = Nepomuk.Resource(uri)
 
                 tmpCoverUrl = self.readProperty(resTmp, 'nie:url', 'str')
+                if tmpCoverUrl[:7] == "file://":
+                    tmpCoverUrl = tmpCoverUrl[7:]
+
                 if ((tmpCoverUrl != "") and fileExists(tmpCoverUrl)):
                     coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F")
                     break
@@ -1588,7 +1591,7 @@ class cDataFormat():
             audios = []
             videos = []
             if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
-                mainResource = cResource(uri)
+                mainResource = cResource(uri, False, False) # prefechData = useCache = False
                 defaultType = NOCR(mainResource.type())
 
             else:
@@ -1780,11 +1783,14 @@ class cDataFormat():
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                                 'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceIsA": resourceIsA}
 
+                                print "hay symbol"
+
                             else:
+                                print "no hay symbol"
                                 symbol = ""
 
                     except:
-                        symbol = ""
+                        symbol = self.iconDelete
 
             output += text
 

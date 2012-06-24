@@ -293,7 +293,7 @@ class cResource():
     valUri = None
     notCachedOntologies = ["nie:url"]
 
-    def __init__(self, uri = None, prefechData = False):
+    def __init__(self, uri = None, prefechData = False, useCache = True):
 
         if DO_NOT_USE_NEPOMUK:
             self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -325,7 +325,7 @@ class cResource():
                     self.read()
 
                 else:
-                    if (self.cacheEnabled and resourcesCache.has_key(self.valUri)):
+                    if (useCache and self.cacheEnabled and resourcesCache.has_key(self.valUri)):
                         self.ontologies = resourcesCache[self.valUri]
 
                     else:
