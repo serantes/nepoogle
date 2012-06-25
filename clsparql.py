@@ -582,8 +582,8 @@ class cSparqlBuilder():
     fields = [ \
                 [0, 'nie:url', True, True], \
                 [1, 'nie:title', True, True], \
-                [2, 'nao:prefLabel', True, True], \
-                [3, 'nco:fullname', True, True], \
+                [2, 'nco:fullname', True, True], \
+                [3, 'nao:prefLabel', True, True], \
                 [4, 'nao:altLabel', True, True] \
             ]
     filters = []
