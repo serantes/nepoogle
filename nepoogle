@@ -744,16 +744,23 @@ class Nepoogle(QWidget):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     print("Removing property: %s, %s, %s" % (uri, ontology, value))
-                    #resource = Nepomuk.Resource(uri)
-                    #resource.removeProperty(QUrl(NOC(ontology)), Nepomuk.Variant(value))
-                    subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                                            "org.kde.nepomuk.DataManagement.removeProperty", \
-                                                uri, \
-                                                ontology, \
-                                                "%s" % value, \
-                                                PROGRAM_NAME
-                                        ])
-                    mustRefresh = SLEEP_AFTER_UPDATE_DBUS
+                    if (len(values) == 1):
+                        resource = Nepomuk.Resource(uri)
+                        resource.removeProperty(QUrl(NOC(ontology)))
+                        mustRefresh = SLEEP_AFTER_UPDATE
+
+                    else:
+                        resource = Nepomuk.Resource(uri)
+                        resource.removeProperty(QUrl(NOC(ontology)), Nepomuk.Variant(QUrl(value)))
+                        mustRefresh = SLEEP_AFTER_UPDATE
+                        #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                                                #"org.kde.nepomuk.DataManagement.removeProperty", \
+                                                    #uri, \
+                                                    #ontology, \
+                                                    #"%s" % value, \
+                                                    #PROGRAM_NAME
+                                            #])
+                        #mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
