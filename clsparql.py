@@ -1215,7 +1215,7 @@ class cSparqlBuilder():
                     text = ""
 
                 text += \
-                        "  ?x0 nao:userVisible 1 .\n" \
+                        "  ?x0 %s\n" \
                         "  FILTER(\n" \
                             "    bif:exists ((\n" \
                                 "      SELECT *\n" \
@@ -1224,7 +1224,7 @@ class cSparqlBuilder():
                                 "      }\n" \
                             "    ))\n" \
                         "  )\n" \
-                        % text
+                        % (self.visibilityFilter, text)
 
             else:
                 if self.visibilityFilter != '':
