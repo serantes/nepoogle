@@ -1590,16 +1590,17 @@ class cDataFormat():
             images = []
             audios = []
             videos = []
-            if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+            if INTERNAL_RESOURCE:
                 mainResource = cResource(uri, False, False) # prefechData = useCache = False
                 defaultType = NOCR(mainResource.type())
 
             else:
-                if nepoogle.clearResourceManagerCache:
-                    Nepomuk.ResourceManager.instance().clearCache()
-
                 mainResource = Nepomuk.Resource(uri)
-                defaultType = NOCR(mainResource.type())
+                if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+                    defaultType = NOCR(cResource(uri).type())
+
+                else:
+                    defaultType = NOCR(mainResource.type())
 
             while data.next():
                 currOnt = NOCR(data["ont"].toString())
@@ -1768,7 +1769,7 @@ class cDataFormat():
             # Hacks for resources.
             if defaultType == "nco:Contact":
                 # Adding the header.
-                ontologySymbol = NOC(ONTOLOGY_SYMBOL)
+                ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
                     if vartype(symbols) == "list":

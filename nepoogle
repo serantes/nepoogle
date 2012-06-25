@@ -753,14 +753,6 @@ class Nepoogle(QWidget):
                         resource = Nepomuk.Resource(uri)
                         resource.removeProperty(QUrl(NOC(ontology)), Nepomuk.Variant(QUrl(value)))
                         mustRefresh = SLEEP_AFTER_UPDATE
-                        #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                                                #"org.kde.nepomuk.DataManagement.removeProperty", \
-                                                    #uri, \
-                                                    #ontology, \
-                                                    #"%s" % value, \
-                                                    #PROGRAM_NAME
-                                            #])
-                        #mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
@@ -812,7 +804,7 @@ class Nepoogle(QWidget):
 
                 if dropType == "image":
                     if (i == 0):
-                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
+                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
                             continue
@@ -828,7 +820,7 @@ class Nepoogle(QWidget):
 
                     if imageReply == QMessageBox.Yes:
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyImages, True), Nepomuk.Variant(url))
+                        uriResource.addProperty(NOC(ontologyImages, True), Nepomuk.Variant(QUrl(url)))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 elif dropType == "resource":
@@ -871,14 +863,17 @@ class Nepoogle(QWidget):
                         resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         if resourceReply == QMessageBox.Yes:
                             print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
-                            subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                                                    "org.kde.nepomuk.DataManagement.addProperty", \
-                                                        uri, \
-                                                        ontologyResource, \
-                                                        "%s" % url, \
-                                                        PROGRAM_NAME
-                                                ])
-                            mustRefresh = SLEEP_AFTER_UPDATE_DBUS
+                            resourceResource = Nepomuk.Resource(uri)
+                            resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), Nepomuk.Variant(QUrl(url)))
+                            mustRefresh = SLEEP_AFTER_UPDATE
+                            #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
+                                                    #"org.kde.nepomuk.DataManagement.addProperty", \
+                                                        #uri, \
+                                                        #ontologyResource, \
+                                                        #"%s" % url, \
+                                                        #PROGRAM_NAME
+                                                #])
+                            #mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
                     else:
                         QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
