@@ -53,6 +53,7 @@ class cDataFormat():
     data = []
     enableImageViewer = True
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
+    hiddenOntologiesInverse = [NOC("nao:hasSubResource")]
     model = None
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
     outFormat = 1  # 1- Text, 2- Html
@@ -985,7 +986,7 @@ class cDataFormat():
                 result = value
 
             elif valueType == 'aperturevalue':
-                result = "%.1f" % float(value)
+                result = "F%.1f" % float(value)
 
             elif valueType == 'exposurebiasvalue':
                 try:
@@ -1745,7 +1746,7 @@ class cDataFormat():
 
                 if value != '':
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
-                    processedData += [[currOnt, ontologyToHuman(ontInfo[1]), value]]
+                    processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
 
         text = ''
         if len(processedData) > 0:
@@ -1813,6 +1814,10 @@ class cDataFormat():
         if data.isValid():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
+                ontology = toUnicode(data["ont"].toString())
+                if ontology in self.hiddenOntologiesInverse:
+                    continue
+
                 if INTERNAL_RESOURCE:
                     res = cResource(resUri)
 

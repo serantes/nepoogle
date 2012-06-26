@@ -94,6 +94,7 @@ ontologyTypes = [ \
                     ['nao:lastmodified', 'datetime'], \
                     ['nao:numericrating', 'int'], \
                     ['nexif:aperturevalue', 'aperturevalue'], \
+                    ['nexif:fnumber', 'aperturevalue'], \
                     ['nexif:exposurebiasvalue', 'exposurebiasvalue'], \
                     ['nexif:exposuretime', 'exposuretime'], \
                     ['nexif:focallength', 'focallength'], \
@@ -157,44 +158,36 @@ def ontologyToHuman(ontology = '', reverse = False):
         #nao:lastModified rdfs:label ?v
     #}
     #Resultado: "last modified at"
-    result = ''
-    if ontology == '':
-        return result
+    #result = ''
+    #if ontology == '':
+    #    return result
 
-    if ontology[:7] == "http://" or ontology.find(":") >= 0:
-        result = ontologyInfo(ontology)
-        if result != [] and result[1] != "":
-            return result[1]
+    result = ontologyInfo(ontology)[1]
+    if result != "":
+        tmpResult = result
+        result = tmpResult[0].upper()
+        for i in range(1, len(tmpResult)):
+            if tmpResult[i] == tmpResult[i].upper():
+                result += ' ' + tmpResult[i].lower().strip()
 
-    try:
-        ontology = ontology.split(':')[1]
+            else:
+                result += tmpResult[i]
 
-    except:
-        pass
+        if reverse:
+            if result == 'Actor':
+                result = 'Acting in'
 
-    if ontology == '':
-        return result
+            if result == 'Creator':
+                result = 'Creates'
 
-    result += ontology[0].upper()
-    for i in range(1, len(ontology)):
-        if ontology[i] == ontology[i].upper():
-            result += ' ' + ontology[i].lower()
+            elif result == 'Has tag':
+                result = 'Tagged resources'
 
-        else:
-            result += ontology[i]
+            elif result == 'Performer':
+                result = 'Performing'
 
-    if reverse:
-        if result == 'Creator':
-            result = 'Is creator of'
-
-        elif result == 'Has tag':
-            result = 'Is tag of'
-
-        elif result == 'Performer':
-            result = 'Is performer of'
-
-        elif result == 'Series':
-            result = 'Episodes'
+            elif result == 'Series':
+                result = 'Episodes'
 
     return result
 
@@ -1006,6 +999,9 @@ class cSparqlBuilder():
                     filterExpression = self.buildTimeFilter(val, i, operator)
 
                 elif valType == "aperturevalue":
+                    if val[0].lower() == 'f':
+                        val = val[1:]
+
                     filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif valType == "exposurebiasvalue":
