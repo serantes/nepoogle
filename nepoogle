@@ -208,8 +208,7 @@ class cWebView(QWebView):
     #        super(cWebView, self).contextMenuEvent(event)
 
 
-    def dragEnterEvent(self, event):
-        pass
+    #def dragEnterEvent(self, event):
         #print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
         #event.setAccepted(True);
 
@@ -560,10 +559,10 @@ class Nepoogle(QWidget):
         mustRefresh = SLEEP_NO_SLEEP
 
         ontology = "nao:altLabel"
-        text = dialogInputBox(_("nao:altLabel value"))
-        if text != "":
+        value = dialogInputBox(_("nao:altLabel value"))
+        if value != "":
             uriResource = Nepomuk.Resource(uri)
-            uriResource.addProperty(NOC(ontology, True), Nepomuk.Variant(QUrl(text)))
+            uriResource.addProperty(NOC(ontology, True), toVariant(value))
             mustRefresh = SLEEP_AFTER_UPDATE
 
         if mustRefresh > SLEEP_NO_SLEEP:
@@ -796,7 +795,8 @@ class Nepoogle(QWidget):
             if ((value != None) and (value != "")):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
-                    print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
+                    print("%s: property %s removed" % (uri, ontology))
+                    #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
                     if (len(values) == 1):
                         resource = Nepomuk.Resource(uri)
                         resource.removeProperty(QUrl(NOC(ontology)))
@@ -804,7 +804,7 @@ class Nepoogle(QWidget):
 
                     else:
                         resource = Nepomuk.Resource(uri)
-                        resource.removeProperty(QUrl(NOC(ontology)), Nepomuk.Variant(QUrl(value)))
+                        resource.removeProperty(QUrl(NOC(ontology)), toVariant(value))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
         if mustRefresh > SLEEP_NO_SLEEP:
@@ -873,16 +873,19 @@ class Nepoogle(QWidget):
 
                     if imageReply == QMessageBox.Yes:
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyImages, True), Nepomuk.Variant(QUrl(url)))
+                        uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 elif dropType == "url":
                     urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if urlReply == QMessageBox.Yes:
                         urlResource = Nepomuk.Resource(url)
-                        urlResource.setProperty(NOC("nie:url", True), Nepomuk.Variant(url))
+                        if url.find("://") > 0:
+                            url = QUrl(url)
+
+                        urlResource.setProperty(NOC("nie:url", True), toVariant(url))
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), Nepomuk.Variant(urlResource.uri()))
+                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), toVariant(urlResource.uri()))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
@@ -933,9 +936,10 @@ class Nepoogle(QWidget):
 
                         resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         if resourceReply == QMessageBox.Yes:
-                            print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
+                            print("%s: property %s added" % (uri, ontologyResource))
+                            #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
                             resourceResource = Nepomuk.Resource(uri)
-                            resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), Nepomuk.Variant(QUrl(url)))
+                            resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(url))
                             mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:

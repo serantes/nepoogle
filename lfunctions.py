@@ -27,6 +27,7 @@ from PyKDE4.kdecore import *
 
 from PyQt4.QtCore import *
 from PyKDE4.soprano import *
+from PyKDE4.nepomuk import *
 
 from lglobals import *
 
@@ -70,7 +71,7 @@ def dialogList(parameters = [], message = _("Select")):
 
 
 def dialogInputBox(message = _("Text")):
-    parameters = ["kdialog", "--title", _("%s find ") % PROGRAM_NAME, "--inputbox", message]
+    parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
     return toUnicode(dialogProcess.stdout.readline().strip())
@@ -196,6 +197,13 @@ def toUnicode(string):
 
     except:
         return string
+
+
+def toVariant(value):
+    if ((vartype(value) != "QUrl") and (value.find("://") > 0)):
+        value = QUrl(value)
+
+    return Nepomuk.Variant(value)
 
 
 def vartype(var):
