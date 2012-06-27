@@ -1136,13 +1136,11 @@ class cSparqlBuilder():
             if item[2]:
                 try:
                     columnName = "?" + item[1].split(":")[1]
-                    sortText += columnName
                     if self.caseInsensitiveSort:
-                        sortColumns += " bif:lower(%s) AS %s%s " % (columnName, columnName, self.sortSuffix)
-                        sortText += self.sortSuffix + ' '
+                        sortText += "bif:lower(%s) " % columnName
 
                     else:
-                        sortText += ' '
+                        sortText += columnName + " "
 
                 except:
                     pass
