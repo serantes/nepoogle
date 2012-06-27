@@ -722,7 +722,7 @@ class cDataFormat():
                         "var %(type)stotalItems = %(i)s;\n" \
                         "var %(type)splayList = new Array();\n" % {"type": listType, "i": i}
 
-            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; width: 100%%;'>\")\n" % {"type": listType}
+            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; max-width: 650px;'>\")\n" % {"type": listType}
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
@@ -1584,7 +1584,7 @@ class cDataFormat():
         output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">Resource viewer</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
                         % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
         output += "</div>\n"
-        output += "<div class=\"data\" style=\"float: left; width: 500px;\">\n<hr>"
+        output += "<div class=\"data\" style=\"float: left; width: 600px;\">\n<hr>"
         output += self.htmlViewerTableHeader
 
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
@@ -1922,7 +1922,7 @@ class cDataFormat():
                     output += imageViewer % {'url': url}
 
                 else:
-                    output += '<img title=\"%(url)s\" style=\"height:auto;width:400px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+                    output += '<img title=\"%(url)s\" style=\"height:auto;width:600px;scalefit=1\" src=\"%(url)s\"><br />\n' \
                                 % {'url': url}
                 output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
                 #output += "\n</div>\n"
