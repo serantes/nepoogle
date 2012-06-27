@@ -555,30 +555,6 @@ class Nepoogle(QWidget):
                 self.wvOutput.findText(text, QWebPage.HighlightAllOccurrences)
 
 
-    def addProperty(self):
-        uri = toUnicode(self.leSearch.text()).strip()
-        if not uri[:13] == "nepomuk:/res/":
-            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
-            return False
-
-        mustRefresh = SLEEP_NO_SLEEP
-
-        ontology = "nao:altLabel"
-        value = dialogInputBox(_("nao:altLabel value"))
-        if value != "":
-            uriResource = Nepomuk.Resource(uri)
-            uriResource.addProperty(NOC(ontology, True), toVariant(value))
-            mustRefresh = SLEEP_AFTER_UPDATE
-
-        if mustRefresh > SLEEP_NO_SLEEP:
-            time.sleep(mustRefresh)
-            self.pendingQuery = True
-            self.queryMethod = "refresh"
-            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
-                % self.iconProcessIdle)
-
-
-
     def linkClicked(self, url, forceExec = False):
         url = toUnicode(url.toString())
         print(toUtf8(url))
@@ -746,6 +722,76 @@ class Nepoogle(QWidget):
             # In KDE we trust.nepomuk:/res/eee8837d-27ab-43ac-a34a-43d339102c1c
             # Seems like there is a problem with character ?.
             subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
+
+
+    def addProperty(self, text = ""):
+        uri = toUnicode(self.leSearch.text()).strip()
+        if not uri[:13] == "nepomuk:/res/":
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
+            return False
+
+        mustRefresh = SLEEP_NO_SLEEP
+
+        if self.model == None:
+            return False
+
+        if INTERNAL_RESOURCE:
+            resource = cResource(uri)
+
+        else:
+            resource = Nepomuk.Resource(uri)
+
+        resourceMainType = NOCR(resource.type())
+        query = 'SELECT DISTINCT ?r\n' \
+                'WHERE {\n' \
+                    '\t{\n' \
+                    '\t\t?r rdfs:domain %s .\n' \
+                    '\t} UNION {\n' \
+                    '\t\t?r rdfs:range rdfs:Literal .\n' \
+                    '\t} UNION {\n' \
+                    '\t\t?r rdfs:range xsd:string .\n' \
+                    '\t}\n' \
+                '}\n' \
+                % (resourceMainType)
+
+        values = []
+        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        if queryResultSet.isValid():
+            while queryResultSet.next():
+                values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+
+        if values != []:
+            parameters = []
+            status = "on"
+            values.sort()
+            for value in values:
+                parameters += [value, value, status]
+                if status == "on":
+                    status = "off"
+
+            ontologyResource, labelResource = dialogList(parameters, _("Select an ontology"))
+            if not ((ontologyResource == None) or (ontologyResource == "")):
+                if text == "":
+                    text = dialogInputBox(_("%s value") % ontologyResource)
+                    if text == "":
+                        return False
+
+                resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if resourceReply == QMessageBox.Yes:
+                    print("%s: property %s added" % (uri, ontologyResource))
+                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
+                    resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
+                    mustRefresh = SLEEP_AFTER_UPDATE
+
+        else:
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
+
+        if mustRefresh > SLEEP_NO_SLEEP:
+            time.sleep(mustRefresh)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
 
 
     def removePropertyFromResource(self, uri = None, ontology = None):
@@ -950,63 +996,12 @@ class Nepoogle(QWidget):
                     else:
                         QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
 
-                    #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
-
         elif event.mimeData().hasText():
             text = toUnicode(event.mimeData().text())
             if text == "":
                 return False
 
-            if self.model == None:
-                return False
-
-            if INTERNAL_RESOURCE:
-                resource = cResource(uri)
-
-            else:
-                resource = Nepomuk.Resource(uri)
-
-            resourceMainType = NOCR(resource.type())
-            query = 'SELECT DISTINCT ?r\n' \
-                    'WHERE {\n' \
-                        '\t{\n' \
-                        '\t\t?r rdfs:domain %s .\n' \
-                        '\t} UNION {\n' \
-                        '\t\t?r rdfs:range rdfs:Literal .\n' \
-                        '\t} UNION {\n' \
-                        '\t\t?r rdfs:range xsd:string .\n' \
-                        '\t}\n' \
-                    '}\n' \
-                    % (resourceMainType)
-
-            values = []
-            queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-            if queryResultSet.isValid():
-                while queryResultSet.next():
-                    values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
-
-            if values != []:
-                parameters = []
-                status = "on"
-                values.sort()
-                for value in values:
-                    parameters += [value, value, status]
-                    if status == "on":
-                        status = "off"
-
-                ontologyResource, labelResource = dialogList(parameters, _("Select an ontology"))
-                if not ((ontologyResource == None) or (ontologyResource == "")):
-                    resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    if resourceReply == QMessageBox.Yes:
-                        print("%s: property %s added" % (uri, ontologyResource))
-                        #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
-                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
-                        mustRefresh = SLEEP_AFTER_UPDATE
-
-            else:
-                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
-
-            #print("Not supported: %s" % toUtf8(event.mimeData().text()))
+            self.addProperty(text)
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
