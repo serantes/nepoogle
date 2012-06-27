@@ -200,7 +200,7 @@ def toUnicode(string):
 
 
 def toVariant(value):
-    if ((vartype(value) != "QUrl") and (value.find("://") > 0)):
+    if ((vartype(value) != "QUrl") and (toUnicode(value).find("://") > 0)):
         value = QUrl(value)
 
     return Nepomuk.Variant(value)
