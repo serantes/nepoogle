@@ -59,12 +59,12 @@ def dialogList(parameters = [], message = _("Select")):
                         + parameters
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
         dialogProcess.wait()
-        value = dialogProcess.stdout.readline().strip()
+        value = toUnicode(dialogProcess.stdout.readline().strip())
         try:
-            label = parameters[parameters.index(value) + 1]
+            label = toUnicode(parameters[parameters.index(value) + 1])
 
         except:
-            label = value
+            label = toUnicode(value)
 
     return value, label
 
@@ -73,8 +73,7 @@ def dialogInputBox(message = _("Text")):
     parameters = ["kdialog", "--title", _("%s find ") % PROGRAM_NAME, "--inputbox", message]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
-    value = dialogProcess.stdout.readline().strip()
-    return value
+    return toUnicode(dialogProcess.stdout.readline().strip())
 
 
 def fileExists(fileName = ''):
