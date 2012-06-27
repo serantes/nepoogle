@@ -1617,9 +1617,16 @@ class Nepoogle(QWidget):
                     searchEngine = DEFAULT_ENGINE
                     searchString = "e%d %s" % (searchEngine, searchString)
 
+                externalParameters = []
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
-                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    processedSearchString = searchString[3:]
+                    for command in ["--playlist", "--playmixed"]:
+                        if processedSearchString.find(command) >= 0:
+                            externalParameters += [command]
+                            processedSearchString = processedSearchString.replace(command, "")
+
+                    query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
                     oNQP = None
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
@@ -1630,7 +1637,13 @@ class Nepoogle(QWidget):
 
                 elif searchEngine == 2:
                     oNQP = Nepomuk.Query.QueryParser()
-                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    processedSearchString = searchString[3:]
+                    for command in ["--playlist", "--playmixed"]:
+                        if processedSearchString.find(command) >= 0:
+                            externalParameters += [command]
+                            processedSearchString = processedSearchString.replace(command, "")
+
+                    query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
                     oNQP = None
                     query = hackQueryParser(query, 'e2')
                     if (self.verboseMode and sys.stdout.isatty()):
@@ -1648,10 +1661,10 @@ class Nepoogle(QWidget):
                     self.sparql.warningsList = []
 
                 oDataFormat = cDataFormat(searchString, self.model)
-                if self.sparql.externalParameters == ['playlist']:
+                if ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
 
-                elif self.sparql.externalParameters == ['playmixed']:
+                elif ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playmixed'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playmixed', self.resultData, self.resultStructure, self.resultTime)
 
                 else:
@@ -1893,10 +1906,8 @@ def main(args):
             verboseMode == False
 
         searchEngine = DEFAULT_ENGINE
-
         if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
             searchEngine = int(searchString[1:2])
-            #searchString = searchString[3:]
 
         output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
         print(toUtf8(output))
