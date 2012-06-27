@@ -209,8 +209,8 @@ class cWebView(QWebView):
 
 
     #def dragEnterEvent(self, event):
-        #print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
-        #event.setAccepted(True);
+    #    print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
+    #    event.setAccepted(True)
 
         #if (event.mimeData().hasFormat("text/plain")):
             #event.setDropAction(Qt.CopyAction)
@@ -221,6 +221,11 @@ class cWebView(QWebView):
 
         #self.dragOver = True;
         #self.update();
+
+
+    def dragMoveEvent(self, event):
+        if (event.mimeData().hasFormat("text/plain")):
+            event.setAccepted(True)
 
 
     def dropEvent(self, event):
@@ -829,12 +834,12 @@ class Nepoogle(QWidget):
         # Query para obtener qué puede ser un resource.
         #SELECT * WHERE { ?r rdfs:range %s . }
 
-        if event.mimeData().hasUrls():
-            uri = toUnicode(self.leSearch.text()).strip()
-            if not uri[:13] == "nepomuk:/res/":
-                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only drop data in the Resource Viewer."))
-                return False
+        uri = toUnicode(self.leSearch.text()).strip()
+        if not uri[:13] == "nepomuk:/res/":
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only drop data in the Resource Viewer."))
+            return False
 
+        if event.mimeData().hasUrls():
             imageReply = resourceReply = None
             for i in range(0, len(event.mimeData().urls())):
                 url = toUnicode(event.mimeData().urls()[i].toString()).strip()
@@ -947,8 +952,61 @@ class Nepoogle(QWidget):
 
                     #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
 
-        else:
-            print("Not supported: %s" % toUtf8(event.mimeData().text()))
+        elif event.mimeData().hasText():
+            text = toUnicode(event.mimeData().text())
+            if text == "":
+                return False
+
+            if self.model == None:
+                return False
+
+            if INTERNAL_RESOURCE:
+                resource = cResource(uri)
+
+            else:
+                resource = Nepomuk.Resource(uri)
+
+            resourceMainType = NOCR(resource.type())
+            query = 'SELECT DISTINCT ?r\n' \
+                    'WHERE {\n' \
+                        '\t{\n' \
+                        '\t\t?r rdfs:domain %s .\n' \
+                        '\t} UNION {\n' \
+                        '\t\t?r rdfs:range rdfs:Literal .\n' \
+                        '\t} UNION {\n' \
+                        '\t\t?r rdfs:range xsd:string .\n' \
+                        '\t}\n' \
+                    '}\n' \
+                    % (resourceMainType)
+
+            values = []
+            queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            if queryResultSet.isValid():
+                while queryResultSet.next():
+                    values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+
+            if values != []:
+                parameters = []
+                status = "on"
+                values.sort()
+                for value in values:
+                    parameters += [value, value, status]
+                    if status == "on":
+                        status = "off"
+
+                ontologyResource, labelResource = dialogList(parameters, _("Select an ontology"))
+                if not ((ontologyResource == None) or (ontologyResource == "")):
+                    resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if resourceReply == QMessageBox.Yes:
+                        print("%s: property %s added" % (uri, ontologyResource))
+                        #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
+                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
+                        mustRefresh = SLEEP_AFTER_UPDATE
+
+            else:
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
+
+            #print("Not supported: %s" % toUtf8(event.mimeData().text()))
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
