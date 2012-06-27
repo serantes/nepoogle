@@ -209,10 +209,17 @@ class cWebView(QWebView):
 
 
     def dragEnterEvent(self, event):
-        print "dragEnterEvent"
-        event.setAccepted(True);
-        self.dragOver = True;
-        self.update();
+        print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
+        #event.setAccepted(True);
+
+        if (event.mimeData().hasFormat("text/plain")):
+            print("accepted")
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+            event.acceptProposedAction();
+
+        #self.dragOver = True;
+        #self.update();
 
 
     def dropEvent(self, event):
@@ -511,10 +518,13 @@ class Nepoogle(QWidget):
             elif event.key() == Qt.Key_Right:
                 self.linkClicked(QUrl("navigate:/next"))
 
-            if event.key() == Qt.Key_Delete:
+            elif event.key() == Qt.Key_Delete:
                 uri = toUnicode(self.leSearch.text()).strip()
                 if uri[:13] == 'nepomuk:/res/':
                     self.linkClicked(QUrl("remove:/" + uri))
+
+            elif event.key() == Qt.Key_F:
+                self.findText()
 
             #else
                 #pass
@@ -527,6 +537,13 @@ class Nepoogle(QWidget):
 
         #else
             #pass
+
+    def findText(self):
+        text = dialogInputBox(_("Text to find"))
+        if text != "":
+            self.wvOutput.findText("", QWebPage.HighlightAllOccurrences)
+            if self.wvOutput.findText(text, QWebPage.FindWrapsAroundDocument):
+                self.wvOutput.findText(text, QWebPage.HighlightAllOccurrences)
 
 
     def linkClicked(self, url, forceExec = False):
