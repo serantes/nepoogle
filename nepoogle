@@ -209,14 +209,16 @@ class cWebView(QWebView):
 
 
     def dragEnterEvent(self, event):
-        print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
+        pass
+        #print "dragEnterEvent", event.dropAction(), event.proposedAction(), event.spontaneous()
         #event.setAccepted(True);
 
-        if (event.mimeData().hasFormat("text/plain")):
-            print("accepted")
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-            event.acceptProposedAction();
+        #if (event.mimeData().hasFormat("text/plain")):
+            #event.setDropAction(Qt.CopyAction)
+            #event.accept()
+            #print "Accepted: %s" % event.isAccepted()
+            #event.acceptProposedAction();
+            #print "Accepted: %s" % event.isAccepted()
 
         #self.dragOver = True;
         #self.update();
@@ -526,6 +528,9 @@ class Nepoogle(QWidget):
             elif event.key() == Qt.Key_F:
                 self.findText()
 
+            elif event.key() == Qt.Key_Plus:
+                self.addProperty()
+
             #else
                 #pass
 
@@ -544,6 +549,30 @@ class Nepoogle(QWidget):
             self.wvOutput.findText("", QWebPage.HighlightAllOccurrences)
             if self.wvOutput.findText(text, QWebPage.FindWrapsAroundDocument):
                 self.wvOutput.findText(text, QWebPage.HighlightAllOccurrences)
+
+
+    def addProperty(self):
+        uri = toUnicode(self.leSearch.text()).strip()
+        if not uri[:13] == "nepomuk:/res/":
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
+            return False
+
+        mustRefresh = SLEEP_NO_SLEEP
+
+        ontology = "nao:altLabel"
+        text = dialogInputBox(_("nao:altLabel value"))
+        if text != "":
+            uriResource = Nepomuk.Resource(uri)
+            uriResource.addProperty(NOC(ontology, True), Nepomuk.Variant(QUrl(text)))
+            mustRefresh = SLEEP_AFTER_UPDATE
+
+        if mustRefresh > SLEEP_NO_SLEEP:
+            time.sleep(mustRefresh)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
 
 
     def linkClicked(self, url, forceExec = False):
@@ -767,7 +796,7 @@ class Nepoogle(QWidget):
             if ((value != None) and (value != "")):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
-                    print("Removing property: %s, %s, %s" % (uri, ontology, value))
+                    print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
                     if (len(values) == 1):
                         resource = Nepomuk.Resource(uri)
                         resource.removeProperty(QUrl(NOC(ontology)))
@@ -1545,6 +1574,9 @@ class Nepoogle(QWidget):
         if searchString.find("--m0:") >= 0:
             searchString = searchString.replace("--m0:", "--playlist genre:-instrumental performer:")
 
+        elif searchString.find("--m1:") >= 0:
+            searchString = searchString.replace("--m1:", "--playlist nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+
         return searchString
 
 
@@ -1739,7 +1771,7 @@ class Nepoogle(QWidget):
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
 
-    if query.find("?v5 ") == -1:
+    if query.find("?v7 ") == -1:
         # Don't change queries with only one item.
         return query
 
