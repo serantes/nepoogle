@@ -208,6 +208,13 @@ class cWebView(QWebView):
     #        super(cWebView, self).contextMenuEvent(event)
 
 
+    def dragEnterEvent(self, event):
+        print "dragEnterEvent"
+        event.setAccepted(True);
+        self.dragOver = True;
+        self.update();
+
+
     def dropEvent(self, event):
         self.owner.dropHandler(event)
 
@@ -823,11 +830,20 @@ class Nepoogle(QWidget):
                         uriResource.addProperty(NOC(ontologyImages, True), Nepomuk.Variant(QUrl(url)))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
-                elif dropType == "resource":
+                elif dropType == "url":
+                    urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if urlReply == QMessageBox.Yes:
+                        urlResource = Nepomuk.Resource(url)
+                        urlResource.setProperty(NOC("nie:url", True), Nepomuk.Variant(url))
+                        uriResource = Nepomuk.Resource(uri)
+                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), Nepomuk.Variant(urlResource.uri()))
+                        mustRefresh = SLEEP_AFTER_UPDATE
+
+                else:
                     if self.model == None:
                         return False
 
-                    if INTERNAL_RESOURCE or USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+                    if INTERNAL_RESOURCE:
                         resource = cResource(url)
 
                     else:
@@ -836,11 +852,20 @@ class Nepoogle(QWidget):
                     resourceMainType = NOCR(resource.type())
                     resourceGenericLabel = resource.genericLabel()
 
-                    query = 'SELECT DISTINCT ?r\n' \
-                            'WHERE {\n' \
-                                '\t?r rdfs:range %s .\n' \
-                            '}\n' \
-                            % (resourceMainType)
+                    if dropType == "resource":
+                        query = 'SELECT DISTINCT ?r\n' \
+                                'WHERE {\n' \
+                                    '\t?r rdfs:range %s .\n' \
+                                '}\n' \
+                                % (resourceMainType)
+
+                    else:
+                        query = 'SELECT DISTINCT ?r\n' \
+                                'WHERE {\n' \
+                                    '\t?r rdfs:domain %s .\n' \
+                                '}\n' \
+                                % (resourceMainType)
+
                     values = []
                     queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                     if queryResultSet.isValid():
@@ -866,29 +891,11 @@ class Nepoogle(QWidget):
                             resourceResource = Nepomuk.Resource(uri)
                             resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), Nepomuk.Variant(QUrl(url)))
                             mustRefresh = SLEEP_AFTER_UPDATE
-                            #subprocess.Popen(["qdbus", "org.kde.NepomukStorage", "/datamanagement", \
-                                                    #"org.kde.nepomuk.DataManagement.addProperty", \
-                                                        #uri, \
-                                                        #ontologyResource, \
-                                                        #"%s" % url, \
-                                                        #PROGRAM_NAME
-                                                #])
-                            #mustRefresh = SLEEP_AFTER_UPDATE_DBUS
 
                     else:
                         QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
 
-                elif dropType == "url":
-                    urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    if urlReply == QMessageBox.Yes:
-                        urlResource = Nepomuk.Resource(url)
-                        urlResource.setProperty(NOC("nie:url", True), Nepomuk.Variant(url))
-                        uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), Nepomuk.Variant(urlResource.uri()))
-                        mustRefresh = SLEEP_AFTER_UPDATE
-
-                else:
-                    QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
+                    #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource."))
 
         else:
             print("Not supported: %s" % toUtf8(event.mimeData().text()))
@@ -1590,8 +1597,8 @@ class Nepoogle(QWidget):
                     searchEngine = int(searchString[1:2])
 
                 else:
-                    searchEngine = 1
-                    searchString = "e1 " + searchString
+                    searchEngine = DEFAULT_ENGINE
+                    searchString = "e%d %s" % (searchEngine, searchString)
 
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
