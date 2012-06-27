@@ -51,7 +51,7 @@ def addLinksToText(text = ''):
     return text
 
 
-def dialogList(parameters = [], message = ""):
+def dialogList(parameters = [], message = _("Select")):
     value = label = None
 
     if parameters != []:
@@ -67,6 +67,14 @@ def dialogList(parameters = [], message = ""):
             label = value
 
     return value, label
+
+
+def dialogInputBox(message = _("Text")):
+    parameters = ["kdialog", "--title", _("%s find ") % PROGRAM_NAME, "--inputbox", message]
+    dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+    dialogProcess.wait()
+    value = dialogProcess.stdout.readline().strip()
+    return value
 
 
 def fileExists(fileName = ''):
