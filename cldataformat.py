@@ -1924,7 +1924,7 @@ class cDataFormat():
                 else:
                     output += '<img title=\"%(url)s\" style=\"height:auto;width:600px;scalefit=1\" src=\"%(url)s\"><br />\n' \
                                 % {'url': url}
-                output += "<b>File name</b>:<title>%s</title><em>%s</em><br />" % (url, os.path.basename(url))
+                output += "<b>File name</b>:<em><a title=\"%(url)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": os.path.basename(url)}
                 #output += "\n</div>\n"
 
         if len(audios) + len(images) + len(videos) > 0:
