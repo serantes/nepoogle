@@ -1752,14 +1752,20 @@ class cDataFormat():
         if len(processedData) > 0:
             processedData = sorted(processedData, key=lambda row: row[1] + row[2])
             oldOnt = ''
+            # Default to add values.
+            text += '<tr><td valign=\"top\" width=\"120px\">' \
+                    '<a title=\"%(title)s\" href=\"propadd:/%(uri)s\"><b>%(label)s</b></a></td><td></td></tr>\n' \
+                        % {"uri": uri, "title": _("Click to add a new value"), "label": _("Add new value")}
             for row in processedData:
                 if (oldOnt != row[1]):
                     if text != '':
                         text += '</td></tr>\n'
 
                     text += '<tr><td valign=\"top\" width=\"120px\">' \
-                            '<a href="delprop:/%s&%s"><img %s src=\"file://%s\"></a><b title=\"%s\">%s</b>:</td><td>%s' \
-                                % (uri, row[0], self.htmlStyleIcon, self.iconListRemove, row[0], row[1], row[2])
+                            '<a title=\"%(ont)s\" href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
+                                % {"uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
+                            #'<a href="delprop:/%s&%s"><img %s src=\"file://%s\"></a><b title=\"%s\">%s</b>:</td><td>%s' \
+                            #    % (uri, row[0], self.htmlStyleIcon, self.iconListRemove, row[0], row[1], row[2])
                     oldOnt = row[1]
 
                 else:

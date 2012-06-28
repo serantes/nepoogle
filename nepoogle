@@ -570,10 +570,14 @@ class Nepoogle(QWidget):
                     self.execQuery()
                     self.pendingQuery = False
 
-        elif url[:9] == "delprop:/":
-            uri = url[9:].split("&")
+        elif url[:10] == "propedit:/":
+            uri = url[10:].split("&")
             if (len(uri) == 2):
                 self.removePropertyFromResource(uri[0], uri[1])
+
+        elif url[:9] == "propadd:/":
+            uri = url[9:]
+            self.addProperty(uri)
 
         elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
@@ -724,8 +728,10 @@ class Nepoogle(QWidget):
             subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
 
 
-    def addProperty(self, text = ""):
-        uri = toUnicode(self.leSearch.text()).strip()
+    def addProperty(self, uri = None, text = ""):
+        if (uri == None):
+            uri = toUnicode(self.leSearch.text()).strip()
+
         if not uri[:13] == "nepomuk:/res/":
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
             return False
@@ -837,7 +843,7 @@ class Nepoogle(QWidget):
                     if status == "on":
                         status = "off"
 
-                value, label = dialogList(parameters, _("Select one property to remove"))
+                value, label = dialogList(parameters, _("Select the value to be removed"))
 
             else:
                 value = resourcesList[0][0]
@@ -1001,7 +1007,7 @@ class Nepoogle(QWidget):
             if text == "":
                 return False
 
-            self.addProperty(text)
+            self.addProperty(uri, text)
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
