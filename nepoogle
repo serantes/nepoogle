@@ -246,6 +246,7 @@ class Nepoogle(QWidget):
     cache = []
     cacheViewer = []
     clearResourceManagerCache = True
+    keyModifiers = Qt.NoModifier
     model = None
     navigationData = []
     pendingQuery = False
@@ -547,8 +548,15 @@ class Nepoogle(QWidget):
         #else
             #pass
 
+        self.keyModifiers = event.modifiers()
+
+
+    def keyReleaseEvent(self, event):
+        self.keyModifiers = event.modifiers()
+
+
     def findText(self):
-        text = dialogInputBox(_("Text to find"))
+        text = dialogInputBox(_("Text to find:"))
         if text != "":
             self.wvOutput.findText("", QWebPage.HighlightAllOccurrences)
             if self.wvOutput.findText(text, QWebPage.FindWrapsAroundDocument):
@@ -569,15 +577,6 @@ class Nepoogle(QWidget):
                 if forceExec:
                     self.execQuery()
                     self.pendingQuery = False
-
-        elif url[:10] == "propedit:/":
-            uri = url[10:].split("&")
-            if (len(uri) == 2):
-                self.removePropertyFromResource(uri[0], uri[1])
-
-        elif url[:9] == "propadd:/":
-            uri = url[9:]
-            self.addProperty(uri)
 
         elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
@@ -626,6 +625,22 @@ class Nepoogle(QWidget):
 
         elif url[:6] == 'prop:/':
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
+
+        elif url[:9] == "propadd:/":
+            uri = url[9:]
+            self.addProperty(uri)
+
+        elif url[:10] == "propedit:/":
+            uri = url[10:].split("&")
+            if (len(uri) == 2):
+                if self.keyModifiers == Qt.NoModifier:
+                    self.addProperty(uri[0], uri[1])
+
+                elif self.keyModifiers == Qt.ShiftModifier:
+                    self.editProperty(uri[0], uri[1])
+
+                elif self.keyModifiers == Qt.ControlModifier:
+                    self.removeProperty(uri[0], uri[1])
 
         elif url[:7] == 'query:/':
             urlElements = url[7:].split("'")
@@ -728,7 +743,11 @@ class Nepoogle(QWidget):
             subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
 
 
-    def addProperty(self, uri = None, text = ""):
+        # Clear always modifiers because the next keypress could happen in other window.
+        self.keyModifiers = Qt.NoModifier
+
+
+    def addProperty(self, uri = None, ontology = "", text = ""):
         if (uri == None):
             uri = toUnicode(self.leSearch.text()).strip()
 
@@ -748,40 +767,47 @@ class Nepoogle(QWidget):
             resource = Nepomuk.Resource(uri)
 
         resourceMainType = NOCR(resource.type())
-        query = 'SELECT DISTINCT ?r\n' \
-                'WHERE {\n' \
-                    '\t{\n' \
-                    '\t\t?r rdfs:domain %s .\n' \
-                    '\t} UNION {\n' \
-                    '\t\t?r rdfs:range rdfs:Literal .\n' \
-                    '\t} UNION {\n' \
-                    '\t\t?r rdfs:range xsd:string .\n' \
-                    '\t}\n' \
-                '}\n' \
-                % (resourceMainType)
+        if ontology == "":
+            query = 'SELECT DISTINCT ?r\n' \
+                    'WHERE {\n' \
+                        '\t{\n' \
+                        '\t\t?r rdfs:domain %s .\n' \
+                        '\t} UNION {\n' \
+                        '\t\t?r rdfs:range rdfs:Literal .\n' \
+                        '\t} UNION {\n' \
+                        '\t\t?r rdfs:range xsd:string .\n' \
+                        '\t}\n' \
+                    '}\n' \
+                    % (resourceMainType)
 
-        values = []
-        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        if queryResultSet.isValid():
-            while queryResultSet.next():
-                values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+            values = []
+            queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            if queryResultSet.isValid():
+                while queryResultSet.next():
+                    values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
 
-        if values != []:
-            parameters = []
-            status = "on"
-            values.sort()
-            for value in values:
-                parameters += [value, value, status]
-                if status == "on":
-                    status = "off"
+            if values != []:
+                parameters = []
+                status = "on"
+                values.sort()
+                for value in values:
+                    parameters += [value, value, status]
+                    if status == "on":
+                        status = "off"
 
-            ontologyResource, labelResource = dialogList(parameters, _("Select an ontology"))
-            if not ((ontologyResource == None) or (ontologyResource == "")):
-                if text == "":
-                    text = dialogInputBox(_("%s value") % ontologyResource)
-                    if text == "":
-                        return False
+                ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
+                if ((ontologyResource == None) or (ontologyResource == "")):
+                    return False
 
+        else:
+            ontologyResource = ontology
+            labelResource = ontology
+
+        if not ((ontologyResource == None) or (ontologyResource == "")):
+            if text == "":
+                text = dialogInputBox(_("Value to store in \"%s\":") % ontologyResource)
+
+            if text != "":
                 resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if resourceReply == QMessageBox.Yes:
                     print("%s: property %s added" % (uri, ontologyResource))
@@ -800,7 +826,60 @@ class Nepoogle(QWidget):
                 % self.iconProcessIdle)
 
 
-    def removePropertyFromResource(self, uri = None, ontology = None):
+    def editProperty(self, uri = None, ontology = None):
+        if (uri == None):
+            uri = toUnicode(self.leSearch.text()).strip()
+
+        if not uri[:13] == "nepomuk:/res/":
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
+            return False
+
+        mustRefresh = SLEEP_NO_SLEEP
+
+        if self.model == None:
+            return False
+
+        if INTERNAL_RESOURCE:
+            resource = cResource(uri)
+
+        else:
+            resource = Nepomuk.Resource(uri)
+
+        try:
+            text = resource.property(NOC(ontology))
+            if text.isStringList():
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Only properties with one value could be edited."))
+                return False
+
+            text = toUnicode(resource.property(NOC(ontology)).toString())
+            if text[:13] == "nepomuk:/res/":
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't edit resources here, click in the resource and edit directly."))
+                return False
+
+        except:
+            text = None
+
+        if text != None:
+            newText = dialogTextInputBox("Editing \"%s\":" % ontology, text)
+            if newText != text:
+                resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if resourceReply == QMessageBox.Yes:
+                    print("%s: property %s edited" % (uri, ontology))
+                    ontology = QUrl(NOC(ontology, True))
+                    resource.removeProperty(ontology, toVariant(text))
+                    resource.addProperty(ontology, toVariant(newText))
+                    #resource.setProperty(QUrl(NOC(ontology, True)), toVariant(text))
+                    mustRefresh = SLEEP_AFTER_UPDATE
+
+        if mustRefresh > SLEEP_NO_SLEEP:
+            time.sleep(mustRefresh)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
+
+    def removeProperty(self, uri = None, ontology = None):
         if ((uri == None) or (ontology == None)):
             return False
 
@@ -843,7 +922,7 @@ class Nepoogle(QWidget):
                     if status == "on":
                         status = "off"
 
-                value, label = dialogList(parameters, _("Select the value to be removed"))
+                value, label = dialogList(parameters, _("Select the value to be removed:"))
 
             else:
                 value = resourcesList[0][0]
@@ -912,10 +991,26 @@ class Nepoogle(QWidget):
                     if ((url[:7] == "http://") or (url[:8] == "https://")):
                         dropType = "url"
 
+                if dropType == None:
+                    if (url[:10] == "propedit:/"):
+                        try:
+                            ontValue = url[10:].split("&")[1]
+
+                        except:
+                            ontValue = ""
+
+                        self.addProperty(uri, ontValue)
+                        continue
+
+                if dropType == None:
+                    if (url[:9] == "propadd:/"):
+                        self.addProperty(uri)
+                        continue
+
                 if dropType == "image":
                     if (i == 0):
                         parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
-                        ontologyImages, labelImages = dialogList(parameters, _("Select an ontology"))
+                        ontologyImages, labelImages = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
                             continue
 
@@ -987,7 +1082,7 @@ class Nepoogle(QWidget):
                             if status == "on":
                                 status = "off"
 
-                        ontologyResource, labelResource = dialogList(parameters, _("Select an ontology"))
+                        ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyResource == None) or (ontologyResource == "")):
                             continue
 
@@ -1007,7 +1102,7 @@ class Nepoogle(QWidget):
             if text == "":
                 return False
 
-            self.addProperty(uri, text)
+            self.addProperty(uri, "", text)
 
         if mustRefresh > SLEEP_NO_SLEEP:
             time.sleep(mustRefresh)
@@ -1318,7 +1413,7 @@ class Nepoogle(QWidget):
             searchString = searchString.replace("--m0:", "--playlist genre:-instrumental performer:")
 
         elif searchString.find("--m1:") >= 0:
-            searchString = searchString.replace("--m1:", "--playlist nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+            searchString = searchString.replace("--m1:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
 
         return searchString
 

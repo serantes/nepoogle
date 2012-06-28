@@ -1758,14 +1758,15 @@ class cDataFormat():
             # Default to add values.
             text += '<tr><td valign=\"top\" width=\"120px\">' \
                     '<a title=\"%(title)s\" href=\"propadd:/%(uri)s\"><b>%(label)s</b></a></td><td></td></tr>\n' \
-                        % {"uri": uri, "title": _("Click to add a new value"), "label": _("Add new value (Ctrl++)")}
+                        % {"uri": uri, "title": _("Click to add a new value (Ctrl++)"), "label": _("Add new value")}
             for row in processedData:
                 if (oldOnt != row[1]):
                     if text != '':
                         text += '</td></tr>\n'
 
                     text += '<tr><td valign=\"top\" width=\"120px\">' \
-                            '<a title=\"%(ont)s\" href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
+                            '<a title=\"%(ont)s (Click, Shift+Click, Ctrl+Click to add, edit or remove)\" ' \
+                            'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
                                 % {"uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
                             #'<a href="delprop:/%s&%s"><img %s src=\"file://%s\"></a><b title=\"%s\">%s</b>:</td><td>%s' \
                             #    % (uri, row[0], self.htmlStyleIcon, self.iconListRemove, row[0], row[1], row[2])
@@ -1799,9 +1800,10 @@ class cDataFormat():
 
                                 fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
                                 resourceIsA = self.resourceIsA(mainResource)
-                                output += '<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"><h2>%(fullname)s</h2><b>%(resourceIsA)s</b>' \
+                                output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
+                                            '<td><h3>%(resourceType)s</h3><h2>%(fullname)s</h2><h4>%(resourceIsA)s</h4></td></tr>' \
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceIsA": resourceIsA}
+                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceType": ontologyInfo(defaultType)[1], "resourceIsA": resourceIsA}
 
                             else:
                                 symbol = ""
