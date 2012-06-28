@@ -52,6 +52,13 @@ def addLinksToText(text = ''):
     return text
 
 
+def dialogInputBox(message = _("Text")):
+    parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
+    dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+    dialogProcess.wait()
+    return toUnicode(dialogProcess.stdout.readline().strip())
+
+
 def dialogList(parameters = [], message = _("Select")):
     value = label = None
 
@@ -70,12 +77,15 @@ def dialogList(parameters = [], message = _("Select")):
     return value, label
 
 
-def dialogInputBox(message = _("Text")):
-    parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
+def dialogTextInputBox(message = _("Text"), text = ""):
+    parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, text]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
-    return toUnicode(dialogProcess.stdout.readline().strip())
+    text = u""
+    for line in iter(dialogProcess.stdout.readline, ''):
+        text += toUnicode(line)
 
+    return text
 
 def fileExists(fileName = ''):
     if fileName == '':
