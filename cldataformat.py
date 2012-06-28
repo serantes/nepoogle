@@ -78,7 +78,7 @@ class cDataFormat():
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
     iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
-    iconListRemove = KIconLoader().iconPath('list-remove', KIconLoader.Small)
+    #iconListRemove = KIconLoader().iconPath('list-remove', KIconLoader.Small)
     iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.Small)
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
@@ -1658,16 +1658,19 @@ class cDataFormat():
                             shorcut = ontLabel
 
                         genericLabel = toUnicode(resource.genericLabel())
-                        value = '<!--' + genericLabel + '-->' \
-                                + self.htmlRenderLink('uri', resource.uri(), genericLabel)
-                        if ((genericLabel[:7] == "http://") or (genericLabel[:8] == "https://")) \
-                                and (genericLabel.find(" ") < 0):
+                        resourceUrl = self.readProperty(resource, "nie:url", "str")
+                        if resourceUrl == "":
+                            resourceUrl = genericLabel
+
+                        value = '<!--' + genericLabel + '-->' + self.htmlRenderLink('uri', resource.uri(), genericLabel)
+                        if ((resourceUrl[:7] == "http://") or (resourceUrl[:8] == "https://")) \
+                                and (resourceUrl.find(" ") < 0):
                                 # Seems a url so a link to the url could be great.
                                 value += " <a title=\"%s\" href=\"%s\"><img src=\"file://%s\"></a>" \
-                                            % (genericLabel, genericLabel, self.iconEmblemLink)
+                                            % (resourceUrl, resourceUrl, self.iconEmblemLink)
 
                         if ontLabel != '':
-                            value += ' ' + self.htmlRenderLink('ontology', shorcut, resource.genericLabel())
+                            value += ' ' + self.htmlRenderLink('ontology', shorcut, genericLabel)
 
                 elif currOnt == 'rdf:type':
                     value = NOCR(value)
@@ -1755,7 +1758,7 @@ class cDataFormat():
             # Default to add values.
             text += '<tr><td valign=\"top\" width=\"120px\">' \
                     '<a title=\"%(title)s\" href=\"propadd:/%(uri)s\"><b>%(label)s</b></a></td><td></td></tr>\n' \
-                        % {"uri": uri, "title": _("Click to add a new value"), "label": _("Add new value")}
+                        % {"uri": uri, "title": _("Click to add a new value"), "label": _("Add new value (Ctrl++)")}
             for row in processedData:
                 if (oldOnt != row[1]):
                     if text != '':
