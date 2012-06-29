@@ -737,6 +737,16 @@ class Nepoogle(QWidget):
             #self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     #% self.iconProcessIdle)
 
+        elif url[:11] == "setrating:/":
+            rating = url[11:]
+            try:
+                rating = int(rating)
+
+            except:
+                rating = 0
+
+            self.setRating(None, rating)
+
         else:
             # In KDE we trust.nepomuk:/res/eee8837d-27ab-43ac-a34a-43d339102c1c
             # Seems like there is a problem with character ?.
@@ -745,6 +755,61 @@ class Nepoogle(QWidget):
 
         # Clear always modifiers because the next keypress could happen in other window.
         self.keyModifiers = Qt.NoModifier
+
+
+    def setRating(self, uri = None, rating = None):
+        if (uri == None):
+            uri = toUnicode(self.leSearch.text()).strip()
+            if not uri[:13] == "nepomuk:/res/":
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
+                return False
+
+        if vartype(uri) == "Resource":
+            resource = uri
+
+        else:
+            if self.model == None:
+                return False
+
+            if INTERNAL_RESOURCE:
+                resource = cResource(uri)
+
+            else:
+                resource = Nepomuk.Resource(uri)
+
+        if vartype(rating) == "int":
+            pass
+
+        elif vartype(rating) in ("str", "unicode"):
+            try:
+                rating = int(rating)
+
+            except:
+                rating = 0
+
+        elif vartype(rating) == "QString":
+            try:
+                rating = int(toUnicode(rating))
+
+            except:
+                rating = 0
+
+        if ((rating == None) or (rating < 0)):
+            resource.removeProperty(toVariant(QUrl(resource.ratingUri())))
+            rating = None
+
+        else:
+            rating = max(min(rating, 10), 0)
+            resource.setRating(rating)
+
+        if (vartype(uri) != "Resource"):
+            time.sleep(SLEEP_AFTER_UPDATE)
+            self.pendingQuery = True
+            self.queryMethod = "refresh"
+            self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                % self.iconProcessIdle)
+
+        return rating
 
 
     def addProperty(self, uri = None, ontology = "", text = ""):
@@ -781,6 +846,7 @@ class Nepoogle(QWidget):
                     % (resourceMainType)
 
             values = []
+            values += ["nao:numericRating"]
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
                 while queryResultSet.next():
@@ -808,11 +874,17 @@ class Nepoogle(QWidget):
                 text = dialogInputBox(_("Value to store in \"%s\":") % ontologyResource)
 
             if text != "":
-                resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if resourceReply == QMessageBox.Yes:
+                #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                #if resourceReply == QMessageBox.Yes:
+                if True:
                     print("%s: property %s added" % (uri, ontologyResource))
-                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
-                    resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
+                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, text))
+                    if ontologyResource == "nao:numericRating":
+                        self.setRating(resource, text)
+
+                    else:
+                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
+
                     mustRefresh = SLEEP_AFTER_UPDATE
 
         else:
@@ -865,10 +937,15 @@ class Nepoogle(QWidget):
                 resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if resourceReply == QMessageBox.Yes:
                     print("%s: property %s edited" % (uri, ontology))
-                    ontology = QUrl(NOC(ontology, True))
-                    resource.removeProperty(ontology, toVariant(text))
-                    resource.addProperty(ontology, toVariant(newText))
-                    #resource.setProperty(QUrl(NOC(ontology, True)), toVariant(text))
+                    if ontology == "nao:numericRating":
+                        self.setRating(resource, newText)
+
+                    else:
+                        ontology = QUrl(NOC(ontology, True))
+                        resource.removeProperty(ontology, toVariant(text))
+                        resource.addProperty(ontology, toVariant(newText))
+                        #resource.setProperty(QUrl(NOC(ontology, True)), toVariant(text))
+
                     mustRefresh = SLEEP_AFTER_UPDATE
 
         if mustRefresh > SLEEP_NO_SLEEP:
