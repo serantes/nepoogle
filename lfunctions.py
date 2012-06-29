@@ -210,8 +210,15 @@ def toUnicode(string):
 
 
 def toVariant(value):
-    if (vartype(value) != "QUrl"):
+    if (vartype(value) == "QUrl"):
+        pass
+
+    elif (vartype(value) == "QString"):
         if ((toUnicode(value).find("://") > 0) or (value[:13] == "nepomuk:/res/")):
+            value = QUrl(value)
+
+    elif (vartype(value) in ("unicode", "str")):
+        if ((value.find("://") > 0) or (value[:13] == "nepomuk:/res/")):
             value = QUrl(value)
 
     return Nepomuk.Variant(value)
