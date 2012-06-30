@@ -217,12 +217,12 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:Contact", \
-                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
                                 "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:PersonContact", \
-                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
                                 "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
@@ -1117,8 +1117,8 @@ class cDataFormat():
             elements = valuesName.split("->")
             if len(elements) > 1:
                 # A simple relation.
-                uri = toUnicode(resource.property(NOC(elements[0])).toString())
-                if uri != "":
+                uris = toUnicode(resource.property(NOC(elements[0])).toStringList())
+                for uri in uris:
                     query = 'SELECT DISTINCT ?value\n' \
                             'WHERE {\n' \
                                 '\t<%s> %s ?value .\n' \
@@ -1196,7 +1196,7 @@ class cDataFormat():
         for variable in variables:
             variable = toUnicode(variable)
             elements = variable.split("|")
-            addImage = addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = False
+            addImage = addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = limitToOne = False
             KIOName = ""
             for item in elements:
                 if item == "l" or item[:1] == "l":
@@ -1252,8 +1252,14 @@ class cDataFormat():
                                 except:
                                     value[1] = "0"
 
+                elif item == "1":
+                    limitToOne = True
+
                 else:
                     values = self.readValues(resource, item)
+
+            if limitToOne:
+                values = [values[0]]
 
             formatValue = ""
             for value in values:
