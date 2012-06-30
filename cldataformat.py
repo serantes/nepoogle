@@ -400,7 +400,7 @@ class cDataFormat():
         return "file://" + coverUrl
 
 
-    def getRatingHtml(self, rating = None):
+    def getRatingHtml(self, rating = None, size = 32):
 
         if (self.iconRatingEmpty == self.iconUnknown) \
                 or (self.iconRatingFull == "") \
@@ -420,7 +420,7 @@ class cDataFormat():
             empty_count = max(empty_count - full_count - half_count, 0)
 
         #starHtml = "<a href=\"setrating:/%s\"><img style=\"-webkit-filter: blur(2px) grayscale(1);\" src=\"file://%s\"></a>"
-        starHtml = "<a href=\"setrating:/%s\"><img src=\"file://%s\"></a>"
+        starHtml = "<a href=\"setrating:/%%s\"><img style=\"width:%spx\" src=\"file://%%s\"></a>" % size
         html = ""
         html += "<div class=\"rating\">"
         i = 1
@@ -1777,7 +1777,7 @@ class cDataFormat():
 
                 elif currOnt == "nao:numericRating":
                     try:
-                        value = self.getRatingHtml(int(value))
+                        value = self.getRatingHtml(int(value), 16)
 
                     except:
                         pass
@@ -1863,7 +1863,7 @@ class cDataFormat():
                                             '<td><h3>%(resourceType)s</h3><h2>%(fullname)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                                 'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, \
-                                                "resourceType": ontologyInfo(defaultType)[1], "rating": self.getRatingHtml(mainResource), "resourceIsA": resourceIsA}
+                                                "resourceType": ontologyInfo(defaultType)[1], "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
 
                             else:
                                 symbol = ""
