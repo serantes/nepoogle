@@ -1258,7 +1258,7 @@ class cDataFormat():
                 else:
                     values = self.readValues(resource, item)
 
-            if limitToOne:
+            if limitToOne and (len(values) > 1):
                 values = [values[0]]
 
             formatValue = ""
