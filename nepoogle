@@ -948,10 +948,13 @@ class Nepoogle(QWidget):
                         self.setRating(resource, newText)
 
                     else:
-                        ontology = QUrl(NOC(ontology, True))
-                        resource.removeProperty(ontology, toVariant(text))
-                        resource.addProperty(ontology, toVariant(newText))
-                        #resource.setProperty(QUrl(NOC(ontology, True)), toVariant(text))
+                        ontologyFull = QUrl(NOC(ontology, True))
+                        if ontology in ("nie:url"):
+                            resource.setProperty(ontologyFull, toVariant(newText))
+
+                        else:
+                            resource.removeProperty(ontologyFull, toVariant(text))
+                            resource.addProperty(ontologyFull, toVariant(newText))
 
                     mustRefresh = SLEEP_AFTER_UPDATE
 
