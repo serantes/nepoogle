@@ -245,6 +245,7 @@ class cWebView(QWebView):
 class Nepoogle(QWidget):
     cache = []
     cacheViewer = []
+    currUri = None
     clearResourceManagerCache = True
     keyModifiers = Qt.NoModifier
     model = None
@@ -259,6 +260,7 @@ class Nepoogle(QWidget):
     resultStructure = []
     resultTime = None
     sparql = None
+    textToFind = ""
     verboseMode = False
     warningsList = []
 
@@ -488,6 +490,7 @@ class Nepoogle(QWidget):
         if self.pendingQuery:
             self.execQuery()
 
+        self.textToFind = ""
 
     def loadProgress(self, progress):
         #print('loadProgress:', progress)
@@ -511,6 +514,9 @@ class Nepoogle(QWidget):
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
+
+        elif event.key() == Qt.Key_F3:
+            self.findText(True)
 
         elif event.modifiers() == Qt.ControlModifier:
             if event.key() == Qt.Key_PageUp:
@@ -555,12 +561,13 @@ class Nepoogle(QWidget):
         self.keyModifiers = event.modifiers()
 
 
-    def findText(self):
-        text = dialogInputBox(_("Text to find:"))
-        if text != "":
-            self.wvOutput.findText("", QWebPage.HighlightAllOccurrences)
-            if self.wvOutput.findText(text, QWebPage.FindWrapsAroundDocument):
-                self.wvOutput.findText(text, QWebPage.HighlightAllOccurrences)
+    def findText(self, again = False):
+        if (not again or (self.textToFind == "")):
+            self.textToFind = dialogInputBox(_("Text to find:"))
+
+        self.wvOutput.findText("", QWebPage.HighlightAllOccurrences)
+        if self.wvOutput.findText(self.textToFind, QWebPage.FindWrapsAroundDocument):
+            self.wvOutput.findText(self.textToFind, QWebPage.HighlightAllOccurrences)
 
 
     def linkClicked(self, url, forceExec = False):
@@ -1518,6 +1525,7 @@ class Nepoogle(QWidget):
 
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
+                self.currUri = searchString
                 if self.queryMethod in ("manual", "refresh"):
                     cachedData = None
 
@@ -1556,6 +1564,7 @@ class Nepoogle(QWidget):
                         self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
 
             elif searchString != '':
+                self.currUri = None
                 searchString = self.processMacros(searchString)
                 if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
                     searchEngine = int(searchString[1:2])
@@ -1842,7 +1851,6 @@ def main(args):
         nepoogle = Nepoogle(None, searchString, verboseMode)
         nepoogle.show()
         nepoogle.repaint()
-
         if searchString != '':
             nepoogle.execQuery()
 
