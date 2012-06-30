@@ -65,6 +65,7 @@ class cDataFormat():
     renderedDataText = ""
     skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource")]
     structure = []
+    uri = None
     videojsEnabled = False
 
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
@@ -90,10 +91,14 @@ class cDataFormat():
     iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
     iconPlaylistLast = KIconLoader().iconPath('go-last-view', KIconLoader.Small)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
+    iconRatingEmpty = KIconLoader().iconPath('rating_empty', KIconLoader.Small)
+    iconRatingFull = KIconLoader().iconPath('rating_full', KIconLoader.Small)
+    iconRatingHalf = KIconLoader().iconPath('rating_half', KIconLoader.Small)
     iconReindex = KIconLoader().iconPath('nepomuk', KIconLoader.Small)
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
     iconSystemSearchWeb = KIconLoader().iconPath('edit-web-search', KIconLoader.Small)
+    iconUnknown = KIconLoader().iconPath('unknown', KIconLoader.Small)
 
     htmlHeader = "<html>\n" \
                         "<head>\n" \
@@ -207,48 +212,24 @@ class cDataFormat():
                             "{uri|l|of}%[<br /><b>Identifier</b>: {nao:identifier}%] %[<b>Label</b>: {nao:prefLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
-                        ["nmm:Movie", \
-                            "<b>Title</b>: {nie:title|l|of|ol}" \
-                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
-                                "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
-                                "%[<br /><b>Description</b>: {nie:description}%]", \
+                        ["nao:Tag", \
+                            "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nmm:MusicAlbum", \
-                            "{nie:title|l|s:album}" \
-                                "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
-                                "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                        ["nco:Contact", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
+                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nmm:MusicPiece", \
-                            "{nfo:fileName|l|of|ol}<br />" \
-                                "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber|f%02d} - {nie:title}</em><br />" \
-                                "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
-                                "%[<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}%]", \
+                        ["nco:PersonContact", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
+                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nexif:Photo", \
+                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
-                        ["nmm:TVSeason", \
-                            "<b>Title</b>: {nmm:seasonOf->nie:title|l} <br /><b>Season</b>: {nmm:seasonNumber|l}", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
-                        ["nmm:TVSeries", \
-                                "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
-                                "{nie:title|l|s:tvserie|ok:tvshow}" \
-                                "%[<br /><b>Last watched episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
-                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
-                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
-                                "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
-                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
-                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nmm:TVShow", \
-                            "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nmm:series ?series . ?series nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
-                            "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
-                                "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
-                                "%[ <b>Watched</b>: {nuao:usageCount} times%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nfo:Audio", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]%[<br />url: {nie:url}%]", \
                             "{type}", \
@@ -299,26 +280,50 @@ class cDataFormat():
                             "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
-                        ["nao:Tag", \
-                            "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nco:Contact", \
-                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
-                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nco:PersonContact", \
-                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url}\"'>%]" \
-                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
-                        ["nexif:Photo", \
-                            "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
-                            "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nie:InformationElement", \
                             "{nfo:fileName|l|of|ol}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmm:Movie", \
+                            "<b>Title</b>: {nie:title|l|of|ol}" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
+                                "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
+                                "%[<br /><b>Description</b>: {nie:description}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmm:MusicAlbum", \
+                            "{nie:title|l|s:album}" \
+                                "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
+                                "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmm:MusicPiece", \
+                            "{nfo:fileName|l|of|ol}<br />" \
+                                "<b>Title</b>: <em>%[{nmm:setNumber}x%]{nmm:trackNumber|f%02d} - {nie:title}</em><br />" \
+                                "<b>Album</b>: {nmm:musicAlbum->nie:title|l|s:album}<br \>" \
+                                "%[<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nmm:TVSeason", \
+                            "<b>Title</b>: {nmm:seasonOf->nie:title|l} <br /><b>Season</b>: {nmm:seasonNumber|l}", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nmm:TVSeries", \
+                                "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
+                                "{nie:title|l|s:tvserie|ok:tvshow}" \
+                                "%[<br /><b>Last watched episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
+                                "%[<br /><b>Last downloaded episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
+                                " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmm:TVShow", \
+                            "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nmm:series ?series . ?series nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
+                            "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
+                                "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
+                                "%[ <b>Watched</b>: {nuao:usageCount} times%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["rdfs:Resource", \
@@ -393,6 +398,47 @@ class cDataFormat():
                     break
 
         return "file://" + coverUrl
+
+
+    def getRatingHtml(self, rating = None):
+
+        if (self.iconRatingEmpty == self.iconUnknown) \
+                or (self.iconRatingFull == "") \
+                or (self.iconRatingHalf == ""):
+            return Rating
+
+        num_stars = 5
+        full_count = half_count = 0
+        empty_count = num_stars
+
+        if (vartype(rating) == "Resource"):
+            rating = rating.rating()
+
+        if (vartype(rating) in ("int", "long")):
+            full_count = min(rating/2, 5)
+            half_count = min(rating - full_count*2, num_stars - full_count)
+            empty_count = max(empty_count - full_count - half_count, 0)
+
+        #starHtml = "<a href=\"setrating:/%s\"><img style=\"-webkit-filter: blur(2px) grayscale(1);\" src=\"file://%s\"></a>"
+        starHtml = "<a href=\"setrating:/%s\"><img src=\"file://%s\"></a>"
+        html = ""
+        html += "<div class=\"rating\">"
+        i = 1
+        for j in range(0, full_count):
+            html += starHtml % (i*2-1, self.iconRatingFull)
+            i += 1
+
+        for j in range(0, half_count):
+            html += starHtml % (i*2-2, self.iconRatingHalf)
+            i += 1
+
+        for j in range(0, empty_count):
+            html += starHtml % (i*2, self.iconRatingEmpty)
+            i += 1
+
+        html += "</div>"
+
+        return html
 
 
     def resourceIsA(self, uri = None):
@@ -1723,6 +1769,13 @@ class cDataFormat():
                 elif (currOnt in ("nco:fullname", "nie:title")):
                     value = value + ' ' + self.htmlRenderLink('googlesearch', value)
 
+                elif currOnt == "nao:numericRating":
+                    try:
+                        value = self.getRatingHtml(int(value))
+
+                    except:
+                        pass
+
                 else:
                     try:
                         # Must check for full paths to avoid file detection in execution path.
@@ -1801,9 +1854,10 @@ class cDataFormat():
                                 fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
                                 resourceIsA = self.resourceIsA(mainResource)
                                 output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
-                                            '<td><h3>%(resourceType)s</h3><h2>%(fullname)s</h2><h4>%(resourceIsA)s</h4></td></tr>' \
+                                            '<td><h3>%(resourceType)s</h3><h2>%(fullname)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, "resourceType": ontologyInfo(defaultType)[1], "resourceIsA": resourceIsA}
+                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, \
+                                                "resourceType": ontologyInfo(defaultType)[1], "rating": self.getRatingHtml(mainResource), "resourceIsA": resourceIsA}
 
                             else:
                                 symbol = ""
