@@ -743,12 +743,14 @@ class cDataFormat():
             url = url[7:]
 
         if listType == 'audio':
+            output += "<div class=\"audioplayer\">\n"
             output += "<b>Audio player</b><br />\n" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
                             % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"))
 
         elif listType == 'video':
+            output += "<div class=\"videoplayer\">\n"
             output += "<b>Video player</b><br />\n" \
                         "<video id=\"%splayer\" " \
                             "src=\"file://%s\" %s controls preload>No video support</video><br />\n" \
@@ -855,6 +857,8 @@ class cDataFormat():
             output += "</script>\n"
 
             #print '<html>\n<body>\n' + toUtf8(output) + '\n</body>\n</html>'
+
+            output += "<br /></div>\n"
 
         return output
 
