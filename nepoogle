@@ -927,10 +927,21 @@ class Nepoogle(QWidget):
         try:
             text = resource.property(NOC(ontology))
             if text.isStringList():
-                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Only properties with one value could be edited."))
-                return False
+                parameters = []
+                status = "on"
+                for item in text.toStringList():
+                    item = toUnicode(item)
+                    parameters += [item] + [item] + [status]
+                    if status == "on":
+                        status = "off"
 
-            text = toUnicode(resource.property(NOC(ontology)).toString())
+                text, dummyValue = dialogList(parameters, _("Select value to edit:"))
+                if text == "":
+                    return False
+
+            else:
+                text = toUnicode(resource.property(NOC(ontology)).toString())
+
             if text[:13] == "nepomuk:/res/":
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't edit resources here, click in the resource and edit directly."))
                 return False
@@ -950,7 +961,14 @@ class Nepoogle(QWidget):
                     else:
                         ontologyFull = QUrl(NOC(ontology, True))
                         if ontology in ("nie:url"):
-                            resource.setProperty(ontologyFull, toVariant(newText))
+                            # Caution!, strip() is mandatory here because only one line is supported.
+                            newText = QUrl(newText.strip())
+                            if (newText.isValid()):
+                                resource.setProperty(ontologyFull, toVariant(newText))
+
+                            else:
+                                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Invalid url."))
+                                return False
 
                         else:
                             resource.removeProperty(ontologyFull, toVariant(text))
@@ -964,6 +982,8 @@ class Nepoogle(QWidget):
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
+
+        return True
 
 
     def removeProperty(self, uri = None, ontology = None):
