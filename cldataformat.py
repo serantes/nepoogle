@@ -84,7 +84,9 @@ class cDataFormat():
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
     iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
     iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.Small)
-    iconNoCover = KIconLoader().iconPath('audio-x-generic', KIconLoader.Desktop)
+    iconNoCover = KIconLoader().iconPath('no_cover', KIconLoader.Desktop)
+    iconNoPhoto = KIconLoader().iconPath('no_photo', KIconLoader.Desktop)
+    iconNoSymbol = KIconLoader().iconPath('no_symbol', KIconLoader.Desktop)
     iconNoVideoThumbnail = KIconLoader().iconPath('video-x-generic', KIconLoader.Desktop)
     iconPlaylistFirst = KIconLoader().iconPath('go-first-view', KIconLoader.Small)
     iconPlaylistPrevious = KIconLoader().iconPath('go-previous-view', KIconLoader.Small)
@@ -402,14 +404,13 @@ class cDataFormat():
 
     def getRatingHtml(self, rating = None, size = 32):
         if (self.iconRatingEmpty == self.iconUnknown) \
-                or (self.iconRatingFull == "") \
-                or (self.iconRatingHalf == ""):
+                or (self.iconRatingFull == self.iconUnknown) \
+                or (self.iconRatingHalf == self.iconUnknown):
 
             if (vartype(rating) == "Resource"):
-                return rating.rating()
+                rating = rating.rating()
 
-            else:
-                return rating
+            return "<div class=\"rating\"><br />%s</div>" % rating
 
         num_stars = 5
         full_count = half_count = 0
@@ -1860,12 +1861,15 @@ class cDataFormat():
 
                 if defaultType == "nco:Contact":
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
+                    symbol = toUnicode(self.iconNoPhoto)
 
                 elif defaultType == "nmm:MusicAlbum":
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
+                    symbol = toUnicode(self.iconNoCover)
 
                 else:
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL)
+                    symbol = toUnicode(self.iconNoSymbol)
 
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
@@ -1875,42 +1879,42 @@ class cDataFormat():
                     else:
                         symbol = self.readProperty(symbols.toStringList()[0], "nie:url", "str")
 
-                    try:
-                        if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
-                            ext = os.path.splitext(symbol)[1][1:].lower()
-                            if ext != '' and ext in self.supportedImageFormats:
-                                if symbol[:7] != 'file://':
-                                    symbol = 'file://' + symbol
+                try:
+                    if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
+                        ext = os.path.splitext(symbol)[1][1:].lower()
+                        if ext != '' and ext in self.supportedImageFormats:
+                            if symbol[:7] != 'file://':
+                                symbol = 'file://' + symbol
 
-                                symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                                output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
-                                            % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                                'title': os.path.basename(symbol), 'url': symbol}
+                            symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                            output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
+                                        % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
+                                            'title': os.path.basename(symbol), 'url': symbol}
 
-                                output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
+                            output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
 
-                                if defaultType == "nco:Contact":
-                                    fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
-                                    resourceIsA = self.resourceIsA(mainResource)
-                                    output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
-                                                % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
+                            if defaultType == "nco:Contact":
+                                fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
+                                resourceIsA = self.resourceIsA(mainResource)
+                                output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
+                                            % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
 
-                                elif defaultType == "nmm:MusicAlbum":
-                                    title = toUnicode(mainResource.property(NOC("nie:title")).toString())
-                                    output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
-                                                % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
-
-                                else:
-                                    title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
-                                    output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
-                                                % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
-
+                            elif defaultType == "nmm:MusicAlbum":
+                                title = toUnicode(mainResource.property(NOC("nie:title")).toString())
+                                output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                            % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
                             else:
-                                symbol = ""
+                                title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
+                                output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                            % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
-                    except:
-                        symbol = self.iconDelete
+
+                        else:
+                            symbol = ""
+
+                except:
+                    symbol = self.iconDelete
 
             output += text
 
