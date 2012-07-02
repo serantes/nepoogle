@@ -569,6 +569,9 @@ class Nepoogle(QWidget):
         if self.wvOutput.findText(self.textToFind, QWebPage.FindWrapsAroundDocument):
             self.wvOutput.findText(self.textToFind, QWebPage.HighlightAllOccurrences)
 
+        else:
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), _("Text not found."))
+
 
     def linkClicked(self, url, forceExec = False):
         url = toUnicode(url.toString())
