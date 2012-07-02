@@ -1874,6 +1874,7 @@ class cDataFormat():
                                 if symbol[:7] != 'file://':
                                     symbol = 'file://' + symbol
 
+                                symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
                                 output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                                 'title': os.path.basename(symbol), 'url': symbol}
