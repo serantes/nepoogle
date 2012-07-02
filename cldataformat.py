@@ -1818,6 +1818,14 @@ class cDataFormat():
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
                     processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
 
+            if not mainResource.hasProperty(NOC("nao:numericRating")):
+                try:
+                    processedData += [["nao:numericRating", ontologyToHuman("nao:numericRating"), self.getRatingHtml(0, 16)]]
+
+                except:
+                    pass
+
+
         text = ''
         if len(processedData) > 0:
             processedData = sorted(processedData, key=lambda row: row[1] + row[2])
