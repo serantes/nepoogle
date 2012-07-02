@@ -52,14 +52,18 @@ def addLinksToText(text = ''):
     return text
 
 
-def dialogInputBox(message = _("Text")):
+def dialogInputBox(message = _("Text"), stripString = True):
     parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
-    return toUnicode(dialogProcess.stdout.readline().strip())
+    value = toUnicode(dialogProcess.stdout.readline())
+    if stripString:
+        value = value.strip()
+
+    return value
 
 
-def dialogList(parameters = [], message = _("Select")):
+def dialogList(parameters = [], message = _("Select"), stripString = True):
     value = label = None
 
     if parameters != []:
@@ -67,17 +71,20 @@ def dialogList(parameters = [], message = _("Select")):
                         + parameters
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
         dialogProcess.wait()
-        value = toUnicode(dialogProcess.stdout.readline().strip())
+        value = toUnicode(dialogProcess.stdout.readline())
         try:
             label = toUnicode(parameters[parameters.index(value) + 1])
 
         except:
             label = toUnicode(value)
 
+        if stripString:
+            value = value.strip()
+
     return value, label
 
 
-def dialogTextInputBox(message = _("Text"), text = ""):
+def dialogTextInputBox(message = _("Text"), text = "", stripString = True):
     parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, text]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
@@ -85,9 +92,13 @@ def dialogTextInputBox(message = _("Text"), text = ""):
     for line in iter(dialogProcess.stdout.readline, ''):
         text += toUnicode(line)
 
-    # Cleaning last "\n".
-    if (text[-1] == "\n"):
-        text = text[:-1]
+    if stripString:
+        text = text.strip()
+
+    else:
+        # Cleaning last "\n".
+        if (text[-1] == "\n"):
+            text = text[:-1]
 
     return text
 
