@@ -401,11 +401,15 @@ class cDataFormat():
 
 
     def getRatingHtml(self, rating = None, size = 32):
-
         if (self.iconRatingEmpty == self.iconUnknown) \
                 or (self.iconRatingFull == "") \
                 or (self.iconRatingHalf == ""):
-            return Rating
+
+            if (vartype(rating) == "Resource"):
+                return rating.rating()
+
+            else:
+                return rating
 
         num_stars = 5
         full_count = half_count = 0
@@ -1843,9 +1847,18 @@ class cDataFormat():
 
         else:
             # Hacks for resources.
-            if defaultType == "nco:Contact":
+            if (defaultType in ("nco:Contact", "nmm:MusicAlbum", "nao:Tag")):
                 # Adding the header.
-                ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
+
+                if defaultType == "nco:Contact":
+                    ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
+
+                elif defaultType == "nmm:MusicAlbum":
+                    ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
+
+                else:
+                    ontologySymbol = NOC(ONTOLOGY_SYMBOL)
+
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
                     if vartype(symbols) == "list":
@@ -1861,13 +1874,28 @@ class cDataFormat():
                                 if symbol[:7] != 'file://':
                                     symbol = 'file://' + symbol
 
-                                fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
-                                resourceIsA = self.resourceIsA(mainResource)
                                 output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
-                                            '<td><h3>%(resourceType)s</h3><h2>%(fullname)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                             % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                                'url': symbol, 'title': os.path.basename(symbol), "fullname": fullname, \
-                                                "resourceType": ontologyInfo(defaultType)[1], "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
+                                                'title': os.path.basename(symbol), 'url': symbol}
+
+                                output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
+
+                                if defaultType == "nco:Contact":
+                                    fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
+                                    resourceIsA = self.resourceIsA(mainResource)
+                                    output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
+                                                % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
+
+                                elif defaultType == "nmm:MusicAlbum":
+                                    title = toUnicode(mainResource.property(NOC("nie:title")).toString())
+                                    output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                                % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
+                                else:
+                                    title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
+                                    output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                                % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
 
                             else:
                                 symbol = ""
@@ -1969,11 +1997,11 @@ class cDataFormat():
         if len(audios) > 0:
             #output += "<div class=\"preview\" style=\"float: left;\">"
             # Dirty hack for support covers and playlist in nmm:MusicAlbum.
-            if defaultType == "nmm:MusicAlbum":
-                output += "<b>Album cover</b><br />"
-                output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                % {'url': self.getCoverUrl(mainResource, audios[0][0])}
-                output += "<br />\n"
+            #if defaultType == "nmm:MusicAlbum":
+                #output += "<b>Album cover</b><br />"
+                #output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                #% {'url': self.getCoverUrl(mainResource, audios[0][0])}
+                #output += "<br />\n"
 
             output += self.buildPlaylist(audios, 'audio')
             #output += "\n</div>\n"
