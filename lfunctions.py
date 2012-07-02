@@ -52,18 +52,23 @@ def addLinksToText(text = ''):
     return text
 
 
-def dialogInputBox(message = _("Text"), stripString = True):
+def dialogInputBox(message = _("Text")):
     parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
-    value = toUnicode(dialogProcess.stdout.readline())
-    if stripString:
-        value = value.strip()
+    value = u""
+    for line in iter(dialogProcess.stdout.readline, ''):
+        value += toUnicode(line)
 
+    # Cleaning last "\n".
+    if (value[-1] == "\n"):
+        value = value[:-1]
+
+    print(toUtf8("dialogInputBox:%s" % value))
     return value
 
 
-def dialogList(parameters = [], message = _("Select"), stripString = True):
+def dialogList(parameters = [], message = _("Select")):
     value = label = None
 
     if parameters != []:
@@ -71,36 +76,38 @@ def dialogList(parameters = [], message = _("Select"), stripString = True):
                         + parameters
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
         dialogProcess.wait()
-        value = toUnicode(dialogProcess.stdout.readline())
+        value = u""
+        for line in iter(dialogProcess.stdout.readline, ''):
+            value += toUnicode(line)
+
+        # Cleaning last "\n".
+        if (value[-1] == "\n"):
+            value = value[:-1]
+
         try:
             label = toUnicode(parameters[parameters.index(value) + 1])
 
         except:
             label = toUnicode(value)
 
-        if stripString:
-            value = value.strip()
-
+    print(toUtf8("dialogList:%s" % value))
     return value, label
 
 
-def dialogTextInputBox(message = _("Text"), text = "", stripString = True):
-    parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, text]
+def dialogTextInputBox(message = _("Text"), value = ""):
+    parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, value]
     dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
     dialogProcess.wait()
-    text = u""
+    value = u""
     for line in iter(dialogProcess.stdout.readline, ''):
-        text += toUnicode(line)
+        value += toUnicode(line)
 
-    if stripString:
-        text = text.strip()
+    # Cleaning last "\n".
+    if (value[-1] == "\n"):
+        value = value[:-1]
 
-    else:
-        # Cleaning last "\n".
-        if (text[-1] == "\n"):
-            text = text[:-1]
-
-    return text
+    print(toUtf8("dialogTextInputBox:%s" % value))
+    return value
 
 def fileExists(fileName = ''):
     if fileName == '':
