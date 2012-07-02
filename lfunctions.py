@@ -85,6 +85,10 @@ def dialogTextInputBox(message = _("Text"), text = ""):
     for line in iter(dialogProcess.stdout.readline, ''):
         text += toUnicode(line)
 
+    # Cleaning last "\n".
+    if (text[-1] == "\n"):
+        text = text[:-1]
+
     return text
 
 def fileExists(fileName = ''):
