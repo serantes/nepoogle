@@ -646,6 +646,9 @@ class Nepoogle(QWidget):
                 if self.keyModifiers == Qt.NoModifier:
                     self.addProperty(uri[0], uri[1])
 
+                #elif self.keyModifiers and Qt.ShiftModifier and Qt.ControlModifier:
+                #    self.removeProperty(uri[0], uri[1])
+
                 elif self.keyModifiers == Qt.ShiftModifier:
                     self.editProperty(uri[0], uri[1])
 
@@ -939,7 +942,7 @@ class Nepoogle(QWidget):
                         status = "off"
 
                 text, dummyValue = dialogList(parameters, _("Select value to edit:"))
-                if text == "":
+                if text.strip() == "":
                     return False
 
             else:
