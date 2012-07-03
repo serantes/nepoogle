@@ -259,6 +259,7 @@ class Nepoogle(QWidget):
     resultData = []
     resultStructure = []
     resultTime = None
+    screenWidth = 1024
     sparql = None
     textToFind = ""
     verboseMode = False
@@ -580,7 +581,7 @@ class Nepoogle(QWidget):
         if url[:11] == "autocover:/":
             uri = url[11:]
 
-            oDataFormat = cDataFormat("", self.model)
+            oDataFormat = cDataFormat("", self.model, self.screenWidth)
 
             try:
                 coverUrl = oDataFormat.gtCoverUrl(mainResource, "")
@@ -1576,7 +1577,7 @@ class Nepoogle(QWidget):
                     cachedData = lvalue(self.cacheViewer, searchString, 0, 1)
 
                 if cachedData == None:
-                    oDataFormat = cDataFormat(searchString, self.model)
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
                     #output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
@@ -1659,7 +1660,7 @@ class Nepoogle(QWidget):
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
 
-                oDataFormat = cDataFormat(searchString, self.model)
+                oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
                 if ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
 
@@ -1894,6 +1895,7 @@ def main(args):
         nepoogle = Nepoogle(None, searchString, verboseMode)
         nepoogle.show()
         nepoogle.repaint()
+        nepoogle.screenWidth = QDesktopWidget().availableGeometry(-1).width()
         if searchString != '':
             nepoogle.execQuery()
 
@@ -1948,7 +1950,7 @@ def main(args):
                 oSparql = None
 
                 if displayResults in (None, True):
-                    oDataFormat = cDataFormat(searchString)
+                    oDataFormat = cDataFormat(searchString, self.screenWidth)
                     oDataFormat.formatAsText(data, structure, time)
 
                 output = "\n%(records)s records found in %(seconds).4f seconds.\n" \

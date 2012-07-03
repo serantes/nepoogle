@@ -68,6 +68,13 @@ class cDataFormat():
     uri = None
     videojsEnabled = False
 
+    # Sizes
+    screenWidth = 1024
+    viewerColumnsWidth = (screenWidth - 100) / 2
+    playlistWidth = viewerColumnsWidth
+    videoWidth = viewerColumnsWidth
+    videoHeight = int(0.5625*viewerColumnsWidth)
+
     supportedAudioFormats = ("flac", "mp3", "ogg", "wav")
     supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
     supportedVideoFormats = ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "webm", "wmv")
@@ -195,7 +202,7 @@ class cDataFormat():
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
-    htmlVideoSize = "height=\"360\" width=\"640\""
+    htmlVideoSize = "height=\"%s\" width=\"%s\"" % (videoHeight, videoWidth)
 
     #TODO: columnsformat. This is linked to self.columnsCount.
     ontologyFormat = [ \
@@ -335,7 +342,7 @@ class cDataFormat():
                     ]
 
 
-    def __init__(self, searchString = "", model = None):
+    def __init__(self, searchString = "", model = None, screenWidth = 1024):
         self.searchString = searchString
         if model == None:
             if DO_NOT_USE_NEPOMUK:
@@ -346,6 +353,12 @@ class cDataFormat():
 
         else:
             self.model = model
+
+        self.screenWidth = screenWidth
+        self.viewerColumnsWidth = (self.screenWidth - 100) / 2
+        self.playlistWidth = self.viewerColumnsWidth
+        self.videoWidth = self.viewerColumnsWidth
+        self.videoHeight = int(0.5625*self.viewerColumnsWidth)
 
 
     def getCoverUrl(self, res = None, url = ""):
@@ -775,7 +788,7 @@ class cDataFormat():
                         "var %(type)stotalItems = %(i)s;\n" \
                         "var %(type)splayList = new Array();\n" % {"type": listType, "i": i}
 
-            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; max-width: 650px;'>\")\n" % {"type": listType}
+            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; max-width: %(width)s;'>\")\n" % {"type": listType, "width": self.playlistWidth}
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
@@ -1633,19 +1646,19 @@ class cDataFormat():
         script = ""
         if self.enableImageViewer:
             script += SCRIPT_IMAGE_VIEWER
-            imageViewer = "<img title=\"%(url)s\" src=\"%(url)s\" style=\"width:600px;\" "\
-                            "onLoad=\"new viewer({image: this, frame: ['600px','400px']});\"/>"
+            imageViewer = "<img title=\"%%(url)s\" src=\"%%(url)s\" style=\"width: %s;\" "\
+                            "onLoad=\"new viewer({image: this, frame: ['%s','400px']});\"/>" % (self.viewerColumnsWidth, self.viewerColumnsWidth)
 
         if self.videojsEnabled:
             script += "<link href=\"http://vjs.zencdn.net/c/video-js.css\" rel=\"stylesheet\" type=\"text/css\">\n" \
                         "<script src=\"http://vjs.zencdn.net/c/video.js\"></script>\n"
 
-        output = self.htmlHeader % ('Resource viewer', script)
+        output = self.htmlHeader % (_('Resource viewer'), script)
         output += "<div class=\"top\" style=\"static: top;\">\n"
-        output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">Resource viewer</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
-                        % {'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
+        output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">%(title)s</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
+                        % {"title": _('Resource viewer'), 'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
         output += "</div>\n"
-        output += "<div class=\"data\" style=\"float: left; width: 600px;\">\n<hr>"
+        output += "<div class=\"data\" style=\"float: left; width: %s;\">\n<hr>" % self.viewerColumnsWidth
         output += self.htmlViewerTableHeader
 
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
@@ -2044,8 +2057,8 @@ class cDataFormat():
                     output += imageViewer % {'url': url}
 
                 else:
-                    output += '<img title=\"%(url)s\" style=\"height:auto;width:600px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                % {'url': url}
+                    output += '<img title=\"%(url)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                % {'url': url, "width": self.viewerColumnsWidth}
                 output += "<b>File name</b>:<em><a title=\"%(url)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": os.path.basename(url)}
                 #output += "\n</div>\n"
 
