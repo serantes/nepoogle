@@ -222,6 +222,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nao:Tag", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nao:hasSymbol->nie:url|1}\"'>%]" \
                             "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
