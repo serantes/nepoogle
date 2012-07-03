@@ -87,7 +87,7 @@ class cDataFormat():
     iconNoCover = KIconLoader().iconPath('no_cover', KIconLoader.Desktop)
     iconNoPhoto = KIconLoader().iconPath('no_photo', KIconLoader.Desktop)
     iconNoSymbol = KIconLoader().iconPath('no_symbol', KIconLoader.Desktop)
-    iconNoVideoThumbnail = KIconLoader().iconPath('video-x-generic', KIconLoader.Desktop)
+    iconNoVideoThumbnail = KIconLoader().iconPath('no_video_thumbnail', KIconLoader.Desktop)
     iconPlaylistFirst = KIconLoader().iconPath('go-first-view', KIconLoader.Small)
     iconPlaylistPrevious = KIconLoader().iconPath('go-previous-view', KIconLoader.Small)
     iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
@@ -1855,7 +1855,7 @@ class cDataFormat():
             output += '<p>No data found for the uri %s.</p>\n' % uri
 
         else:
-            # Hacks for resources.
+            # Special headers for some resources.
             if (defaultType in ("nco:Contact", "nmm:MusicAlbum", "nao:Tag")):
                 # Adding the header.
 
@@ -1883,13 +1883,19 @@ class cDataFormat():
                     if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
                         ext = os.path.splitext(symbol)[1][1:].lower()
                         if ext != '' and ext in self.supportedImageFormats:
+                            if ((defaultType == "nmm:MusicAlbum") and (symbol == toUnicode(self.iconNoCover))):
+                                addCoverLink = "<a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
+
+                            else:
+                                addCoverLink = ""
+
                             if symbol[:7] != 'file://':
                                 symbol = 'file://' + symbol
 
                             symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                            output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
+                            output += '<tr><td>%(addCoverLink)s<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
                                         % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                            'title': os.path.basename(symbol), 'url': symbol}
+                                            'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
 
                             output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
 
