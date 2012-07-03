@@ -1738,8 +1738,18 @@ class cDataFormat():
                         if shorcut == None:
                             shorcut = ontLabel
 
-                        genericLabel = toUnicode(resource.genericLabel())
-                        #print(toUtf8(genericLabel))
+                        # Trying to avoid the two titles bug.
+                        #genericLabel = toUnicode(resource.genericLabel())
+                        genericLabel = resource.property(NOC("nie:title", True))
+                        if genericLabel.isStringList():
+                            genericLabel = toUnicode(genericLabel.toStringList()[0])
+
+                        else:
+                            genericLabel = toUnicode(genericLabel.toString())
+
+                        if (genericLabel == ""):
+                            genericLabel = toUnicode(resource.genericLabel())
+
                         resourceUrl = self.readProperty(resource, "nie:url", "str")
                         if resourceUrl == "":
                             resourceUrl = genericLabel
@@ -1786,8 +1796,6 @@ class cDataFormat():
                                                         '', \
                                                         url \
                                                     )
-#                                            url[8:].split('/')[0], \
-#                                            '/' + '/'.join(url[8:].split('/')[1:]))
 
                     else:
                         value += self.htmlRenderLink('url', url, url)

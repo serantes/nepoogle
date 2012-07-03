@@ -956,8 +956,14 @@ class Nepoogle(QWidget):
             if text.isStringList():
                 parameters = []
                 status = "on"
+                # Trying to avoid the two titles bug with this oldItem.
+                oldItem = ""
                 for item in text.toStringList():
                     item = toUnicode(item)
+                    if item == oldItem:
+                        continue
+
+                    oldItem = item
                     parameters += [item] + [item] + [status]
                     if status == "on":
                         status = "off"
@@ -1355,7 +1361,7 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program was tested on <b>KDE 4.8.1</b>." \
+                    "<li>This program was tested on <b>KDE 4.8.4</b>." \
                     "<li>Nepomuk search api is available using e0 or e2 as prefix.</li>\n" \
                     "<li><b>Virtuoso 6.1.4</b> or greater is required to use Nepomuk search api.</li>\n" \
                     "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
@@ -1471,6 +1477,7 @@ class Nepoogle(QWidget):
                     "\n  </head>\n<body>\n" \
                     "<p><h3>%(program)s's help</h3></p>\n" \
                     "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
+                    "<p><b>Warning!:</b> since <b>%(program)s 0.9.4</b> resources can be edited using dialog forms and/or drag&amp;drop but this features are <em>not fully tested and may contain bugs</em>. Please, <em>be cautious</em> using edition capabilities!</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(shortcuts)s" \
