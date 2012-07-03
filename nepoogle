@@ -1181,11 +1181,8 @@ class Nepoogle(QWidget):
                         ontologyUrl = ONTOLOGY_LINK
 
                     if urlReply == QMessageBox.Yes:
-                        urlResource = Nepomuk.Resource(url)
-                        if url.find("://") > 0:
-                            url = QUrl(url)
-
-                        urlResource.setProperty(NOC("nie:url", True), toVariant(url))
+                        urlResource = Nepomuk.Resource(QUrl(url))
+                        urlResource.addType(NOC("nfo:Website", True))
                         uriResource = Nepomuk.Resource(uri)
                         uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
                         mustRefresh = SLEEP_AFTER_UPDATE
