@@ -202,8 +202,6 @@ class cDataFormat():
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemRun) \
                         + "</a>"
 
-    htmlVideoSize = "height=\"%s\" width=\"%s\"" % (videoHeight, videoWidth)
-
     #TODO: columnsformat. This is linked to self.columnsCount.
     ontologyFormat = [ \
                         [None, \
@@ -776,8 +774,8 @@ class cDataFormat():
             output += "<div class=\"videoplayer\">\n"
             output += "<b>Video player</b><br />\n" \
                         "<video id=\"%splayer\" " \
-                            "src=\"file://%s\" %s controls preload>No video support</video><br />\n" \
-                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"), self.htmlVideoSize)
+                            "src=\"file://%s\" height=\"%s\" width=\"%s\" controls preload>No video support</video><br />\n" \
+                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"), self.videoHeight, self.videoWidth)
 
         if self.playlistShowWithOneElement or len(data) > 1:
             output += "<img onclick='%(type)splayTrack(-1)' style='margin:2px' src='file://%(f)s'>" \
