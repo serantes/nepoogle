@@ -1716,10 +1716,10 @@ class cDataFormat():
 
                     elif resource.hasType(NOC('rdfs:Resource', True)):
                         ontLabel = ''
-                        ext = os.path.splitext(toUnicode(resource.genericLabel()))[1][1:].lower()
-                        if ext != '' and ext in self.supportedImageFormats:
-                            if resource.hasProperty(NOC('nie:url')):
-                                url = toUnicode(resource.property(NOC('nie:url')).toString())
+                        if resource.hasProperty(NOC('nie:url')):
+                            url = toUnicode(resource.property(NOC('nie:url')).toString())
+                            ext = os.path.splitext(url)[1][1:].lower()
+                            if ext != '' and ext in self.supportedImageFormats:
                                 if not url in images:
                                     images += [url]
 
@@ -2050,7 +2050,7 @@ class cDataFormat():
                 output += "<br />"
 
             for url in sorted(images):
-                if url[:7] != 'file://':
+                if ((url.find("://") < 0) and not (url[:7] == 'file://')):
                     url = 'file://' + url
 
                 if self.enableImageViewer:
