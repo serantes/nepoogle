@@ -1754,18 +1754,17 @@ class cDataFormat():
                 elif currOnt == 'nie:url':
                     url = fromPercentEncoding(value)
                     ext = os.path.splitext(url)[1][1:].lower()
-                    if ((ext != '') and fileExists(url)):
-                        if ext in self.supportedImageFormats:
-                            if not url in images:
-                                images += [url]
+                    if ext in self.supportedImageFormats:
+                        if not url in images:
+                            images += [url]
 
-                        elif ext in self.supportedAudioFormats:
-                            if lindex(audios, url) == None:
-                                audios += [[url, uri]]
+                    elif ext in self.supportedAudioFormats:
+                        if lindex(audios, url) == None:
+                            audios += [[url, uri]]
 
-                        elif ext in self.supportedVideoFormats:
-                            if lindex(videos, url) == None:
-                                videos += [[url, uri]]
+                    elif ext in self.supportedVideoFormats:
+                        if lindex(videos, url) == None:
+                            videos += [[url, uri]]
 
                     value = ''
                     if url[:7] == 'file://':
@@ -1893,47 +1892,50 @@ class cDataFormat():
                         symbol = self.readProperty(symbols.toStringList()[0], "nie:url", "str")
 
                 try:
-                    if (((symbol[0] == "/") or (symbol[:7] == "file://")) and fileExists(symbol)):
-                        ext = os.path.splitext(symbol)[1][1:].lower()
-                        if ext != '' and ext in self.supportedImageFormats:
-                            if ((defaultType == "nmm:MusicAlbum") and (symbol == toUnicode(self.iconNoCover))):
-                                addCoverLink = "<a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
-
-                            else:
-                                addCoverLink = ""
-
-                            if symbol[:7] != 'file://':
-                                symbol = 'file://' + symbol
-
-                            symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                            output += '<tr><td>%(addCoverLink)s<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
-                                        % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
-                                            'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
-
-                            output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
-
-                            if defaultType == "nco:Contact":
-                                fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
-                                resourceIsA = self.resourceIsA(mainResource)
-                                output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
-                                            % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
-
-                            elif defaultType == "nmm:MusicAlbum":
-                                title = toUnicode(mainResource.property(NOC("nie:title")).toString())
-                                output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
-                                            % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
-
-                            else:
-                                title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
-                                output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
-                                            % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
-
+                    if ((symbol[0] == "/") or (symbol[:7] == "file://")):
+                        if fileExists(symbol):
+                            if (symbol[:7] != "file://"):
+                                symbol = "file://" + symbol
 
                         else:
-                            symbol = ""
+                            symbol = self.iconUnknown
+
+                    ext = os.path.splitext(symbol)[1][1:].lower()
+                    if ext in self.supportedImageFormats:
+                        if ((defaultType == "nmm:MusicAlbum") and (symbol == toUnicode(self.iconNoCover))):
+                            addCoverLink = "<a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
+
+                        else:
+                            addCoverLink = ""
+
+                        symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                        output += '<tr><td>%(addCoverLink)s<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
+                                    % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
+                                        'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
+
+                        output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
+
+                        if defaultType == "nco:Contact":
+                            fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
+                            resourceIsA = self.resourceIsA(mainResource)
+                            output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
+                                        % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
+
+                        elif defaultType == "nmm:MusicAlbum":
+                            title = toUnicode(mainResource.property(NOC("nie:title")).toString())
+                            output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                        % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
+                        else:
+                            title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
+                            output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                        % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
+                    else:
+                        symbol = self.iconUnknown
 
                 except:
-                    symbol = self.iconDelete
+                    symbol = self.iconUnknown
 
             output += text
 

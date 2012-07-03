@@ -1107,9 +1107,13 @@ class Nepoogle(QWidget):
                 dropType = None
                 if dropType == None:
                     ext = os.path.splitext(url)[1][1:].lower()
-                    if ((ext != '') and fileExists(url)):
+                    if (ext != ''):
                         if ext in supportedImageFormats:
-                            dropType = "image"
+                            if ((url[:7] == "http://") or (url[:8] == "https://")):
+                                dropType = "url_image"
+
+                            elif fileExists(url):
+                                dropType = "image"
 
                 if dropType == None:
                     if url[:13] == "nepomuk:/res/":
@@ -1137,7 +1141,7 @@ class Nepoogle(QWidget):
 
                 if dropType == "image":
                     if (i == 0):
-                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "on", "nmm:artwork", "nmm:artwork", "off"]
+                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "on", ONTOLOGY_MUSIC_ALBUM_COVER, ONTOLOGY_MUSIC_ALBUM_COVER, "off"]
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
                             continue
@@ -1156,8 +1160,26 @@ class Nepoogle(QWidget):
                         uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
-                elif dropType == "url":
-                    urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                elif dropType in ("url", "url_image"):
+                    if dropType == "url_image":
+                        parameters = [ONTOLOGY_LINK, ONTOLOGY_LINK, "on", ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "off", ONTOLOGY_MUSIC_ALBUM_COVER, ONTOLOGY_MUSIC_ALBUM_COVER, "off"]
+                        ontologyUrl, labelUrl = dialogList(parameters, _("Select an ontology:"))
+                        if ((ontologyUrl == None) or (ontologyUrl == "")):
+                            continue
+
+                        if (len(event.mimeData().urls()) > 1):
+                            msgImagePronoun = "all images"
+
+                        else:
+                            msgImagePronoun = "next image"
+
+                        msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
+                        urlReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyUrl, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                    else:
+                        urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        ontologyUrl = ONTOLOGY_LINK
+
                     if urlReply == QMessageBox.Yes:
                         urlResource = Nepomuk.Resource(url)
                         if url.find("://") > 0:
@@ -1165,7 +1187,7 @@ class Nepoogle(QWidget):
 
                         urlResource.setProperty(NOC("nie:url", True), toVariant(url))
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ONTOLOGY_LINK, True), toVariant(urlResource.uri()))
+                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
