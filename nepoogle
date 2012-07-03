@@ -259,7 +259,8 @@ class Nepoogle(QWidget):
     resultData = []
     resultStructure = []
     resultTime = None
-    screenWidth = 1024
+    screenHeight = 600
+    screenWidth = 800
     sparql = None
     textToFind = ""
     verboseMode = False
@@ -329,8 +330,12 @@ class Nepoogle(QWidget):
                             #% ('%s', htmlImgStyle, 'system run', iconSystemRun)
 
 
-    def __init__(self, parent = None, searchString = '', verboseMode = False):
+    def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None):
         super(Nepoogle, self).__init__(parent)
+
+        if (screenRect != None):
+            self.screenHeight = screenRect.height()
+            self.screenWidth = screenRect.width()
 
         self.verboseMode = verboseMode
 
@@ -410,7 +415,8 @@ class Nepoogle(QWidget):
 
         self.setLayout(self.grid)
 
-        self.resize(700, 600)
+        self.resize(int((self.screenWidth) / 2), self.screenHeight - 50)
+
         if searchString == '':
             self.leSearch.setText(toUnicode('Type search here'))
 
@@ -1181,10 +1187,15 @@ class Nepoogle(QWidget):
                         ontologyUrl = ONTOLOGY_LINK
 
                     if urlReply == QMessageBox.Yes:
-                        urlResource = Nepomuk.Resource(QUrl(url))
+                        # This code has really low performance so don't use it.
+                        #urlResource = Nepomuk.Resource()
+                        #urlResource.addType(NOC("nfo:Website", True))
+                        #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
+                        #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
+                        urlResource = Nepomuk.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
                         urlResource.addType(NOC("nfo:Website", True))
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
+                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
@@ -1911,10 +1922,9 @@ def main(args):
         #    window.execQuery()
 
         app = QApplication(args)
-        nepoogle = Nepoogle(None, searchString, verboseMode)
+        nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1))
         nepoogle.show()
         nepoogle.repaint()
-        nepoogle.screenWidth = QDesktopWidget().availableGeometry(-1).width()
         if searchString != '':
             nepoogle.execQuery()
 

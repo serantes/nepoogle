@@ -69,7 +69,7 @@ class cDataFormat():
     videojsEnabled = False
 
     # Sizes
-    screenWidth = 1024
+    screenWidth = 800
     viewerColumnsWidth = (screenWidth - 100) / 2
     playlistWidth = viewerColumnsWidth
     videoWidth = viewerColumnsWidth
@@ -264,6 +264,10 @@ class cDataFormat():
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:RemoteDataObject", \
+                            "{nie:url|l|of}%[<br /><b>Title</b>: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
                         ["nfo:RasterImage", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
@@ -1661,25 +1665,29 @@ class cDataFormat():
         output += "<div class=\"data\" style=\"float: left; width: %s;\">\n<hr>" % self.viewerColumnsWidth
         output += self.htmlViewerTableHeader
 
-        data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-        if data.isValid():
+        if INTERNAL_RESOURCE:
+            mainResource = cResource(uri, False, False) # prefechData = useCache = False
+            defaultType = NOCR(mainResource.type())
+
+        else:
+            mainResource = Nepomuk.Resource(uri)
+            if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+                defaultType = NOCR(cResource(uri).type())
+
+            else:
+                defaultType = NOCR(mainResource.type())
+
+        if defaultType != "":
+            data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+
+        isAnEmptyResource = True
+        if ((defaultType != "") and data.isValid()):
             processedData = []
             images = []
             audios = []
             videos = []
-            if INTERNAL_RESOURCE:
-                mainResource = cResource(uri, False, False) # prefechData = useCache = False
-                defaultType = NOCR(mainResource.type())
-
-            else:
-                mainResource = Nepomuk.Resource(uri)
-                if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
-                    defaultType = NOCR(cResource(uri).type())
-
-                else:
-                    defaultType = NOCR(mainResource.type())
-
             while data.next():
+                isAnEmptyResource = False
                 currOnt = NOCR(data["ont"].toString())
                 if currOnt in self.hiddenOntologies:
                     continue
@@ -1732,6 +1740,7 @@ class cDataFormat():
                             shorcut = ontLabel
 
                         genericLabel = toUnicode(resource.genericLabel())
+                        #print(toUtf8(genericLabel))
                         resourceUrl = self.readProperty(resource, "nie:url", "str")
                         if resourceUrl == "":
                             resourceUrl = genericLabel
@@ -1831,13 +1840,12 @@ class cDataFormat():
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
                     processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
 
-            if not mainResource.hasProperty(NOC("nao:numericRating")):
+            if (not isAnEmptyResource and not mainResource.hasProperty(NOC("nao:numericRating"))):
                 try:
                     processedData += [["nao:numericRating", ontologyToHuman("nao:numericRating"), self.getRatingHtml(0, 16)]]
 
                 except:
                     pass
-
 
         text = ''
         if len(processedData) > 0:
@@ -1856,15 +1864,13 @@ class cDataFormat():
                             '<a title=\"%(ont)s (Click, Shift+Click, Ctrl+Click to add, edit or remove)\" ' \
                             'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
                                 % {"uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
-                            #'<a href="delprop:/%s&%s"><img %s src=\"file://%s\"></a><b title=\"%s\">%s</b>:</td><td>%s' \
-                            #    % (uri, row[0], self.htmlStyleIcon, self.iconListRemove, row[0], row[1], row[2])
                     oldOnt = row[1]
 
                 else:
                     text += ', ' + row[2]
 
         if text == '':
-            output += '<p>No data found for the uri %s.</p>\n' % uri
+            output += '<p>%s.</p>\n' % (_("No data found for the uri \"%s\", resource was probably deleted.") % uri)
 
         else:
             # Special headers for some resources.
@@ -2029,22 +2035,11 @@ class cDataFormat():
 
         # Resource audios.
         if len(audios) > 0:
-            #output += "<div class=\"preview\" style=\"float: left;\">"
-            # Dirty hack for support covers and playlist in nmm:MusicAlbum.
-            #if defaultType == "nmm:MusicAlbum":
-                #output += "<b>Album cover</b><br />"
-                #output += '<img title=\"%(url)s\" style=\"height:auto;width:250px;scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                #% {'url': self.getCoverUrl(mainResource, audios[0][0])}
-                #output += "<br />\n"
-
             output += self.buildPlaylist(audios, 'audio')
-            #output += "\n</div>\n"
 
         # Resource videos.
         if len(videos) > 0:
-            #output += "<div class=\"preview\" style=\"float: left;\">"
             output += self.buildPlaylist(videos, 'video')
-            #output += "\n</div>\n"
 
         # Resource images.
         if len(images) > 0:
@@ -2061,8 +2056,8 @@ class cDataFormat():
                 else:
                     output += '<img title=\"%(url)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\"><br />\n' \
                                 % {'url': url, "width": self.viewerColumnsWidth}
+
                 output += "<b>File name</b>:<em><a title=\"%(url)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": os.path.basename(url)}
-                #output += "\n</div>\n"
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
