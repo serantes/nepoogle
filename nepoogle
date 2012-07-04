@@ -886,11 +886,11 @@ class Nepoogle(QWidget):
             if queryResultSet.isValid():
                 while queryResultSet.next():
                     ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                    values += [[ontology, ontologyInfo(ontology)[1]]]
+                    values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
 
             if values != []:
                 parameters = []
-                values = sorted(values, key=lambda item: item[1])
+                values = sorted(values, key=lambda item: item[1].lower())
                 for value in values:
                     if (value[0] == self.lastOntologySelected):
                         status = "on"
@@ -898,7 +898,7 @@ class Nepoogle(QWidget):
                     else:
                         status = "off"
 
-                    parameters += [value[0], "%s (%s)" % (value[1], value[0]), status]
+                    parameters += [value[0], value[1], status]
 
                 ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
                 if ((ontologyResource == None) or (ontologyResource == "")):
