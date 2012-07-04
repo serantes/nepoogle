@@ -86,6 +86,7 @@ class cDataFormat():
     iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
     iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
     iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
+    iconListAdd = KIconLoader().iconPath('list-add', KIconLoader.Small)
     #iconListRemove = KIconLoader().iconPath('list-remove', KIconLoader.Small)
     iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.Small)
     iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
@@ -1887,14 +1888,17 @@ class cDataFormat():
                 if defaultType == "nco:Contact":
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
                     symbol = toUnicode(self.iconNoPhoto)
+                    newResource = "&nbsp;<a title=\"Create and empty Contact\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % self.iconListAdd
 
                 elif defaultType == "nmm:MusicAlbum":
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
                     symbol = toUnicode(self.iconNoCover)
+                    newResource = ""
 
                 else:
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL)
                     symbol = toUnicode(self.iconNoSymbol)
+                    newResource = ""
 
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
@@ -1926,7 +1930,7 @@ class cDataFormat():
                                     % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                         'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
 
-                        output += "<td><h3>%(resourceType)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1]}
+                        output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1], "newResource": newResource}
 
                         if defaultType == "nco:Contact":
                             fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())

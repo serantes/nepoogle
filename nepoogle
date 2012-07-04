@@ -585,7 +585,22 @@ class Nepoogle(QWidget):
         url = toUnicode(url.toString())
         print(toUtf8(url))
 
-        if url[:11] == "autocover:/":
+        if url[:13] == "addresource:/":
+            mustRefresh = SLEEP_NO_SLEEP
+
+            ontology = url[13:]
+            if ontology == "nco:Contact":
+                newResource = Nepomuk.Resource(QString(_("New contact")), NOC(ontology, True))
+                newResource.addProperty(NOC(ONTOLOGY_FULLNAME, True), toVariant(_("New contact")))
+                newResource.removeProperty(NOC(ONTOLOGY_IDENTIFIER, True))
+
+                mustRefresh = SLEEP_AFTER_UPDATE
+
+            if mustRefresh > SLEEP_NO_SLEEP:
+                time.sleep(mustRefresh)
+                self.linkClicked(QUrl(newResource.uri()), True)
+
+        elif url[:11] == "autocover:/":
             uri = url[11:]
 
             oDataFormat = cDataFormat("", self.model, self.screenWidth)
@@ -1190,7 +1205,7 @@ class Nepoogle(QWidget):
 
                 elif dropType in ("url", "url_image"):
                     if dropType == "url_image":
-                        parameters = [ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK), ONTOLOGY_LINK), "on", \
+                        parameters = [ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK), "on", \
                                         ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
                                         ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
                                         ONTOLOGY_SYMBOL, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
