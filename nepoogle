@@ -248,6 +248,7 @@ class Nepoogle(QWidget):
     currUri = None
     clearResourceManagerCache = True
     keyModifiers = Qt.NoModifier
+    lastOntologySelected = "nie:title"
     model = None
     navigationData = []
     pendingQuery = False
@@ -889,13 +890,15 @@ class Nepoogle(QWidget):
 
             if values != []:
                 parameters = []
-                status = "on"
                 values = sorted(values, key=lambda item: item[1])
                 for value in values:
-                    print value
-                    parameters += [value[0], "%s (%s)" % (value[1], value[0]), status]
-                    if status == "on":
+                    if (value[0] == self.lastOntologySelected):
+                        status = "on"
+
+                    else:
                         status = "off"
+
+                    parameters += [value[0], "%s (%s)" % (value[1], value[0]), status]
 
                 ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
                 if ((ontologyResource == None) or (ontologyResource == "")):
@@ -922,6 +925,8 @@ class Nepoogle(QWidget):
                         resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
 
                     mustRefresh = SLEEP_AFTER_UPDATE
+
+                    self.lastOntologySelected = ontologyResource
 
         else:
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
@@ -1155,7 +1160,8 @@ class Nepoogle(QWidget):
 
                 if dropType == "image":
                     if (i == 0):
-                        parameters = [ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "on", ONTOLOGY_MUSIC_ALBUM_COVER, ONTOLOGY_MUSIC_ALBUM_COVER, "off"]
+                        parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], "off", "nfo:depiction", ontologyInfo("nfo:depiction")[1], "on", ONTOLOGY_SYMBOL, ontologyInfo(ONTOLOGY_SYMBOL)[1], "off", ONTOLOGY_SYMBOL_CONTACT, ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], "off"]
+
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
                             continue
@@ -1480,7 +1486,7 @@ class Nepoogle(QWidget):
                     "<p><h3>%(program)s's help</h3></p>\n" \
                     "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
                     "<p><b>Warning!:</b> since <b>%(program)s 0.9.4</b> resources can be edited using dialog forms and/or drag&amp;drop but this features are <em>not fully tested and may contain bugs</em>. Please, <em>be cautious</em> using edition capabilities!</p>\n" \
-                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engino it's not working so default query engine in Nepomuk::Query:QueryParser()</p>\n" \
+                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engino it's not working so default query engine in Nepomuk::Query:QueryParser().</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(shortcuts)s" \
