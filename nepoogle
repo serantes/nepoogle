@@ -880,18 +880,20 @@ class Nepoogle(QWidget):
                     % (resourceMainType)
 
             values = []
-            values += ["nao:numericRating"]
+            values += [[ONTOLOGY_NUMERIC_RATING, ontologyInfo(ONTOLOGY_NUMERIC_RATING)[1]]]
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
                 while queryResultSet.next():
-                    values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+                    ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
+                    values += [[ontology, ontologyInfo(ontology)[1]]]
 
             if values != []:
                 parameters = []
                 status = "on"
-                values.sort()
+                values = sorted(values, key=lambda item: item[1])
                 for value in values:
-                    parameters += [value, value, status]
+                    print value
+                    parameters += [value[0], "%s (%s)" % (value[1], value[0]), status]
                     if status == "on":
                         status = "off"
 
@@ -905,7 +907,7 @@ class Nepoogle(QWidget):
 
         if not ((ontologyResource == None) or (ontologyResource == "")):
             if text == "":
-                text = dialogInputBox(_("Value to store in \"%s\":") % ontologyResource)
+                text = dialogInputBox(_("Value to store in \"%s\":") % ontologyInfo(ontologyResource)[1])
 
             if text != "":
                 #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -913,7 +915,7 @@ class Nepoogle(QWidget):
                 if True:
                     print("%s: property %s added" % (uri, ontologyResource))
                     #print("Adding property: %s, %s, %s" % (uri, ontologyResource, text))
-                    if ontologyResource == "nao:numericRating":
+                    if ontologyResource == ONTOLOGY_NUMERIC_RATING:
                         self.setRating(resource, text)
 
                     else:
@@ -983,12 +985,12 @@ class Nepoogle(QWidget):
             text = None
 
         if text != None:
-            newText = dialogTextInputBox("Editing \"%s\":" % ontology, text)
+            newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo(ontology)[1], text)
             if newText != text:
-                resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontology), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontologyInfo(ontology)[1]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if resourceReply == QMessageBox.Yes:
                     print("%s: property %s edited" % (uri, ontology))
-                    if ontology == "nao:numericRating":
+                    if ontology == ONTOLOGY_NUMERIC_RATING:
                         self.setRating(resource, newText)
 
                     else:
@@ -1069,7 +1071,7 @@ class Nepoogle(QWidget):
                 label = resourcesList[0][1]
 
             if ((value != None) and (value != "")):
-                reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontology, label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontologyInfo(ontology)[1], label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if reply == QMessageBox.Yes:
                     print("%s: property %s removed" % (uri, ontology))
                     #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
@@ -1478,6 +1480,7 @@ class Nepoogle(QWidget):
                     "<p><h3>%(program)s's help</h3></p>\n" \
                     "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
                     "<p><b>Warning!:</b> since <b>%(program)s 0.9.4</b> resources can be edited using dialog forms and/or drag&amp;drop but this features are <em>not fully tested and may contain bugs</em>. Please, <em>be cautious</em> using edition capabilities!</p>\n" \
+                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engino it's not working so default query engine in Nepomuk::Query:QueryParser()</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(shortcuts)s" \
