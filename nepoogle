@@ -248,7 +248,7 @@ class Nepoogle(QWidget):
     currUri = None
     clearResourceManagerCache = True
     keyModifiers = Qt.NoModifier
-    lastOntologySelected = "nie:title"
+    lastOntologySelected = ONTOLOGY_TITLE
     model = None
     navigationData = []
     pendingQuery = False
@@ -871,17 +871,22 @@ class Nepoogle(QWidget):
             query = 'SELECT DISTINCT ?r\n' \
                     'WHERE {\n' \
                         '\t{\n' \
-                        '\t\t?r rdfs:domain %s .\n' \
+                        '\t\t?r rdfs:domain %s .FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
                         '\t} UNION {\n' \
-                        '\t\t?r rdfs:range rdfs:Literal .\n' \
+                        '\t\t?r rdfs:range rdfs:Literal . FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
                         '\t} UNION {\n' \
-                        '\t\t?r rdfs:range xsd:string .\n' \
+                        '\t\t?r rdfs:range xsd:string .FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
                         '\t}\n' \
                     '}\n' \
                     % (resourceMainType)
 
             values = []
-            values += [[ONTOLOGY_NUMERIC_RATING, ontologyInfo(ONTOLOGY_NUMERIC_RATING)[1]]]
+            values += [[ONTOLOGY_ALTLABEL, "%s (%s)" % (ontologyInfo(ONTOLOGY_ALTLABEL)[1], ONTOLOGY_ALTLABEL)], \
+                        [ONTOLOGY_DESCRIPTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DESCRIPTION)[1], ONTOLOGY_DESCRIPTION)], \
+                        [ONTOLOGY_NUMERIC_RATING, "%s (%s)" % (ontologyInfo(ONTOLOGY_NUMERIC_RATING)[1], ONTOLOGY_NUMERIC_RATING)], \
+                        [ONTOLOGY_PREFLABEL, "%s (%s)" % (ontologyInfo(ONTOLOGY_PREFLABEL)[1], ONTOLOGY_PREFLABEL)], \
+                        [ONTOLOGY_TITLE, "%s (%s)" % (ontologyInfo(ONTOLOGY_TITLE)[1], ONTOLOGY_TITLE)], \
+                        ]
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
             if queryResultSet.isValid():
                 while queryResultSet.next():
@@ -1160,7 +1165,10 @@ class Nepoogle(QWidget):
 
                 if dropType == "image":
                     if (i == 0):
-                        parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], "off", "nfo:depiction", ontologyInfo("nfo:depiction")[1], "on", ONTOLOGY_SYMBOL, ontologyInfo(ONTOLOGY_SYMBOL)[1], "off", ONTOLOGY_SYMBOL_CONTACT, ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], "off"]
+                        parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
+                                        ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
+                                        ONTOLOGY_SYMBOL, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
+                                        ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
 
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyImages == None) or (ontologyImages == "")):
@@ -1182,7 +1190,11 @@ class Nepoogle(QWidget):
 
                 elif dropType in ("url", "url_image"):
                     if dropType == "url_image":
-                        parameters = [ONTOLOGY_LINK, ONTOLOGY_LINK, "on", ONTOLOGY_SYMBOL, ONTOLOGY_SYMBOL, "off", ONTOLOGY_SYMBOL_CONTACT, ONTOLOGY_SYMBOL_CONTACT, "off", "nfo:depiction", "nfo:depiction", "off", ONTOLOGY_MUSIC_ALBUM_COVER, ONTOLOGY_MUSIC_ALBUM_COVER, "off"]
+                        parameters = [ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK), ONTOLOGY_LINK), "on", \
+                                        ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
+                                        ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
+                                        ONTOLOGY_SYMBOL, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
+                                        ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
                         ontologyUrl, labelUrl = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyUrl == None) or (ontologyUrl == "")):
                             continue
@@ -1228,7 +1240,7 @@ class Nepoogle(QWidget):
                     if dropType == "resource":
                         query = 'SELECT DISTINCT ?r\n' \
                                 'WHERE {\n' \
-                                    '\t?r rdfs:range %s .\n' \
+                                    '\t?r rdfs:range %s . FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
                                 '}\n' \
                                 % (resourceMainType)
 
@@ -1243,16 +1255,20 @@ class Nepoogle(QWidget):
                     queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                     if queryResultSet.isValid():
                         while queryResultSet.next():
-                            values += [NOCR(toUnicode(queryResultSet["r"].toString()))]
+                            ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
+                            values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
 
                     if values != []:
+                        values = sorted(values, key=lambda item: item[1].lower())
                         parameters = []
-                        status = "on"
-                        values.sort()
                         for value in values:
-                            parameters += [value, value, status]
-                            if status == "on":
+                            if (value[0] == self.lastOntologySelected):
+                                status = "on"
+
+                            else:
                                 status = "off"
+
+                            parameters += [value[0], value[1], status]
 
                         ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
                         if ((ontologyResource == None) or (ontologyResource == "")):
@@ -1265,6 +1281,8 @@ class Nepoogle(QWidget):
                             resourceResource = Nepomuk.Resource(uri)
                             resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(url))
                             mustRefresh = SLEEP_AFTER_UPDATE
+
+                            self.lastOntologySelected = ontologyResource
 
                     else:
                         QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
@@ -1486,7 +1504,7 @@ class Nepoogle(QWidget):
                     "<p><h3>%(program)s's help</h3></p>\n" \
                     "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
                     "<p><b>Warning!:</b> since <b>%(program)s 0.9.4</b> resources can be edited using dialog forms and/or drag&amp;drop but this features are <em>not fully tested and may contain bugs</em>. Please, <em>be cautious</em> using edition capabilities!</p>\n" \
-                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engino it's not working so default query engine in Nepomuk::Query:QueryParser().</p>\n" \
+                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engine it's not working so default query engine is Nepomuk::Query:QueryParser().</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(shortcuts)s" \
