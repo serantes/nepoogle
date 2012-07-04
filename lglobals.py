@@ -53,6 +53,7 @@ SLEEP_AFTER_UPDATE = 0.5
 
 ONTOLOGY_LINK = "nao:isRelated"
 ONTOLOGY_MUSIC_ALBUM_COVER = "nmm:artwork"
+ONTOLOGY_NUMERIC_RATING = "nao:numericRating"
 ONTOLOGY_SYMBOL = "nao:hasSymbol"
 ONTOLOGY_SYMBOL_CONTACT = "nco:photo"
 
