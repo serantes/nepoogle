@@ -908,14 +908,14 @@ class Nepoogle(QWidget):
             if values != []:
                 parameters = []
                 values = sorted(values, key=lambda item: item[1].lower())
-                for value in values:
-                    if (value[0] == self.lastOntologySelected):
+                for item in values:
+                    if (item[0] == self.lastOntologySelected):
                         status = "on"
 
                     else:
                         status = "off"
 
-                    parameters += [value[0], value[1], status]
+                    parameters += [item[0], item[1], status]
 
                 ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
                 if ((ontologyResource == None) or (ontologyResource == "")):
