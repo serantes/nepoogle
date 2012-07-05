@@ -602,17 +602,14 @@ class Nepoogle(QWidget):
 
         elif url[:11] == "autocover:/":
             uri = url[11:]
-
             oDataFormat = cDataFormat("", self.model, self.screenWidth)
+            coverUrl = oDataFormat.getCoverUrl(uri, "", False) # unknown url and don't use html encodig for url.
+            if coverUrl in ("", "file://" + oDataFormat.iconNoCover) :
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Cover not detected.\n\nYou can drag&drop and image as \"artwork (nmm:artwork)\" to manually set one."))
 
-            try:
-                coverUrl = oDataFormat.gtCoverUrl(mainResource, "")
-
-            except:
-                coverUrl = ""
-
-            if coverUrl == "":
-                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Cover not detected.\n\nYou can drag&drop and image as \"nmm:artwork\" to manually set one."))
+            else:
+                self.addProperty(uri, "nmm:artwork", coverUrl)
+                QMessageBox.information(self, "%s - %s" % (PROGRAM_NAME, _("Information")), _("Added as album cover the next file:\n\n%s") % coverUrl)
 
         elif url[:8] == 'delete:/':
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -862,7 +859,7 @@ class Nepoogle(QWidget):
         return rating
 
 
-    def addProperty(self, uri = None, ontology = "", text = ""):
+    def addProperty(self, uri = None, ontology = "", value = ""):
         if (uri == None):
             uri = toUnicode(self.leSearch.text()).strip()
 
@@ -929,20 +926,20 @@ class Nepoogle(QWidget):
             labelResource = ontology
 
         if not ((ontologyResource == None) or (ontologyResource == "")):
-            if text == "":
-                text = dialogInputBox(_("Value to store in \"%s\":") % ontologyInfo(ontologyResource)[1])
+            if value == "":
+                value = dialogInputBox(_("Value to store in \"%s\":") % ontologyInfo(ontologyResource)[1])
 
-            if text != "":
-                #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (text, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if value != "":
+                #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (value, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 #if resourceReply == QMessageBox.Yes:
                 if True:
                     print("%s: property %s added" % (uri, ontologyResource))
-                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, text))
+                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
                     if ontologyResource == ONTOLOGY_NUMERIC_RATING:
-                        self.setRating(resource, text)
+                        self.setRating(resource, value)
 
                     else:
-                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(text))
+                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(value))
 
                     mustRefresh = SLEEP_AFTER_UPDATE
 

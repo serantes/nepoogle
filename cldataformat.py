@@ -305,6 +305,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicAlbum", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nmm:artwork->nie:url|1}\"'>%]" \
                             "{nie:title|l|s:album}" \
                                 "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
                                 "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
@@ -365,11 +366,11 @@ class cDataFormat():
         self.videoHeight = int(0.5625*self.viewerColumnsWidth)
 
 
-    def getCoverUrl(self, res = None, url = ""):
+    def getCoverUrl(self, res = None, url = "", useHtmlEncoding = True):
         if res in (None, ""):
-            return None
+            return ""
 
-        if vartype(res) in ("str", "QString", "QVariant"):
+        if vartype(res) in ("str", "unicode", "QString", "QVariant"):
             if INTERNAL_RESOURCE:
                 res = cResource(res)
 
@@ -401,34 +402,71 @@ class cDataFormat():
                     tmpCoverUrl = tmpCoverUrl[7:]
 
                 if ((tmpCoverUrl != "") and fileExists(tmpCoverUrl)):
-                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                    if useHtmlEncoding:
+                        coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+
+                    else:
+                        coverUrl = tmpCoverUrl
+
                     break
 
         # If there is no property then let's try to locate using tracks location.
         if coverUrl == self.iconNoCover:
-            if url[:7] == "file://":
-                url = url[7:]
+            if url == "":
+                # We must obtain the url from one of the album tracks.
+                query = "select ?uri\n" \
+                        "   where { " \
+                        "       ?uri nao:hasSubResource <%s> ; nao:userVisible 1 . " \
+                        "}" % toUnicode(res.uri())
+                data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                if data.isValid():
+                    while data.next():
+                        resUri = toUnicode(data["uri"].toString())
+                        if INTERNAL_RESOURCE:
+                            resTrack = cResource(resUri)
+                            resType = NOCR(resTrack.type())
 
-            url = os.path.dirname(url)
-            for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
-                tmpCoverUrl = url + '/' + coverName
-                if fileExists(tmpCoverUrl):
-                    coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                    break
+                        else:
+                            resTrack = Nepomuk.Resource(resUri)
+                            if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
+                                resType = NOCR(cResource(resUri).type())
+
+                            else:
+                                resType = NOCR(resTrack.type())
+
+                        if (resType == "nmm:MusicPiece"):
+                            url = toUnicode(self.readProperty(resTrack, 'nie:url', 'str'))
+                            break
+
+            if (url != ""):
+                if url[:7] == "file://":
+                    url = url[7:]
+
+                url = os.path.dirname(url)
+                for coverName in ('cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'):
+                    tmpCoverUrl = url + '/' + coverName
+                    if fileExists(tmpCoverUrl):
+                        if useHtmlEncoding:
+                            coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+
+                        else:
+                            coverUrl = tmpCoverUrl
+
+                        break
 
         return "file://" + coverUrl
 
 
     def getRatingHtml(self, rating = None, size = 32):
-        if (self.iconRatingEmpty == self.iconUnknown) \
-                or (self.iconRatingFull == self.iconUnknown) \
-                or (self.iconRatingHalf == self.iconUnknown):
+        #if (self.iconRatingEmpty == self.iconUnknown) \
+        #        or (self.iconRatingFull == self.iconUnknown) \
+        #        or (self.iconRatingHalf == self.iconUnknown):
 
-            if (vartype(rating) == "Resource"):
-                rating = rating.rating()
+        #    if (vartype(rating) == "Resource"):
+        #        rating = rating.rating()
 
-            return "<div class=\"rating\"><br />%s</div>" % rating
-
+        #    return "<div class=\"rating\">%s%s</div>" % (rating, _(" (can't locate rating icons)"))
+        #
         num_stars = 5
         full_count = half_count = 0
         empty_count = num_stars
@@ -1919,14 +1957,14 @@ class cDataFormat():
 
                     ext = os.path.splitext(symbol)[1][1:].lower()
                     if ext in self.supportedImageFormats:
-                        if ((defaultType == "nmm:MusicAlbum") and (symbol == toUnicode(self.iconNoCover))):
-                            addCoverLink = "<a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
+                        if ((defaultType == "nmm:MusicAlbum") and (symbol == "file://" + toUnicode(self.iconNoCover))):
+                            addCoverLink = "<br /><a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
 
                         else:
                             addCoverLink = ""
 
                         symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-                        output += '<tr><td>%(addCoverLink)s<img %(fmt)s title=\"%(title)s\" src=\"%(url)s\"></td>' \
+                        output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\">%(addCoverLink)s</td>' \
                                     % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                         'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
 
