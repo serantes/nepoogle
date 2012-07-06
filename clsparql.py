@@ -94,10 +94,14 @@ ontologyTypes = [ \
                     ['nao:lastmodified', 'datetime'], \
                     ['nao:numericrating', 'int'], \
                     ['nexif:aperturevalue', 'aperturevalue'], \
-                    ['nexif:fnumber', 'aperturevalue'], \
                     ['nexif:exposurebiasvalue', 'exposurebiasvalue'], \
                     ['nexif:exposuretime', 'exposuretime'], \
+                    ['nexif:flash', 'flash'], \
+                    ['nexif:fnumber', 'aperturevalue'], \
                     ['nexif:focallength', 'focallength'], \
+                    ['nexif:meteringmode', 'meteringmode'], \
+                    ['nexif:orientation', 'orientation'], \
+                    ['nexif:whitebalance', 'whitebalance'], \
                     ['nfo:averagebitrate', 'number'], \
                     ['nfo:duration', 'seconds'], \
                     ['nfo:height', 'number'], \
@@ -1018,12 +1022,27 @@ class cSparqlBuilder():
 
                     filterExpression = self.buildFloatFilter(val, i, operator, 6)
 
+                elif valType == "flash":
+                    raise Exception(_("Can't search using \"%s\".") % "nexif:flash")
+
                 elif valType == "focallength":
                     valTerms = val.split("/")
                     if (len(valTerms) > 1):
                         val = float(valTerms[0])/float(valTerms[1])
 
                     filterExpression = self.buildFloatFilter(val, i, operator)
+
+                elif valType == "meteringmode":
+                    raise Exception(_("Can&quot;t search using \"%s\".") % "nexif:meteringMode")
+
+                elif valType == "orientation":
+                    if operator == "==":
+                        operator = "="
+
+                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
+
+                elif valType == "whitebalance":
+                    raise Exception(_("Can't search using \"%s\".") % "nexif:whiteBalance")
 
                 else:
                     if operator == "==":

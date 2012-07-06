@@ -457,6 +457,36 @@ class cDataFormat():
         return "file://" + coverUrl
 
 
+    def getOrientationHtml(self, orientation = 1, size = 48):
+        if (vartype(orientation) == "Resource"):
+            orientation = rating.property(NOC("nexif:orientation", True))
+
+        if not (vartype(orientation) in ("int", "long")):
+            try:
+                orientation = int(orientation)
+
+            except:
+                orientation = 1
+
+        if ((orientation < 1) or (orientation > 8)):
+            orientation = 1
+
+        propertyName = 'iconOrientation%s' % orientation
+        if hasattr(self, propertyName):
+            icon = getattr(self, propertyName)
+
+        else:
+            icon = KIconLoader().iconPath('orientation_%s' % orientation, KIconLoader.Small)
+            setattr(self, propertyName, icon)
+
+        html = ""
+        html += "<div class=\"orientation\">"
+        html += "<img style=\"width:%spx\" src=\"file://%s\">" % (size, icon)
+        html += "</div>"
+
+        return html
+
+
     def getRatingHtml(self, rating = None, size = 32):
         #if (self.iconRatingEmpty == self.iconUnknown) \
         #        or (self.iconRatingFull == self.iconUnknown) \
@@ -1101,7 +1131,7 @@ class cDataFormat():
             elif valueType == 'exposurebiasvalue':
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=3)
-                    result = "%s/%s" % (value.numerator, value.denominator)
+                    result = "%.2f EV" % (value.numerator/value.denominator)
 
                 except:
                     result = "%s" % value
@@ -1109,7 +1139,18 @@ class cDataFormat():
             elif valueType == 'exposuretime':
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=16000)
-                    result = "%s/%s" % (value.numerator, value.denominator)
+                    result = "%s/%s s" % (value.numerator, value.denominator)
+
+                except:
+                    result = "%s" % value
+
+            elif valueType == 'flash':
+                try:
+                    if value == "0":
+                        result = _("No")
+
+                    else:
+                        result = _("Yes")
 
                 except:
                     result = "%s" % value
@@ -1117,7 +1158,35 @@ class cDataFormat():
             elif valueType == 'focallength':
                 try:
                     value = fractions.Fraction(value).limit_denominator()
-                    result = "%s/%s" % (value.numerator, value.denominator)
+                    result = "%.1f mm" % (value.numerator/value.denominator)
+
+                except:
+                    result = "%s" % value
+
+            elif valueType == 'meteringmode':
+                try:
+                    result = int(value)
+                    if (result == 255):
+                        result = 7
+
+                    elif ((result < 0) and (result > 6)):
+                        result = 0
+
+                    result = NEXIF_METERING_MODE[result]
+
+                except:
+                    result = "%s" % value
+
+            elif valueType == 'orientation':
+                result = "%s" % value
+
+            elif valueType == 'whitebalance':
+                try:
+                    result = int(value)
+                    if not (result in (1, 2)):
+                        result = 0
+
+                    result = NEXIF_WHITE_BALANCE[result]
 
                 except:
                     result = "%s" % value
@@ -1854,6 +1923,13 @@ class cDataFormat():
                 elif currOnt == "nao:numericRating":
                     try:
                         value = self.getRatingHtml(int(value), 16)
+
+                    except:
+                        pass
+
+                elif currOnt == "nexif:orientation":
+                    try:
+                        value = self.getOrientationHtml(int(value), 48)
 
                     except:
                         pass
