@@ -2025,7 +2025,7 @@ def main(args):
                 oSparql = None
 
                 if displayResults in (None, True):
-                    oDataFormat = cDataFormat(searchString, self.screenWidth)
+                    oDataFormat = cDataFormat(searchString)
                     oDataFormat.formatAsText(data, structure, time)
 
                 output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
