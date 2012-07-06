@@ -71,6 +71,7 @@ class cDataFormat():
     # Sizes
     screenWidth = 800
     viewerColumnsWidth = (screenWidth - 100) / 2
+    playlistHeight = 200
     playlistWidth = viewerColumnsWidth
     videoWidth = viewerColumnsWidth
     videoHeight = int(0.5625*viewerColumnsWidth)
@@ -860,7 +861,7 @@ class cDataFormat():
                         "var %(type)stotalItems = %(i)s;\n" \
                         "var %(type)splayList = new Array();\n" % {"type": listType, "i": i}
 
-            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: 250px; max-width: %(width)s;'>\")\n" % {"type": listType, "width": self.playlistWidth}
+            output += "document.write(\"<div id='%(type)splaylist' style='overflow: auto; height: %(height)s; max-width: %(width)s;'>\")\n" % {"type": listType, "height": self.playlistHeight, "width": self.playlistWidth}
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
