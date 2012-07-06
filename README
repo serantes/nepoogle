@@ -15,6 +15,13 @@ nepoogle works in console or in gui mode. Try nepoogle --help in console
 mode.
 
 
+User installation
+-----------------
+For convenience there are an install.sh and uninstall.sh scripts to install nepoogle in current user.
+
+install.sh copy nepoogle to ~/bin so this directory must be in the path.
+
+
 Contact
 -------
 
