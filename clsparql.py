@@ -962,6 +962,9 @@ class cSparqlBuilder():
                     ontology = ontology[1:]
                     subqueryUsage = subqueryUsage or (operator == "!=")
 
+                elif ((val == "") and (operator == "!=")):
+                    subqueryUsage = True
+
                 valType = self.ontologyVarType(ontology)
                 #optionalUsage = (optionalUsage and (operator == '!='))
                 if not optionalUsage:
@@ -1529,42 +1532,45 @@ class cSparqlBuilder():
                             data = "<=" + data[2:]
                 #Hack operador negativo.
 
+                dataIndex = 1
                 if operator == "=" and (len(data) > 1) and data[1] == "-":
-                    data = data[1:]
+                    pass
 
                 elif operator == '-':
                     operator = '!='
-                    data = data[1:]
 
                 elif operator == '+':
                     operator = '=='
-                    data = data[1:]
 
                 elif operator == '>':
                     operator = data[1]
                     if operator == '=':
                         operator = '>='
-                        data = data[2:]
+                        dataIndex = 2
 
                     else:
                         operator = '>'
-                        data = data[1:]
 
                 elif operator == '<':
                     operator = data[1]
                     if operator == '=':
                         operator = '<='
-                        data = data[2:]
+                        dataIndex = 2
 
                     else:
                         operator = '<'
-                        data = data[1:]
 
                 else:
                     operator = '='
+                    dataIndex = 0
 
-                if (data[0] == data[-1] == '"') or (data[0] == data[-1] == "'"):
-                    data = data[1:-1]
+                try:
+                    data = data[dataIndex:]
+                    if (data[0] == data[-1] == '"') or (data[0] == data[-1] == "'"):
+                        data = data[1:-1]
+
+                except:
+                    data = ""
 
                 oneFilter = [data, operator, ontology]
                 addAnd = True
@@ -1579,8 +1585,13 @@ class cSparqlBuilder():
                         oneFilter[2] = oneFilterDummy[0]
                         break
 
-            if oneFilter[0][0] == "=":
-                oneFilter[0] = oneFilter[0][1:]
+            try:
+                if oneFilter[0][0] == "=":
+                    oneFilter[0] = oneFilter[0][1:]
+
+            except:
+                pass
+
             # A little bit of language improvement.
 
             allFilters += [oneFilter]
