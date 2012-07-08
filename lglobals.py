@@ -53,6 +53,7 @@ SLEEP_AFTER_UPDATE = 0.5
 
 ONTOLOGY_ALTLABEL = "nao:altLabel"
 ONTOLOGY_COMMENT = "nie:comment"
+ONTOLOGY_COPIED_FROM = "ndo:copiedFrom"
 ONTOLOGY_DEPICTION = "nfo:depiction"
 ONTOLOGY_DESCRIPTION = "nao:description"
 ONTOLOGY_FULLNAME = "nco:fullname"
@@ -66,6 +67,10 @@ ONTOLOGY_SUBJECT = "nie:subject"
 ONTOLOGY_SYMBOL = "nao:hasSymbol"
 ONTOLOGY_SYMBOL_CONTACT = "nco:photo"
 ONTOLOGY_TITLE = "nie:title"
+ONTOLOGY_TYPE_CONTACT = "nco:Contact"
+ONTOLOGY_TYPE_IMAGE = "nfo:Image"
+ONTOLOGY_TYPE_MUSIC_ALBUM = "nmm:MusicAlbum"
+ONTOLOGY_TYPE_TAG = "nao:Tag"
 
 DO_NOT_USE_NEPOMUK = False
 USE_INTERNAL_RESOURCE = False
