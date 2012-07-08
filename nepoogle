@@ -923,9 +923,12 @@ class Nepoogle(QWidget):
 
             values = []
             values += [[ONTOLOGY_ALTLABEL, "%s (%s)" % (ontologyInfo(ONTOLOGY_ALTLABEL)[1], ONTOLOGY_ALTLABEL)], \
+                        [ONTOLOGY_COMMENT, "%s (%s)" % (ontologyInfo(ONTOLOGY_COMMENT)[1], ONTOLOGY_COMMENT)], \
                         [ONTOLOGY_DESCRIPTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DESCRIPTION)[1], ONTOLOGY_DESCRIPTION)], \
+                        [ONTOLOGY_LANGUAGE, "%s (%s)" % (ontologyInfo(ONTOLOGY_LANGUAGE)[1], ONTOLOGY_LANGUAGE)], \
                         [ONTOLOGY_NUMERIC_RATING, "%s (%s)" % (ontologyInfo(ONTOLOGY_NUMERIC_RATING)[1], ONTOLOGY_NUMERIC_RATING)], \
                         [ONTOLOGY_PREFLABEL, "%s (%s)" % (ontologyInfo(ONTOLOGY_PREFLABEL)[1], ONTOLOGY_PREFLABEL)], \
+                        [ONTOLOGY_SUBJECT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)], \
                         [ONTOLOGY_TITLE, "%s (%s)" % (ontologyInfo(ONTOLOGY_TITLE)[1], ONTOLOGY_TITLE)], \
                         ]
             queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)

@@ -52,14 +52,17 @@ SLEEP_AFTER_UPDATE_DBUS = 1.5
 SLEEP_AFTER_UPDATE = 0.5
 
 ONTOLOGY_ALTLABEL = "nao:altLabel"
+ONTOLOGY_COMMENT = "nie:comment"
 ONTOLOGY_DEPICTION = "nfo:depiction"
 ONTOLOGY_DESCRIPTION = "nao:description"
 ONTOLOGY_FULLNAME = "nco:fullname"
 ONTOLOGY_IDENTIFIER = "nao:identifier"
+ONTOLOGY_LANGUAGE = "nie:language"
 ONTOLOGY_LINK = "nao:isRelated"
 ONTOLOGY_MUSIC_ALBUM_COVER = "nmm:artwork"
 ONTOLOGY_NUMERIC_RATING = "nao:numericRating"
 ONTOLOGY_PREFLABEL = "nao:prefLabel"
+ONTOLOGY_SUBJECT = "nie:subject"
 ONTOLOGY_SYMBOL = "nao:hasSymbol"
 ONTOLOGY_SYMBOL_CONTACT = "nco:photo"
 ONTOLOGY_TITLE = "nie:title"
