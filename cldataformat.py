@@ -1253,19 +1253,28 @@ class cDataFormat():
                 # A simple relation.
                 uris = toUnicode(resource.property(NOC(elements[0])).toStringList())
                 for uri in uris:
-                    query = 'SELECT DISTINCT ?value\n' \
-                            'WHERE {\n' \
-                                '\t<%s> %s ?value .\n' \
-                            '}\n' \
-                            % (uri, elements[1])
-                    queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
-                    if queryResultSet.isValid():
-                        value = ""
-                        while queryResultSet.next():
-                            if value != "":
-                                value += ", "
+                    # Handling cases where there is no uri and value is stored directly.
+                    if uri[:13] == "nepomuk:/res/":
+                        query = 'SELECT DISTINCT ?value\n' \
+                                'WHERE {\n' \
+                                    '\t<%s> %s ?value .\n' \
+                                '}\n' \
+                                % (uri, elements[1])
+                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        if queryResultSet.isValid():
+                            value = ""
+                            while queryResultSet.next():
+                                if value != "":
+                                    value += ", "
 
-                            values += [[uri, toUnicode(queryResultSet["value"].toString())]]
+                                values += [[uri, toUnicode(queryResultSet["value"].toString())]]
+
+                    else:
+                        # If value is a "/" then assuming it's a file.
+                        if uri[0] == "/":
+                            uri = "file://" + uri
+
+                        values += [[toUnicode(resource.uri()), uri]]
 
             elif len(elements) == 1:
                 # A property.
