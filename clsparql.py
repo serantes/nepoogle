@@ -921,9 +921,16 @@ class cSparqlBuilder():
                 ontologies = self.tempData[3]
 
         text = ""
+        relationAdjustmentResource = relationAdjustmentValue = 0
+        numInverseRelations = 0
         for item in ontologies:
             textAux = ""
             ontologyElements = item.split("->")
+            if len(ontologyElements) == 1:
+                # Must try inverse elements.
+                ontologyElements = item.split("<-")
+                numInverseRelations = len(ontologyElements) - 1
+
             if item.find('?x0') >= 0:
                 i = 1
 
@@ -972,7 +979,17 @@ class cSparqlBuilder():
                         textAux += "?x%(v1)s %(ont)s %(v2)s . " % {'ont': ontology.split('=')[0], 'v1': i, 'v2': ontology.split('=')[1]}
 
                     else:
-                        textAux += "?x%(v1)s %(ont)s ?x%(v2)s . " % {'ont': ontology, 'v1': i, 'v2': i + 1}
+                        # Here is where relations are stablished: ?x0 ontology ?x1
+                        if numInverseRelations > 0:
+                            resourceIndex = i + 1
+                            valueIndex = i
+                            numInverseRelations -= 1
+
+                        else:
+                            resourceIndex = i
+                            valueIndex = i + 1
+
+                        textAux += "?x%(v1)s %(ont)s ?x%(v2)s . " % {'ont': ontology, 'v1': resourceIndex, 'v2': valueIndex}
                         i += 1
 
             if val == '':
@@ -1036,7 +1053,7 @@ class cSparqlBuilder():
                     filterExpression = self.buildFloatFilter(val, i, operator)
 
                 elif valType == "meteringmode":
-                    raise Exception(_("Can&quot;t search using \"%s\".") % "nexif:meteringMode")
+                    raise Exception(_("Can't search using \"%s\".") % "nexif:meteringMode")
 
                 elif valType == "orientation":
                     if operator == "==":
