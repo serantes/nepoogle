@@ -72,6 +72,7 @@ class cDataFormat():
     screenWidth = 800
     viewerColumnsWidth = (screenWidth - 100) / 2
     playlistHeight = 200
+    playlistScrollHeight = 50
     playlistWidth = viewerColumnsWidth
     videoWidth = viewerColumnsWidth
     videoHeight = int(0.5625*viewerColumnsWidth)
@@ -902,7 +903,7 @@ class cDataFormat():
                 "        if (i == %(type)scurrItem) {\n" \
                 "            %(type)strack.style.fontWeight = 'bold';\n" \
                 "            scrollTop = document.getElementById('%(type)splaylist').scrollTop;\n" \
-                "            if (%(type)strack.offsetTop >  scrollTop + 200 || %(type)strack.offsetTop < scrollTop + 50) {\n" \
+                "            if (%(type)strack.offsetTop >  scrollTop + %(scrollTop)s || %(type)strack.offsetTop < scrollTop + %(scrollBottom)s) {\n" \
                 "                document.getElementById('%(type)splaylist').scrollTop = oldTrackOffsetTop;\n" \
                 "            }\n" \
                 "        } else {\n" \
@@ -912,7 +913,7 @@ class cDataFormat():
                 "    }\n" \
                 "    %(type)splayer.volume = %(type)splayerVolume;\n" \
                 "    //window.alert(%(type)splayer.volume);\n" \
-                "} );\n" % {"type": listType}
+                "} );\n" % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
 
             output += \
                 "%(type)splayer.addEventListener('ended', function () {\n" \
@@ -2014,15 +2015,15 @@ class cDataFormat():
 
         else:
             # Special headers for some resources.
-            if (defaultType in ("nco:Contact", "nmm:MusicAlbum", "nao:Tag")):
+            if (defaultType in (ONTOLOGY_TYPE_CONTACT, ONTOLOGY_TYPE_MUSIC_ALBUM, ONTOLOGY_TYPE_TAG)):
                 # Adding the header.
 
-                if defaultType == "nco:Contact":
+                if defaultType == ONTOLOGY_TYPE_CONTACT:
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
                     symbol = toUnicode(self.iconNoPhoto)
-                    newResource = "&nbsp;<a title=\"Create and empty nco:Contact\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % self.iconListAdd
+                    newResource = "&nbsp;<a title=\"%s\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % (_("Create an empty %s") % ONTOLOGY_TYPE_CONTACT, self.iconListAdd)
 
-                elif defaultType == "nmm:MusicAlbum":
+                elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
                     symbol = toUnicode(self.iconNoCover)
                     newResource = ""
@@ -2030,7 +2031,7 @@ class cDataFormat():
                 else:
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL)
                     symbol = toUnicode(self.iconNoSymbol)
-                    newResource = "&nbsp;<a title=\"Create a nco:Contact based on this tag\" href=\"addresource:/nco:Contact&%s\"><img valign=\"middle\" src=\"file://%s\"></a>" % (uri, self.iconListAdd)
+                    newResource = "&nbsp;<a title=\"%s\" href=\"addresource:/nco:Contact&%s\"><img valign=\"middle\" src=\"file://%s\"></a>" % (_("Create a %s based on this tag") % ONTOLOGY_TYPE_CONTACT, uri, self.iconListAdd)
 
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
@@ -2051,7 +2052,7 @@ class cDataFormat():
 
                     ext = os.path.splitext(symbol)[1][1:].lower()
                     if ext in self.supportedImageFormats:
-                        if ((defaultType == "nmm:MusicAlbum") and (symbol == "file://" + toUnicode(self.iconNoCover))):
+                        if ((defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM) and (symbol == "file://" + toUnicode(self.iconNoCover))):
                             addCoverLink = "<br /><a title:=\"Automatic cover detection\" href=\"autocover:/%s\">Try to detect cover</a>" % toUnicode(mainResource.uri())
 
                         else:
@@ -2064,13 +2065,13 @@ class cDataFormat():
 
                         output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1], "newResource": newResource}
 
-                        if defaultType == "nco:Contact":
+                        if defaultType == ONTOLOGY_TYPE_CONTACT:
                             fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
                             resourceIsA = self.resourceIsA(mainResource)
                             output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                         % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
 
-                        elif defaultType == "nmm:MusicAlbum":
+                        elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
                             title = toUnicode(mainResource.property(NOC("nie:title")).toString())
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
