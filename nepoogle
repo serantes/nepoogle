@@ -597,11 +597,30 @@ class Nepoogle(QWidget):
 
         if url[:13] == "addresource:/":
             mustRefresh = SLEEP_NO_SLEEP
+            ontology = url[13:].split("&")
+            try:
+                uri = ontology[1]
 
-            ontology = url[13:]
+            except:
+                uri = ""
+
+            ontology = ontology[0]
             if ontology == "nco:Contact":
-                newResource = Nepomuk.Resource(QString(_("New contact")), NOC(ontology, True))
-                newResource.addProperty(NOC(ONTOLOGY_FULLNAME, True), toVariant(_("New contact")))
+                fullname = ""
+                if uri != "":
+                    if INTERNAL_RESOURCE:
+                        resource = cResource(uri)
+
+                    else:
+                        resource = Nepomuk.Resource(uri)
+
+                    fullname = toUnicode(resource.property(NOC("nao:prefLabel", True)).toString())
+
+                if fullname == "":
+                    fullname = _("New contact")
+
+                newResource = Nepomuk.Resource(QString(fullname), NOC(ontology, True))
+                newResource.addProperty(NOC(ONTOLOGY_FULLNAME, True), toVariant(fullname))
                 newResource.removeProperty(NOC(ONTOLOGY_IDENTIFIER, True))
 
                 mustRefresh = SLEEP_AFTER_UPDATE
@@ -1721,8 +1740,12 @@ class Nepoogle(QWidget):
 
                 externalParameters = []
                 if searchEngine == 0:
-                    oNQP = Nepomuk.Query.QueryParser()
                     processedSearchString = searchString[3:]
+                    if processedSearchString.find("--help") >= 0:
+                        self.execQuery("e1 " + processedSearchString)
+                        return True
+
+                    oNQP = Nepomuk.Query.QueryParser()
                     for command in ["--playlist", "--playmixed"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
@@ -1738,8 +1761,12 @@ class Nepoogle(QWidget):
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
                 elif searchEngine == 2:
-                    oNQP = Nepomuk.Query.QueryParser()
                     processedSearchString = searchString[3:]
+                    if processedSearchString.find("--help") >= 0:
+                        self.execQuery("e1 " + processedSearchString)
+                        return True
+
+                    oNQP = Nepomuk.Query.QueryParser()
                     for command in ["--playlist", "--playmixed"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
@@ -1841,11 +1868,7 @@ class Nepoogle(QWidget):
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
 
-    if query.find("?v7 ") == -1:
-        # Don't change queries with only one item.
-        return query
-
-    if hackLevel.lower() == 'e2':
+    if hackLevel.lower() == 'e2' and query.find("?v7 ") > 0:
         query = query.replace(' ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> ?v1 . FILTER(?v1>0) .', '')
         query = query.replace(' UNION { ?r ', ' UNION { ?0 ')
         query = query.replace(' { ?r ', ' { SELECT ?r WHERE { { ?r <http://www.semanticdesktop.org/ontologies/2007/08/15/nao#userVisible> 1 . ?r ')

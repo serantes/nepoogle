@@ -415,10 +415,14 @@ class cDataFormat():
         if coverUrl == self.iconNoCover:
             if url == "":
                 # We must obtain the url from one of the album tracks.
+                #query = "select ?uri\n" \
+                #        "   where {\n" \
+                #        "       ?uri nao:hasSubResource <%s> ; nao:userVisible 1 .\n" \
+                #        "}\n" % toUnicode(res.uri())
                 query = "select ?uri\n" \
-                        "   where { " \
-                        "       ?uri nao:hasSubResource <%s> ; nao:userVisible 1 . " \
-                        "}" % toUnicode(res.uri())
+                        "   where {\n" \
+                        "       ?uri nao:hasSubResource <%s> .\n" \
+                        "}\n" % toUnicode(res.uri())
                 data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                 if data.isValid():
                     while data.next():
@@ -1757,9 +1761,13 @@ class cDataFormat():
         if uri == "":
             return self.renderedDataText
 
+        #query = "SELECT DISTINCT ?ont ?val\n" \
+        #        "WHERE {\n" \
+        #            "\t<" + uri + "> ?ont ?val ; nao:userVisible 1 .\n"\
+        #        "}\n"
         query = "SELECT DISTINCT ?ont ?val\n" \
                 "WHERE {\n" \
-                    "\t<" + uri + "> ?ont ?val ; nao:userVisible 1 .\n"\
+                    "\t<" + uri + "> ?ont ?val .\n"\
                 "}\n"
         if stdout:
             print toUtf8(query)
@@ -2012,7 +2020,7 @@ class cDataFormat():
                 if defaultType == "nco:Contact":
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
                     symbol = toUnicode(self.iconNoPhoto)
-                    newResource = "&nbsp;<a title=\"Create and empty Contact\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % self.iconListAdd
+                    newResource = "&nbsp;<a title=\"Create and empty nco:Contact\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % self.iconListAdd
 
                 elif defaultType == "nmm:MusicAlbum":
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
@@ -2022,7 +2030,7 @@ class cDataFormat():
                 else:
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL)
                     symbol = toUnicode(self.iconNoSymbol)
-                    newResource = ""
+                    newResource = "&nbsp;<a title=\"Create a nco:Contact based on this tag\" href=\"addresource:/nco:Contact&%s\"><img valign=\"middle\" src=\"file://%s\"></a>" % (uri, self.iconListAdd)
 
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
@@ -2081,11 +2089,16 @@ class cDataFormat():
             output += text
 
         # Reverse resources.
+        #query = "select ?uri ?ont\n" \
+        #        "   where {\n" \
+        #        "       ?uri ?ont <%s> ; nao:userVisible 1 .\n" \
+        #        "}\n" \
+        #        "order by ?ont\n" % uri
         query = "select ?uri ?ont\n" \
-                "   where { " \
-                "       ?uri ?ont <%s> ; nao:userVisible 1 . " \
-                "}" \
-                "order by ?ont" % uri
+                "   where {\n" \
+                "       ?uri ?ont <%s>.\n" \
+                "}\n" \
+                "order by ?ont\n" % uri
         data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
         reverseResourcesItems = []
         reverseResourcesList = []
