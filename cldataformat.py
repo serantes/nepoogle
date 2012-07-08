@@ -80,36 +80,36 @@ class cDataFormat():
     supportedImageFormats = QImageReader.supportedImageFormats() + ["nef"]
     supportedVideoFormats = ("avi", "divx", "flv", "mkv", "mp4", "mpeg", "mpg", "tp", "ts", "vob", "webm", "wmv")
 
-    iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.Small)
-    iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.Small)
-    iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.Small)
-    iconEmblemLink = KIconLoader().iconPath('emblem-link', KIconLoader.Small)
-    iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.Small)
-    iconKIO = KIconLoader().iconPath('kde', KIconLoader.Small)
-    iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.Small)
-    iconListAdd = KIconLoader().iconPath('list-add', KIconLoader.Small)
-    #iconListRemove = KIconLoader().iconPath('list-remove', KIconLoader.Small)
-    iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.Small)
-    iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.Small)
-    iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.Small)
-    iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.Small)
-    iconNoCover = KIconLoader().iconPath('no_cover', KIconLoader.Desktop)
-    iconNoPhoto = KIconLoader().iconPath('no_photo', KIconLoader.Desktop)
-    iconNoSymbol = KIconLoader().iconPath('no_symbol', KIconLoader.Desktop)
-    iconNoVideoThumbnail = KIconLoader().iconPath('no_video_thumbnail', KIconLoader.Desktop)
-    iconPlaylistFirst = KIconLoader().iconPath('go-first-view', KIconLoader.Small)
-    iconPlaylistPrevious = KIconLoader().iconPath('go-previous-view', KIconLoader.Small)
-    iconPlaylistNext = KIconLoader().iconPath('go-next-view', KIconLoader.Small)
-    iconPlaylistLast = KIconLoader().iconPath('go-last-view', KIconLoader.Small)
-    iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.Small)
-    iconRatingEmpty = KIconLoader().iconPath('rating_empty', KIconLoader.Small)
-    iconRatingFull = KIconLoader().iconPath('rating_full', KIconLoader.Small)
-    iconRatingHalf = KIconLoader().iconPath('rating_half', KIconLoader.Small)
-    iconReindex = KIconLoader().iconPath('nepomuk', KIconLoader.Small)
-    iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.Small)
-    iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.Small)
-    iconSystemSearchWeb = KIconLoader().iconPath('edit-web-search', KIconLoader.Small)
-    iconUnknown = KIconLoader().iconPath('unknown', KIconLoader.Small)
+    iconDelete = toUnicode(KIconLoader().iconPath('edit-delete', KIconLoader.Small))
+    iconDocumentInfo = toUnicode(KIconLoader().iconPath('documentinfo', KIconLoader.Small))
+    iconDocumentProp = toUnicode(KIconLoader().iconPath('document-properties', KIconLoader.Small))
+    iconEmblemLink = toUnicode(KIconLoader().iconPath('emblem-link', KIconLoader.Small))
+    iconFileManager = toUnicode(KIconLoader().iconPath('system-file-manager', KIconLoader.Small))
+    iconKIO = toUnicode(KIconLoader().iconPath('kde', KIconLoader.Small))
+    iconKonqueror = toUnicode(KIconLoader().iconPath('konqueror', KIconLoader.Small))
+    iconListAdd = toUnicode(KIconLoader().iconPath('list-add', KIconLoader.Small))
+    #iconListRemove = toUnicode(KIconLoader().iconPath('list-remove', KIconLoader.Small))
+    iconNavigateFirst = toUnicode(KIconLoader().iconPath('go-first', KIconLoader.Small))
+    iconNavigateLast = toUnicode(KIconLoader().iconPath('go-last', KIconLoader.Small))
+    iconNavigateNext = toUnicode(KIconLoader().iconPath('go-next', KIconLoader.Small))
+    iconNavigatePrevious = toUnicode(KIconLoader().iconPath('go-previous', KIconLoader.Small))
+    iconNoCover = toUnicode(KIconLoader().iconPath('no_cover', KIconLoader.Desktop))
+    iconNoPhoto = toUnicode(KIconLoader().iconPath('no_photo', KIconLoader.Desktop))
+    iconNoSymbol = toUnicode(KIconLoader().iconPath('no_symbol', KIconLoader.Desktop))
+    iconNoVideoThumbnail = toUnicode(KIconLoader().iconPath('no_video_thumbnail', KIconLoader.Desktop))
+    iconPlaylistFirst = toUnicode(KIconLoader().iconPath('go-first-view', KIconLoader.Small))
+    iconPlaylistPrevious = toUnicode(KIconLoader().iconPath('go-previous-view', KIconLoader.Small))
+    iconPlaylistNext = toUnicode(KIconLoader().iconPath('go-next-view', KIconLoader.Small))
+    iconPlaylistLast = toUnicode(KIconLoader().iconPath('go-last-view', KIconLoader.Small))
+    iconProcessIdle = toUnicode(KIconLoader().iconPath('process-idle', KIconLoader.Small))
+    iconRatingEmpty = toUnicode(KIconLoader().iconPath('rating_empty', KIconLoader.Small))
+    iconRatingFull = toUnicode(KIconLoader().iconPath('rating_full', KIconLoader.Small))
+    iconRatingHalf = toUnicode(KIconLoader().iconPath('rating_half', KIconLoader.Small))
+    iconReindex = toUnicode(KIconLoader().iconPath('nepomuk', KIconLoader.Small))
+    iconSystemRun = toUnicode(KIconLoader().iconPath('system-run', KIconLoader.Small))
+    iconSystemSearch = toUnicode(KIconLoader().iconPath('system-search', KIconLoader.Small))
+    iconSystemSearchWeb = toUnicode(KIconLoader().iconPath('edit-web-search', KIconLoader.Small))
+    iconUnknown = toUnicode(KIconLoader().iconPath('unknown', KIconLoader.Small))
 
     htmlHeader = "<html>\n" \
                         "<head>\n" \
@@ -404,7 +404,7 @@ class cDataFormat():
 
                 if ((tmpCoverUrl != "") and fileExists(tmpCoverUrl)):
                     if useHtmlEncoding:
-                        coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                        coverUrl = urlHtmlEncode(tmpCoverUrl)
 
                     else:
                         coverUrl = tmpCoverUrl
@@ -452,7 +452,7 @@ class cDataFormat():
                     tmpCoverUrl = url + '/' + coverName
                     if fileExists(tmpCoverUrl):
                         if useHtmlEncoding:
-                            coverUrl = tmpCoverUrl.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                            coverUrl = urlHtmlEncode(tmpCoverUrl)
 
                         else:
                             coverUrl = tmpCoverUrl
@@ -481,7 +481,7 @@ class cDataFormat():
             icon = getattr(self, propertyName)
 
         else:
-            icon = KIconLoader().iconPath('orientation_%s' % orientation, KIconLoader.Small)
+            icon = toUnicode(KIconLoader().iconPath('orientation_%s' % orientation, KIconLoader.Small))
             setattr(self, propertyName, icon)
 
         html = ""
@@ -842,14 +842,14 @@ class cDataFormat():
             output += "<b>Audio player</b><br />\n" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
-                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"))
+                            % (listType, urlHtmlEncode(url))
 
         elif listType == 'video':
             output += "<div class=\"videoplayer\">\n"
             output += "<b>Video player</b><br />\n" \
                         "<video id=\"%splayer\" " \
                             "src=\"file://%s\" height=\"%s\" width=\"%s\" controls preload>No video support</video><br />\n" \
-                            % (listType, url.replace("\"", "&quot;").replace("#", "%23").replace("?", "%3F"), self.videoHeight, self.videoWidth)
+                            % (listType, urlHtmlEncode(url), self.videoHeight, self.videoWidth)
 
         if self.playlistShowWithOneElement or len(data) > 1:
             output += "<img onclick='%(type)splayTrack(-1)' style='margin:2px' src='file://%(f)s'>" \
@@ -870,9 +870,9 @@ class cDataFormat():
             i = 0
             for item in playList:
                 output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
-                iconRun = self.htmlLinkSystemRun % {"uri": item[2].replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")}
+                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
                 iconRun = iconRun.replace('"', "'")
-                iconDir = self.htmlLinkOpenLocation % {"uri": os.path.dirname(item[2]).replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")}
+                iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
                 iconDir = iconDir.replace('"', "'")
                 row = "<tr>"
                 row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
@@ -2035,10 +2035,10 @@ class cDataFormat():
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
                     if vartype(symbols) == "list":
-                        symbol = self.readProperty(symbols[0].toStringList()[0], "nie:url", "str")
+                        symbol = urlDecode(self.readProperty(symbols[0].toStringList()[0], "nie:url", "str"))
 
                     else:
-                        symbol = self.readProperty(symbols.toStringList()[0], "nie:url", "str")
+                        symbol = urlDecode(self.readProperty(symbols.toStringList()[0], "nie:url", "str"))
 
                 try:
                     if ((symbol[0] == "/") or (symbol[:7] == "file://")):
@@ -2047,7 +2047,7 @@ class cDataFormat():
                                 symbol = "file://" + symbol
 
                         else:
-                            symbol = self.iconUnknown
+                            symbol = "file://" + self.iconUnknown
 
                     ext = os.path.splitext(symbol)[1][1:].lower()
                     if ext in self.supportedImageFormats:
@@ -2057,7 +2057,7 @@ class cDataFormat():
                         else:
                             addCoverLink = ""
 
-                        symbol = symbol.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+                        symbol = urlHtmlEncode(symbol)
                         output += '<tr><td><img %(fmt)s title=\"%(title)s\" src=\"%(url)s\">%(addCoverLink)s</td>' \
                                     % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                         'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}

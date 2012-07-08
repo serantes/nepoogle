@@ -196,6 +196,16 @@ def QStringListToString(stringList = []):
     return result
 
 
+def urlDecode(url):
+    qUrl = QUrl()
+    qUrl.setEncodedUrl(toUnicode(url))
+    return toUnicode(qUrl.toString())
+
+
+def urlHtmlEncode(url):
+    return url.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+
+
 def toPercentEncoding(url = ''):
     return QUrl.toPercentEncoding(url)
 
