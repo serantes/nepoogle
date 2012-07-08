@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, gettext, md5, os, re, signal, subprocess, sys, time
+import datetime, gettext, md5, os, re, signal, subprocess, sys, time, urllib
 
 from PyQt4.QtCore import *
 from PyKDE4.kdecore import *
@@ -230,6 +230,16 @@ class cWebView(QWebView):
 
     def dropEvent(self, event):
         self.owner.dropHandler(event)
+
+
+    def mousePressEnter(self, event):
+        print "mousePressEnter"
+        event.setAccepted(True)
+
+
+    def mouseReleaseEnter(self, event):
+        print "mouseReleaseEnter"
+        event.setAccepted(True)
 
 
     #def openLinkInNewWindow(self, url):
@@ -1211,30 +1221,46 @@ class Nepoogle(QWidget):
                         if ((ontologyUrl == None) or (ontologyUrl == "")):
                             continue
 
-                        if (len(event.mimeData().urls()) > 1):
-                            msgImagePronoun = "all images"
+                        #if (len(event.mimeData().urls()) > 1):
+                            #msgImagePronoun = "all images"
 
-                        else:
-                            msgImagePronoun = "next image"
+                        #else:
+                            #msgImagePronoun = "next image"
 
-                        msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
-                        urlReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyUrl, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        #msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
+                        #urlReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyUrl, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                        #if urlReply == QMessageBox.Yes:
+                        downloadTo = "%s%s/" % (NEPOOGLE_DOWNLOADS_PATH, uri.replace("nepomuk:/res/", ""))
+                        if not os.path.exists(downloadTo):
+                            os.makedirs(downloadTo)
+
+                        downloadTo = downloadTo + os.path.basename(url)
+                        urllib.urlretrieve(url, downloadTo)
+                        #filename, headers = urllib.urlretrieve(url, downloadTo)
+                        #print filename
+                        #print headers
+                        urlResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC("nfo:Image", True))
+                        urlResource.addProperty(NOC("ndo:copiedFrom", True), toVariant(QUrl(url)))
+                        uriResource = Nepomuk.Resource(uri)
+                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource))
+                        mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:
                         urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         ontologyUrl = ONTOLOGY_LINK
 
-                    if urlReply == QMessageBox.Yes:
-                        # This code has really low performance so don't use it.
-                        #urlResource = Nepomuk.Resource()
-                        #urlResource.addType(NOC("nfo:Website", True))
-                        #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
-                        #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
-                        urlResource = Nepomuk.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
-                        urlResource.addType(NOC("nfo:Website", True))
-                        uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource))
-                        mustRefresh = SLEEP_AFTER_UPDATE
+                        if urlReply == QMessageBox.Yes:
+                            # This code has really low performance so don't use it.
+                            #urlResource = Nepomuk.Resource()
+                            #urlResource.addType(NOC("nfo:Website", True))
+                            #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
+                            #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
+                            urlResource = Nepomuk.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
+                            urlResource.addType(NOC("nfo:Website", True))
+                            uriResource = Nepomuk.Resource(uri)
+                            uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource))
+                            mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
                     if self.model == None:
@@ -1463,8 +1489,8 @@ class Nepoogle(QWidget):
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
                     "<br />\n" \
-                    "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> and it has its own query syntax.<br />" \
-                    "<sup>2)</sup>e2 uses a hacked version of <a href=\"http://api.kde.org/4.x-api/kdelibs-apidocs/nepomuk-core/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> optimized with subqueries.<br />" \
+                    "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.8-api/kdelibs-apidocs/nepomuk/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> and it has its own query syntax.<br />" \
+                    "<sup>2)</sup>e2 uses a hacked version of <a href=\"http://api.kde.org/4.8-api/kdelibs-apidocs/nepomuk/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> optimized with subqueries.<br />" \
                     "</ul>" \
                     "</p>\n" \
                     % {'shortcuts': shortcutsList, 'instructions': commandsList}
@@ -1516,7 +1542,7 @@ class Nepoogle(QWidget):
                     "<p><h3>%(program)s's help</h3></p>\n" \
                     "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
                     "<p><b>Warning!:</b> since <b>%(program)s 0.9.4</b> resources can be edited using dialog forms and/or drag&amp;drop but this features are <em>not fully tested and may contain bugs</em>. Please, <em>be cautious</em> using edition capabilities!</p>\n" \
-                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engine it's not working so default query engine is Nepomuk::Query:QueryParser().</p>\n" \
+                    "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engine it's not working so default query engine is Nepomuk::Query::QueryParser().</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(shortcuts)s" \
