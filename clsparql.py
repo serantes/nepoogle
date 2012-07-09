@@ -562,7 +562,7 @@ class cSparqlBuilder():
                 [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r ?lastModified\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
-                [_('--tags'), ['?x0 AS ?id ?prefLabel ?altLabel', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
+                [_('--tags'), ['?x0 AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
                 [_('--topics'), ['?x0 AS ?id ?label', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
                 [_('--tvseries'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
                 [_('--tvshows'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
