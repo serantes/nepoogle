@@ -1485,14 +1485,15 @@ class Nepoogle(QWidget):
                     "<br />\n" \
                     "<em>query</em> :== [e1] item [[logop] item]... | command | uri<br />\n"\
                     "<br />\n" \
+                    "<em>op</em> :== + | - | compop<br />\n" \
                     "<em>logop</em> :== and | or<br />\n" \
                     "<em>compop</em> :==  = | < | <= | > | >=<br />\n" \
-                    "<em>op</em> :== + | - | compop<br />\n" \
                     "<br />\n" \
                     "<em>item</em> :== [ontology:][op]text | &lt;ontology&gt;&lt;op&gt;&lt;text&gt;<br />\n" \
                     "<br />\n" \
-                    "<em>ontology</em> :== [ontitem=]ontitem[->[ontitem=]ontitem]]...<br />\n" \
+                    "<em>ontology</em> :== [ontitem=]ontitem[relation[ontitem=]ontitem]]...<br />\n" \
                     "<em>ontitem</em> :== shortcutontology | shortontology | fullontology<br />\n" \
+                    "<em>relation</em> :== -> | <-<br />\n" \
                     "<em>shortcutontology</em> :== %(shortcuts)s<br />\n" \
                     "<em>shortontology</em> :== prefix:name<br />\n" \
                     "<em>fullontology</em> :== &lt;http://fullurl&gt;<br />\n" \
