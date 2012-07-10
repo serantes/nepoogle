@@ -30,7 +30,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
 
 import PyKDE4.kdecore as kdecore
-from PyKDE4.kdecore import KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, i18n
+from PyKDE4.kdecore import i18n, KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, KUrl
 from PyKDE4.kdeui import KApplication, KIconLoader
 from PyKDE4.nepomuk import Nepomuk
 from PyKDE4.soprano import Soprano

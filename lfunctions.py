@@ -25,7 +25,7 @@
 import datetime, md5, os, re, subprocess, sys
 
 from PyQt4.QtCore import *
-#from PyKDE4.kdecore import *
+from PyKDE4.kdecore import KUrl
 from PyKDE4.soprano import Soprano
 from PyKDE4.nepomuk import Nepomuk
 
