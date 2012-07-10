@@ -25,8 +25,8 @@
 import gettext, time
 
 from PyQt4.QtCore import *
-from PyKDE4.nepomuk import *
-from PyKDE4.soprano import *
+from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.soprano import Soprano
 
 from PyQt4.QtGui import *
 

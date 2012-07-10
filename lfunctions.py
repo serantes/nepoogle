@@ -23,11 +23,11 @@
 #***************************************************************************
 
 import datetime, md5, os, re, subprocess, sys
-from PyKDE4.kdecore import *
 
 from PyQt4.QtCore import *
-from PyKDE4.soprano import *
-from PyKDE4.nepomuk import *
+#from PyKDE4.kdecore import *
+from PyKDE4.soprano import Soprano
+from PyKDE4.nepomuk import Nepomuk
 
 from lglobals import *
 

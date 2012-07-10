@@ -24,10 +24,9 @@
 
 import datetime, fractions, os, re
 
-from PyQt4.QtCore import *
-from PyKDE4.kdeui import *
-from PyKDE4.nepomuk import *
-from PyKDE4.soprano import *
+from PyKDE4.kdeui import KIconLoader
+from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.soprano import Soprano
 
 from clsparql import *
 from lfunctions import *
@@ -1850,12 +1849,14 @@ class cDataFormat():
 
                     elif resource.hasType(NOC('rdfs:Resource', True)):
                         ontLabel = ''
-                        if resource.hasProperty(NOC('nie:url')):
-                            url = toUnicode(resource.property(NOC('nie:url')).toString())
-                            ext = os.path.splitext(url)[1][1:].lower()
-                            if ext != '' and ext in self.supportedImageFormats:
-                                if not url in images:
-                                    images += [url]
+                        # Better don't add remote resources.
+                        if not (resource.hasType(NOC('nfo:RemoteDataObject', True))):
+                            if resource.hasProperty(NOC('nie:url')):
+                                url = toUnicode(resource.property(NOC('nie:url')).toString())
+                                ext = os.path.splitext(url)[1][1:].lower()
+                                if ext != '' and ext in self.supportedImageFormats:
+                                    if not url in images:
+                                        images += [url]
 
                     else:
                         value = toUnicode(resource.type())

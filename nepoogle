@@ -26,16 +26,15 @@
 import datetime, gettext, md5, os, re, signal, subprocess, sys, time, urllib
 
 from PyQt4.QtCore import *
-from PyKDE4.kdecore import *
-from PyKDE4.nepomuk import *
-from PyKDE4.soprano import *
-
 from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
-from PyKDE4.kdeui import *
-#from PyKDE4.kdecore import ki18n, i18n, KCmdLineArgs, KAboutData
-#from PyKDE4.kdeui import KApplication, KXmlGuiWindow, KStandardAction, KAction, KIcon
-#from PyKDE4.kdecore import *
+
+import PyKDE4.kdecore as kdecore
+from PyKDE4.kdecore import KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, i18n
+from PyKDE4.kdeui import KApplication, KIconLoader
+from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.soprano import Soprano
+
 
 #_BUG: carácter ' de Singin' in the Rain
 #_BUG: fallan las búsquedas con el carácter ":"
@@ -441,6 +440,10 @@ class Nepoogle(QWidget):
             self.execQuery('--help')
 
 
+    def closeEvent(self, event):
+        sys.exit()
+
+
     #def downloadLinkToDisk(self, checked):
     #    print("downloadLinkToDisk", checked)
     #    pass
@@ -639,6 +642,16 @@ class Nepoogle(QWidget):
             else:
                 self.addProperty(uri, "nmm:artwork", coverUrl)
                 QMessageBox.information(self, "%s - %s" % (PROGRAM_NAME, _("Information")), _("Added as album cover the next file:\n\n%s") % coverUrl)
+
+        elif url[:9] == "command:/":
+            url = url[9:]
+            self.leSearch.setText(url)
+            self.pendingQuery = True
+            self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
+                                    % self.iconProcessIdle)
+            if forceExec:
+                self.execQuery()
+                self.pendingQuery = False
 
         elif url[:8] == 'delete:/':
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1264,10 +1277,18 @@ class Nepoogle(QWidget):
                         #filename, headers = urllib.urlretrieve(url, downloadTo)
                         #print filename
                         #print headers
-                        urlResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
-                        urlResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(QUrl(url)))
+
+                        # Remote resource creation to store the original url.
+                        urlRemoteResource = Nepomuk.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
+                        urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
+
+                        # Local resource creation to store where file is copied.
+                        urlLocalResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
+                        urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
+
+                        # Assigning local resource to the resource.
                         uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource))
+                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:
@@ -1425,7 +1446,7 @@ class Nepoogle(QWidget):
     def buildHelp(self, oSparqlBuilder):
         commands = '<p><b>Commands</b>:\n<ul>\n'
         for command in oSparqlBuilder.commands:
-            commands += '<li>%s</li>\n' % command[0]
+            commands += '<li><a href="command:/%(command)s">%(command)s</a></li>\n' % {"command": command[0]}
         commands += '</ul></p>\n'
 
         shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + self.htmlTableHeader \
@@ -1917,30 +1938,6 @@ def buildHelp():
 
 
 def main(args):
-    #appName = PROGRAM_NAME
-    #catalog = PROGRAM_NAME
-    #programName = ki18n(PROGRAM_NAME)
-    #version = PROGRAM_VERSION_VERSION
-    #description = ki18n("An alternate search engine for Nepomuk inspired in Google search syntax.")
-    #license = KAboutData.License_GPL
-    #copyright = ki18n("(C) 2011 Ignacio Serantes")
-    #text = ki18n("A search engine for Nepomuk.")
-    #homePage = "http://kde-apps.org/content/show.php/Nepoogle?content=145505"
-    #bugEmail = "kde@aynoa.net"
-
-    #aboutData = KAboutData(appName, catalog, programName, version,
-                            #description, license, copyright, text, homePage,
-                            #bugEmail)
-
-    #KCmdLineArgs.init(sys.argv, aboutData)
-
-    #options = KCmdLineOptions()
-    #options.add("--help", ki18n("this help"))
-    #options.add("--gui", ki18n("force gui mode in console"))
-    #options.add("--stdout", ki18n("force stdout in console mode"))
-    #options.add("--nostdout", ki18n("force no stdout in gui mode"))
-    #KCmdLineArgs.addCmdLineOptions(options)
-
     displayResults = None
     gui = not sys.stdout.isatty()
     verboseMode = None
@@ -2021,14 +2018,29 @@ def main(args):
         if verboseMode == None:
             verboseMode = gui
 
-        #app = KApplication()
+        aboutData = KAboutData(PROGRAM_NAME, PROGRAM_NAME, ki18n(PROGRAM_NAME), PROGRAM_VERSION_VERSION,
+                                ki18n("An alternate search engine for Nepomuk inspired in Google search syntax."),
+                                KAboutData.License_GPL, ki18n("(C) 2011 %s" % PROGRAM_AUTHOR_NAME),
+                                ki18n("A search engine for Nepomuk."),
+                                "http://kde-apps.org/content/show.php/Nepoogle?content=145505",
+                                PROGRAM_AUTHOR_EMAIL)
+        KCmdLineArgs.init([sys.argv[0]], aboutData)
+
+        #options = KCmdLineOptions()
+        #options.add("help", ki18n("this help"))
+        #options.add("gui", ki18n("force gui mode in console"))
+        #options.add("stdout", ki18n("force stdout in console mode"))
+        #options.add("nostdout", ki18n("force no stdout in gui mode"))
+        #KCmdLineArgs.addCmdLineOptions(options)
+
+        app = KApplication()
         #window = Nepoogle(searchString)
         #window.show()
 
         #if searchString != '':
         #    window.execQuery()
 
-        app = QApplication(args)
+        #app = QApplication(args)
         nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1))
         nepoogle.show()
         nepoogle.repaint()

@@ -24,7 +24,7 @@
 
 import gettext, os, sys
 
-from PyKDE4.kdecore import *
+import PyKDE4.kdecore as kdecore
 
 #BEGIN lglobals.py
 
@@ -81,14 +81,14 @@ INTERNAL_RESOURCE_FORCED_IN_CONSOLE = (USE_INTERNAL_RESOURCE or DO_NOT_USE_NEPOM
 INTERNAL_RESOURCE_IN_PLAYLIST = (USE_INTERNAL_RESOURCE or DO_NOT_USE_NEPOMUK)
 INTERNAL_RESOURCE_IN_RESULTS_LIST = (USE_INTERNAL_RESOURCE or DO_NOT_USE_NEPOMUK)
 
-PYKDE4_VERSION_STR = versionString().split(" ")[0].strip()
+PYKDE4_VERSION_STR = kdecore.versionString().split(" ")[0].strip()
 
 SYSTEM_ENCODING = os.environ["LANG"].split(".")[1]
 if (SYSTEM_ENCODING == ""):
     SYSTEM_ENCODING = 'UTF-8' # Forcing UTF-8.
 
-KDE4_CONFIG_PATH = unicode(KStandardDirs().locate("config", ""), SYSTEM_ENCODING).split(":")[0].strip()
-KDE4_DATA_PATH = unicode(KStandardDirs().locate("data", ""), SYSTEM_ENCODING).split(":")[0].strip()
+KDE4_CONFIG_PATH = unicode(kdecore.KStandardDirs().locate("config", ""), SYSTEM_ENCODING).split(":")[0].strip()
+KDE4_DATA_PATH = unicode(kdecore.KStandardDirs().locate("data", ""), SYSTEM_ENCODING).split(":")[0].strip()
 
 NEPOOGLE_CONFIG_FILE = KDE4_CONFIG_PATH + PROGRAM_NAME + ".rc"
 NEPOOGLE_DATA_PATH = KDE4_DATA_PATH + PROGRAM_NAME + "/"
