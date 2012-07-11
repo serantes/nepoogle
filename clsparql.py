@@ -621,7 +621,7 @@ class cSparqlBuilder():
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['!nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
-                    ['nfo:height', _('height'), _('height')], \
+                    ['nfo:height', _('height'), _('he')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
