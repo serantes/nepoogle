@@ -612,6 +612,7 @@ class cSparqlBuilder():
                     ['nao:created', _('created'), _('cd')], \
                     ['nie:contentCreated', _('contentcreated'), _('cc')], \
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
+                    ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
                     ['nmm:setNumber', _('discnumber'), _('dn')], \
@@ -621,6 +622,7 @@ class cSparqlBuilder():
                     ['!nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('height')], \
+                    ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
                     ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
@@ -630,6 +632,7 @@ class cSparqlBuilder():
                     # Renamed from aa albumartist.
                     ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
+                    ['nco:photo<-nco:fullname', _('photos'), _('ps')], \
                     ['nuao:usageCount', _('playcount'), _('pc')], \
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
                     ['nao:numericRating', _('rating'), _('ra')], \
@@ -637,6 +640,7 @@ class cSparqlBuilder():
                     ['nmm:season', _('season'), _('se')], \
                     ['nmm:setNumber', _('setnumber'), _('sn')], \
                     ['nao:identifier', _('tag'), _('ta')], \
+                    ['nfo:depiction<-nie:title', _('tdepictions'), _('tds')], \
                     ['nie:title', _('title'), _('ti')], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn')], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts')], \
