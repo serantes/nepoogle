@@ -22,7 +22,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, md5, os, re, subprocess, sys
+import datetime, md5, os, re, subprocess, sys, tempfile
 
 from PyQt4.QtCore import *
 from PyKDE4.kdecore import KUrl
@@ -36,6 +36,37 @@ _ = gettext.gettext
 #BEGIN lfunctions.py
 # Program functions.
 gSysEncoding = SYSTEM_ENCODING
+
+
+class stderrReader():
+    tmpFile = None
+    old_stderr = None
+    stderrValue = ""
+
+    def __init__(self):
+        self.tmpFile = tempfile.TemporaryFile()
+        self.old_stderr = sys.stderr
+        self.old_stderr.flush()
+        sys.stderr = self.tmpFile
+
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if (self.old_stderr != None):
+            sys.stderr.flush()
+            sys.stderr = self.old_stderr
+
+
+    def read(self):
+        if (self.old_stderr != None):
+            sys.stderr.flush()
+            sys.stderr = self.old_stderr
+            self.old_stderr = None
+
+            self.tmpFile.seek(0)
+            self.stderrValue = self.tmpFile.read()
+            self.tmpFile.close()
+
+        return self.stderrValue
 
 
 def addLinksToText(text = ''):
@@ -104,6 +135,58 @@ def dialogTextInputBox(message = _("Text"), value = ""):
 
     print(toUtf8("dialogTextInputBox:%s" % value))
     return value
+
+
+def downloadFile(remoteUrl, localUrl):
+    remoteUrl = str(QUrl(toUnicode(remoteUrl)).toEncoded())
+
+    result = False
+    NEPOOGLE_DOWNLOAD_METHOD = None
+    try:
+        import urllib
+        NEPOOGLE_DOWNLOAD_METHOD = "urllib"
+
+        if (url.find(".imgur.com/") < 0):
+            import pycurl, StringIO
+            NEPOOGLE_DOWNLOAD_METHOD = "curl"
+
+    except:
+        pass
+
+    if (NEPOOGLE_DOWNLOAD_METHOD == "urllib"):
+        try:
+            urllib.urlretrieve(remoteUrl, localUrl)
+            result = True
+
+        except:
+            pass
+
+    elif (NEPOOGLE_DOWNLOAD_METHOD == "curl"):
+        cUrl = pycurl.Curl()
+        cUrl.setopt(pycurl.URL, remoteUrl)
+        strIO = StringIO.StringIO()
+        cUrl.setopt(pycurl.WRITEFUNCTION, strIO.write)
+        #cUrl.setopt(pycurl.FOLLOWLOCATION, 1)
+        #cUrl.setopt(pycurl.MAXREDIRS, 5)
+        cUrl.setopt(pycurl.POST, 1)
+        cUrl.perform()
+
+        # Data must be written to file.
+        try:
+            f = open(localUrl, "w")
+
+            try:
+                f.write(strIO.getvalue())
+                result = True
+
+            finally:
+                f.close()
+
+        except:
+            result = False
+
+    return result
+
 
 def fileExists(fileName = ''):
     if fileName == '':
@@ -197,8 +280,14 @@ def QStringListToString(stringList = []):
 
 
 def urlDecode(url):
+    url = toUnicode(url)
     qUrl = QUrl()
-    qUrl.setEncodedUrl(toUnicode(url))
+    try:
+        qUrl.setEncodedUrl(url)
+
+    except:
+        qUrl.setUrl(url)
+
     return toUnicode(qUrl.toString())
 
 
@@ -207,7 +296,7 @@ def urlHtmlEncode(url):
 
 
 def toPercentEncoding(url = ''):
-    return QUrl.toPercentEncoding(url)
+    return str(QUrl.toPercentEncoding(url))
 
 
 def toUtf8(string):

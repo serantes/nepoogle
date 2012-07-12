@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, gettext, md5, os, re, signal, subprocess, sys, time, urllib
+import datetime, gettext, md5, os, re, signal, subprocess, sys, time, tempfile
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -978,13 +978,16 @@ class Nepoogle(QWidget):
                 #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (value, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 #if resourceReply == QMessageBox.Yes:
                 if True:
+                    #redirector = stderrReader()
                     print("%s: property %s added" % (uri, ontologyResource))
-                    #print("Adding property: %s, %s, %s" % (uri, ontologyResource, value))
                     if ontologyResource == ONTOLOGY_NUMERIC_RATING:
                         self.setRating(resource, value)
 
                     else:
                         resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(value))
+
+                    #stderr_data = redirector.read()
+                    #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _(stderr_data))
 
                     mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1271,25 +1274,22 @@ class Nepoogle(QWidget):
                         if not os.path.exists(downloadTo):
                             os.makedirs(downloadTo)
 
-                        downloadTo = downloadTo + urlDecode(os.path.basename(url))
-                        print urlDecode(os.path.basename(url))
-                        urllib.urlretrieve(url, downloadTo)
-                        #filename, headers = urllib.urlretrieve(url, downloadTo)
-                        #print filename
-                        #print headers
+                        #downloadTo = downloadTo + urlDecode(os.path.basename(url))
+                        downloadTo = downloadTo + md5.new(url).hexdigest() + os.path.splitext(url)[1].lower()
+                        if downloadFile(url, downloadTo):
+                            # Remote resource creation to store the original url.
+                            urlRemoteResource = Nepomuk.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
+                            urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
 
-                        # Remote resource creation to store the original url.
-                        urlRemoteResource = Nepomuk.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
-                        urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
+                            # Local resource creation to store where file is copied.
+                            urlLocalResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
+                            urlLocalResource.addProperty(NOC(ONTOLOGY_TITLE, True), toVariant(os.path.basename(url)))
+                            urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
 
-                        # Local resource creation to store where file is copied.
-                        urlLocalResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
-                        urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
-
-                        # Assigning local resource to the resource.
-                        uriResource = Nepomuk.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
-                        mustRefresh = SLEEP_AFTER_UPDATE
+                            # Assigning local resource to the resource.
+                            uriResource = Nepomuk.Resource(uri)
+                            uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
+                            mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:
                         urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
