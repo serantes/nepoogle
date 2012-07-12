@@ -665,7 +665,16 @@ class cSparqlBuilder():
 
 
     def __init__(self):
-        pass
+        if USE_NEW_INFERENCE_METHOD:
+            self.visibilityFilter = "a [ nao:userVisible \"true\"^^xsd:boolean ]"
+            for i in range(len(self.commands)):
+                self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1 .", "a [ nao:userVisible \"true\"^^xsd:boolean ] .")
+
+        else:
+            self.visibilityFilter = "nao:userVisible 1 ."
+
+        for command in self.commands:
+            print command[1][0]
 
 
     def __del__(self):
