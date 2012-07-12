@@ -636,7 +636,7 @@ class cSparqlBuilder():
                     ['nuao:usageCount', _('playcount'), _('pc')], \
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
                     ['nao:numericRating', _('rating'), _('ra')], \
-                    ['nmm:relea-First changes to adapt Nepoogle's query engine to KDE 4.9.seDate', _('releasedate'), _('rd')], \
+                    ['nmm:releaseDate', _('releasedate'), _('rd')], \
                     ['nmm:season', _('season'), _('se')], \
                     ['nmm:setNumber', _('setnumber'), _('sn')], \
                     ['nao:identifier', _('tag'), _('ta')], \
@@ -668,13 +668,10 @@ class cSparqlBuilder():
         if USE_NEW_INFERENCE_METHOD:
             self.visibilityFilter = "a [ nao:userVisible \"true\"^^xsd:boolean ] ."
             for i in range(len(self.commands)):
-                self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1 .", "a [ nao:userVisible \"true\"^^xsd:boolean ] .")
+                self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1 .", "a [ nao:userVisible \"true\"^^xsd:boolean ]")
 
         else:
             self.visibilityFilter = "nao:userVisible 1 ."
-
-        for command in self.commands:
-            print command[1][0]
 
 
     def __del__(self):
