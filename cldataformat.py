@@ -1719,7 +1719,7 @@ class cDataFormat():
                     ext = os.path.splitext(url)[1][1:].lower()
                     if ((ext != '') and fileExists(url)):
                         if ext in self.supportedImageFormats:
-                            if not url in images:
+                            if (lindex(images, url) == None):
                                 images += [[url, item[0]]]
 
                         elif ext in self.supportedAudioFormats:
@@ -1746,6 +1746,7 @@ class cDataFormat():
             if len(audios) > 0:
                 output += self.buildPlaylist(audios, 'audio')
 
+            #TODO: it's this loop used?
             for item in images:
                 lines += u"Image: %s<br />\n" % item[0]
 
@@ -1788,7 +1789,7 @@ class cDataFormat():
         script = ""
         if self.enableImageViewer:
             script += SCRIPT_IMAGE_VIEWER
-            imageViewer = "<img title=\"%%(url)s\" src=\"%%(url)s\" style=\"width: %s;\" "\
+            imageViewer = "<img title=\"%%(title)s\" src=\"%%(url)s\" style=\"width: %s;\" "\
                             "onLoad=\"new viewer({image: this, frame: ['%s','400px']});\"/>" % (self.viewerColumnsWidth, self.viewerColumnsWidth)
 
         if self.videojsEnabled:
@@ -1817,6 +1818,9 @@ class cDataFormat():
 
         if defaultType != "":
             data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+
+        noc_nieUrl = NOC("nie:url", True)
+        noc_nieTitle = NOC("nie:title", True)
 
         isAnEmptyResource = True
         if ((defaultType != "") and data.isValid()):
@@ -1864,12 +1868,16 @@ class cDataFormat():
                         ontLabel = ''
                         # Better don't add remote resources.
                         if not (resource.hasType(NOC('nfo:RemoteDataObject', True))):
-                            if resource.hasProperty(NOC('nie:url')):
-                                url = toUnicode(resource.property(NOC('nie:url')).toString())
+                            if resource.hasProperty(noc_nieUrl):
+                                url = toUnicode(resource.property(noc_nieUrl).toString())
                                 ext = os.path.splitext(url)[1][1:].lower()
                                 if ext != '' and ext in self.supportedImageFormats:
-                                    if not url in images:
-                                        images += [url]
+                                    if (lindex(images, url) == None):
+                                        if resource.hasProperty(noc_nieTitle):
+                                            images += [[url, toUnicode(resource.property(noc_nieTitle).toString())]]
+
+                                        else:
+                                            images += [[url, os.path.basename(url)]]
 
                     else:
                         value = toUnicode(resource.type())
@@ -1914,8 +1922,8 @@ class cDataFormat():
                     url = fromPercentEncoding(value)
                     ext = os.path.splitext(url)[1][1:].lower()
                     if ext in self.supportedImageFormats:
-                        if not url in images:
-                            images += [url]
+                        if (lindex(images, url) == None):
+                            images += [[url, os.path.basename(url)]]
 
                     elif ext in self.supportedAudioFormats:
                         if lindex(audios, url) == None:
@@ -1973,8 +1981,8 @@ class cDataFormat():
                         if (((value[0] == "/") or (value[:7] == "file://")) and fileExists(value)):
                             ext = os.path.splitext(value)[1][1:].lower()
                             if ext != '' and ext in self.supportedImageFormats:
-                                if not value in images:
-                                    images += [value]
+                                if (lindex(images, value) == None):
+                                    images += [[value, os.path.basename(value)]]
 
                             if value[:7] != 'file://':
                                 value = 'file://' + value
@@ -2086,7 +2094,7 @@ class cDataFormat():
                                         % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
 
                         elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
-                            title = toUnicode(mainResource.property(NOC("nie:title")).toString())
+                            title = toUnicode(mainResource.property(noc_nieTitle).toString())
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
@@ -2137,8 +2145,8 @@ class cDataFormat():
 
                 else:
                     val = toUnicode(res.genericLabel())
-                    if res.hasProperty(NOC('nie:url')):
-                        url = toUnicode(res.property(NOC('nie:url')).toString())
+                    if res.hasProperty(noc_nieUrl):
+                        url = toUnicode(res.property(noc_nieUrl).toString())
 
                     else:
                         url = None
@@ -2167,8 +2175,8 @@ class cDataFormat():
                     if ((url != None) and fileExists(url)):
                         ext = os.path.splitext(url)[1][1:].lower()
                         if ext in self.supportedImageFormats:
-                            if not url in images:
-                                images += [url]
+                            if (lindex(images, url) == None):
+                                images += [[url, os.path.basename(url)]]
 
                         elif ext in self.supportedAudioFormats:
                             if lindex(audios, url) == None:
@@ -2209,18 +2217,20 @@ class cDataFormat():
             if len(audios) + len(videos) > 0:
                 output += "<br />"
 
-            for url in sorted(images):
+            images = sorted(images, key=lambda item: item[1])
+            for item in sorted(images):
+                url = item[0]
                 if ((url.find("://") < 0) and not (url[:7] == 'file://')):
                     url = 'file://' + url
 
                 if self.enableImageViewer:
-                    output += imageViewer % {'url': url}
+                    output += imageViewer % {"title": item[1], 'url': url}
 
                 else:
-                    output += '<img title=\"%(url)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\"><br />\n' \
-                                % {'url': url, "width": self.viewerColumnsWidth}
+                    output += '<img title=\"%(title)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\"><br />\n' \
+                                % {"title": item[1], 'url': url, "width": self.viewerColumnsWidth}
 
-                output += "<b>File name</b>:<em><a title=\"%(url)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": os.path.basename(url)}
+                output += "<b>File name</b>:<em><a title=\"%(title)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": item[1]}
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
