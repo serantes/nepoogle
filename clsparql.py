@@ -647,7 +647,7 @@ class cSparqlBuilder():
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs')], \
                     ['nmm:series->nie:title', _('tvshow'), _('tv')], \
                     ['rdf:type=nmm:TVShow->nie:title', _('tvshows'), _('tvw')], \
-                    ['rdf:type', _('type'), _('ty')], \
+                    ['!rdf:type', _('type'), _('ty')], \
                     ['%nie:url', _('url'), _('ur')], \
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
                     ['nfo:width', _('width'), _('wi')], \
