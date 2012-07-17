@@ -762,7 +762,7 @@ class Nepoogle(QWidget):
         elif url[:8] == 'remove:/':
             reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
-                resource = Nepomuk.Resource(url[8:])
+                resource = Nepomuk.Resource(QUrl(url[8:]))
                 resource.remove()
                 self.pendingQuery = True
                 self.queryMethod = "refresh"
@@ -1332,16 +1332,18 @@ class Nepoogle(QWidget):
                                 '}\n' \
                                 % (resourceMainType)
 
-                    values = [[ONTOLOGY_SUBJECT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)]]
+                    values = [[ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK)], \
+                                [ONTOLOGY_SUBJECT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)]]
                     queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                     if queryResultSet.isValid():
                         while queryResultSet.next():
                             ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                            values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
+                            if not ontology in (ONTOLOGY_LINK, ONTOLOGY_SUBJECT):
+                                values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
 
                     if values == []:
                         # At least add as a "nao:isRelated".
-                        values = [[ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK)]]
+                        values = []
 
                     if values != []:
                         values = sorted(values, key=lambda item: item[1].lower())
