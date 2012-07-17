@@ -641,7 +641,12 @@ class cDataFormat():
                         if fullname != None:
                             performers += [[itemUri, fullname]]
 
-                performers = sorted(performers, key=lambda item: toUtf8(item[1]))
+                if (len(performers) > 0):
+                    performers = sorted(performers, key=lambda item: toUtf8(item[1]))
+
+                else:
+                    performers = [[None, _("No performers")]]
+
                 if performers == oldPerformers:
                     performers = []
 
@@ -715,8 +720,12 @@ class cDataFormat():
                         if linkPerformers != "":
                             linkPerformers += ",&nbsp;"
 
-                        linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                        % {"uri": performer[0], "title": performer[1]}
+                        if (performer[0] == None):
+                            linkPerformers += "%(title)s" % {"title": performer[1]}
+
+                        else:
+                            linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                            % {"uri": performer[0], "title": performer[1]}
 
                     trackName = "<em>%s</em><br /><em>%s</em><br />%s" \
                                     % (linkTitle, linkPerformers, trackName)
@@ -734,8 +743,12 @@ class cDataFormat():
                         if linkPerformers != "":
                             linkPerformers += ",&nbsp;"
 
-                        linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                        % {"uri": performer[0], "title": performer[1]}
+                        if (performer[0] == None):
+                            linkPerformers += "%(title)s" % {"title": performer[1]}
+
+                        else:
+                            linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                            % {"uri": performer[0], "title": performer[1]}
 
                     trackName = "<em>%s</em><br />%s" % (linkPerformers, trackName)
 
