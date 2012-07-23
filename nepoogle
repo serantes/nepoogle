@@ -838,8 +838,7 @@ class Nepoogle(QWidget):
 
         else:
             # In KDE we trust.nepomuk:/res/eee8837d-27ab-43ac-a34a-43d339102c1c
-            # Seems like there is a problem with character ?.
-            subprocess.Popen(["kioclient", "exec", url.replace("?", "%3F")])
+            subprocess.Popen(["kioclient", "exec", url])
 
 
         # Clear always modifiers because the next keypress could happen in other window.
@@ -1715,6 +1714,8 @@ class Nepoogle(QWidget):
         if searchString == '':
             searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
 
+        output = ""
+
         #if True:
         try:
             if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
@@ -1874,7 +1875,9 @@ class Nepoogle(QWidget):
 
         self.pendingQuery = False
         self.queryMethod = None
-        self.wvOutput.setHtml(output)
+        if (output != ""):
+            self.wvOutput.setHtml(output)
+
         self.setCursor(Qt.ArrowCursor)
         self.leSearch.readOnly = False
         self.repaint()

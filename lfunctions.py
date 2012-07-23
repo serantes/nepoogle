@@ -279,22 +279,6 @@ def QStringListToString(stringList = []):
     return result
 
 
-def urlDecode(url):
-    url = toUnicode(url)
-    qUrl = QUrl()
-    try:
-        qUrl.setEncodedUrl(url)
-
-    except:
-        qUrl.setUrl(url)
-
-    return toUnicode(qUrl.toString())
-
-
-def urlHtmlEncode(url):
-    return url.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
-
-
 def toPercentEncoding(url = ''):
     return str(QUrl.toPercentEncoding(url))
 
@@ -305,7 +289,8 @@ def toUtf8(string):
             return string.toUtf8() # REVISAR: Esto no es coherente con el resto.
 
         else:
-            return string.encode(gSysEncoding)
+            #return string.encode(gSysEncoding)
+            return string.encode("UTF-8")
 
     except:
         return string
@@ -339,6 +324,28 @@ def toVariant(value):
             value = QUrl(value)
 
     return Nepomuk.Variant(value)
+
+
+def urlDecode(url):
+    url = toUtf8(url)
+    qUrl = QUrl()
+    try:
+        print toUtf8(url)
+        qUrl.setEncodedUrl(url)
+
+    except:
+        qUrl.setUrl(url)
+
+    print toUtf8(qUrl.toString())
+    return toUnicode(qUrl.toString())
+
+
+def urlHtmlEncode(url):
+    if ((url[0] == "/") or (url[:7] == "file://")):
+        return url.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
+
+    else:
+        return url.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;")
 
 
 def vartype(var):
