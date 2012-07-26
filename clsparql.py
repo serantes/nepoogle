@@ -280,7 +280,6 @@ def toN3(url = ''):
 
 # An experimental readonly alternative to Nepomuk.Resource().
 class cResource():
-
     cacheEnabled = True
     data = None
     model = None
@@ -556,6 +555,7 @@ class cSparqlBuilder():
                 [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode .\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s) AS ?season MIN(?e) AS ?episode ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
+                [_('--notindexed'), ['notindexed', [], [], []]], \
                 [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--playmixed'), ['playmixed', [], [], []]], \
@@ -707,6 +707,15 @@ class cSparqlBuilder():
 
             # Comandos especiales.
             if self.tempData[0] == 'help':
+                raise Exception(self.tempData[0])
+
+            elif (self.tempData[0] == "notindexed"):
+                try:
+                    self.command == self.tempData[0].split(":")[1]
+
+                except:
+                    self.command = ""
+
                 raise Exception(self.tempData[0])
 
             elif self.tempData[0] == 'newcontact':
@@ -1496,7 +1505,7 @@ class cSparqlBuilder():
         addAnd = False
         for item in items:
             if item[:2] == '--':
-                command = item.lower()
+                command = item
                 commandsFound += 1
                 continue
                 #oneFilter = [item, '', '']
@@ -1633,17 +1642,17 @@ class cSparqlBuilder():
             raise Exception(_("Syntax error, please check your search text."))
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
-            if command not in ('--playlist', '--playmixed'):
+            if command.lower() not in ('--playlist', '--playmixed'):
                 allFilters = []
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
         if commandsFound > 1:
-            raise Exception(_("Syntax error, only one command by query."))
+            raise Exception(_("Syntax error, only one command per query."))
 
         elif commandsFound == 1:
             dummy = command.split(':')
-            command = dummy[0]
+            command = dummy[0].lower()
 
             # Commands that don't support filters.
             if command in ("--playlist", "--playmixed"):

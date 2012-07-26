@@ -232,12 +232,10 @@ class cWebView(QWebView):
 
 
     def mousePressEnter(self, event):
-        print "mousePressEnter"
         event.setAccepted(True)
 
 
     def mouseReleaseEnter(self, event):
-        print "mouseReleaseEnter"
         event.setAccepted(True)
 
 
@@ -1857,6 +1855,16 @@ class Nepoogle(QWidget):
             if msgError == 'help':
                 output = self.buildHelp(self.sparql)
 
+            elif (msgError == "notindexed"):
+                output = "<html>\n  <head>\n    <title>%(title)s</title>\n    " \
+                            "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
+                            "\n  </head>\n<body><b>error:</b> %(error)s" \
+                            "%(powered)s</body>\n</html>" \
+                            % {'title': 'Querying Nepomuk', \
+                                'error': 'This command works only in console mode.', \
+                                'powered': PROGRAM_HTML_POWERED \
+                                }
+
             elif msgError == "newcontact":
                 self.linkClicked(QUrl("addresource:/nco:Contact"))
 
@@ -1932,14 +1940,95 @@ def buildHelp():
     print("Usage: %s [command ] [query]\n" \
           "\n" \
           "commands:\n" \
-          "  --help           -- Shows this help\n" \
-          "  --gui[=MODE]     -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
-          "  --results[=MODE] -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
-          "  --verbose[=MODE] -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
+          "  --help                 -- Shows this help\n" \
+          "  --notindexed:FULLPATH  -- Check for not indexed files in a FULLPATH\n" \
+          "  --gui[=MODE]           -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
+          "  --results[=MODE]       -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
+          "  --verbose[=MODE]       -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
           "\n" \
           "query:\n" \
           "  Query syntax documentation is available in the gui mode help\n" \
           % PROGRAM_NAME)
+
+
+def findNotIndexed(url = None, recursiveMode = True, verbose = False):
+    if url == None or url == "":
+        print(_("ERROR: a url is required."))
+        return False
+
+    try:
+        url = toUnicode(url)
+        if recursiveMode:
+            print(_("Finding all files in \"%s\" ..." % toUtf8(url)))
+            resourcesCount, resources = findRecurseFiles(url)
+
+        else:
+            resourcesCount = 1
+            resources = [url]
+
+        if url[0] == '^':
+            url = '^' + QUrl(url[1:]).toEncoded()
+
+        else:
+            url  = QUrl(url).toEncoded()
+
+        url = toUnicode(url.replace('?', '%3f'))
+        url = url.replace('(', '\\\(').replace(')', '\\\)')
+
+        notIndexedCount = 0
+        sparqlQuery = None
+        recordsets = []
+        for item in resources:
+            item = unicode(item)
+            if (sparqlQuery == None):
+                print(_("Finding all indexed files in \"%s\"..." % toUtf8(url)))
+                sparqlQuery = \
+                    "SELECT DISTINCT ?url\n" \
+                    "WHERE {\n"\
+                        "?x0 nao:userVisible 1 .\n" \
+                        "FILTER(\n" \
+                            "(bif:exists ((\n" \
+                            "SELECT *\n" \
+                            "WHERE {\n" \
+                                "{ ?x0 nie:url ?x1 . FILTER(REGEX(?x1, \"^file://%s\"^^xsd:string, 'i')) } . \n" \
+                            "}\n" \
+                            ")))\n" \
+                        ")\n" \
+                        "OPTIONAL { ?x0 nie:url ?url . } . \n" \
+                    "}\n" % url
+
+                if DO_NOT_USE_NEPOMUK:
+                    model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+                else:
+                    model = Nepomuk.ResourceManager.instance().mainModel()
+
+                count = 0
+                queryResultSet = model.executeQuery(sparqlQuery, Soprano.Query.QueryLanguageSparql)
+                if queryResultSet.isValid():
+                    while queryResultSet.next():
+                        url = toUnicode(queryResultSet["url"].toString().toUtf8())
+                        if url[:7] == "file://":
+                            url = url[7:]
+
+                        recordsets += [url]
+                        count += 1
+
+            if os.path.isdir(item):
+                if verbose:
+                    print(_("Checking \"%s\"..." % toUtf8(item)))
+
+            else:
+                if (lindex(recordsets, item) == None):
+                    notIndexedCount += 1
+                    print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
+
+        print(_("%s not indexed files were located." % notIndexedCount))
+
+    except KeyboardInterrupt:
+        print  "\nOperation aborted by user...\n" \
+
+    return True
 
 
 def main(args):
@@ -2158,6 +2247,23 @@ def main(args):
             msgError = "%s" % sys.exc_info()[1]
             if msgError == 'help':
                 output = buildHelp()
+
+            elif (msgError == "notindexed"):
+                try:
+                    path = oSparql.filters[0][0]
+
+                except:
+                    path = ""
+
+                findNotIndexed(path)
+                output = "\n--\n" \
+                            "Powered by %(name)s %(version)s (%(date)s)" \
+                            % {'title': 'Querying Nepomuk', \
+                                'error': sys.exc_info()[1], \
+                                'name': PROGRAM_NAME, \
+                                'version': PROGRAM_VERSION_VERSION, \
+                                'date': PROGRAM_VERSION_DATE \
+                                }
 
             else:
                 output = "\nerror: %(error)s\n" \

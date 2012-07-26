@@ -69,6 +69,18 @@ class stderrReader():
         return self.stderrValue
 
 
+def addBS(path = '.'):
+    path = path.strip()
+    if path == '':
+        return ''
+
+    else:
+        if path[-1] == '/':
+            return path
+        else:
+            return path + '/'
+
+
 def addLinksToText(text = ''):
     patter1 = re.compile(r"(^|[\n ])(([\w]+?://[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
     patter2 = re.compile(r"#(^|[\n ])(((www|ftp)\.[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\-;:=,?@\[\]+]*)?)", re.IGNORECASE | re.DOTALL)
@@ -198,6 +210,23 @@ def fileExists(fileName = ''):
 
     else:
         return os.path.exists(fileName)
+
+
+def findRecurseFiles(rootPath = './', hidden = False):
+    resources = []
+    rootPath = os.path.normpath(rootPath)
+    for dirPath, dirName, fileNames in os.walk(unicode(rootPath)):
+        if not hidden and os.path.basename(dirPath)[0] == '.':
+            continue
+
+        resources += [addBS(dirPath)]
+        for item in fileNames:
+            if not hidden and item[0] == '.':
+                continue
+
+            resources += [addBS(dirPath) + item]
+
+    return len(resources), sorted(resources)
 
 
 def formatDate(string = '', pack = False):
