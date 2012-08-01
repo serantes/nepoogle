@@ -1593,8 +1593,8 @@ class Nepoogle(QWidget):
                     "<p><b>Warning!:</b> in KDE 4.9 Nepoogle's query engine it's not working so default query engine is Nepomuk::Query::QueryParser().</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
-                    "%(shortcuts)s" \
                     "%(commands)s" \
+                    "%(shortcuts)s" \
                     "%(syntax)s" \
                     "For bugs, suggestions or wishes send a mail to kde@aynoa.net\n" \
                     "%(powered)s</body>\n</html>" \
@@ -1941,7 +1941,7 @@ def buildHelp():
           "\n" \
           "commands:\n" \
           "  --help                 -- Shows this help\n" \
-          "  --notindexed:FULLPATH  -- Check for not indexed files in a FULLPATH\n" \
+          "  --notindexed:FULLPATH  -- Check for not indexed files in FULLPATH\n" \
           "  --gui[=MODE]           -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
           "  --results[=MODE]       -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
           "  --verbose[=MODE]       -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
@@ -1958,6 +1958,9 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
 
     try:
         url = toUnicode(url)
+        if (url[0] == "\"" and url[-1] == "\""):
+            url = url[1:-1]
+
         if recursiveMode:
             print(_("Finding all files in \"%s\" ..." % toUtf8(url)))
             resourcesCount, resources = findRecurseFiles(url)
@@ -1967,13 +1970,13 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
             resources = [url]
 
         if url[0] == '^':
-            url = '^' + QUrl(url[1:]).toEncoded()
+            n3url = '^' + QUrl(url[1:]).toEncoded()
 
         else:
-            url  = QUrl(url).toEncoded()
+            n3url  = QUrl(url).toEncoded()
 
-        url = toUnicode(url.replace('?', '%3f'))
-        url = url.replace('(', '\\\(').replace(')', '\\\)')
+        n3url = toUnicode(n3url.replace('?', '%3f'))
+        n3url = n3url.replace('(', '\\\(').replace(')', '\\\)')
 
         notIndexedCount = 0
         sparqlQuery = None
@@ -1995,7 +1998,7 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
                             ")))\n" \
                         ")\n" \
                         "OPTIONAL { ?x0 nie:url ?url . } . \n" \
-                    "}\n" % url
+                    "}\n" % n3url
 
                 if DO_NOT_USE_NEPOMUK:
                     model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
