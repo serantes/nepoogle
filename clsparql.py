@@ -539,7 +539,7 @@ class cSparqlBuilder():
                 [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
                 [_('--audios'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
                 #[_('--connect'), ['', [], [], []]], \
-                [_('--composers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nco:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
+                [_('--composers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
                 [_('--contacts'), ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
                 [_('--creators'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
@@ -1221,6 +1221,12 @@ class cSparqlBuilder():
         else:
             typeFilters = self.tempData[2]
 
+        if (self.command[:2] == "--" and not (self.command in ("--playlist", "--playmixed"))):
+            visibilityFilter = ""
+
+        else:
+            visibilityFilter = self.visibilityFilter
+
         if len(typeFilters) == 1:
             items = typeFilters[0].split("->")
             if len(items) > 1:
@@ -1229,8 +1235,8 @@ class cSparqlBuilder():
                 #oldVarName = 'x0'
                 for item in items:
                     if item != '':
-                        if self.visibilityFilter != '':
-                            text += "  ?x%s %s\n" % (i, self.visibilityFilter)
+                        if visibilityFilter != '':
+                            text += "  ?x%s %s\n" % (i, visibilityFilter)
 
                         if item == items[-1]:
                             varName = '%s' % (item.split(':')[-1])
@@ -1244,8 +1250,8 @@ class cSparqlBuilder():
                         i += 1
 
             else:
-                if self.visibilityFilter != '':
-                    text += "  ?x0 %s\n" % (self.visibilityFilter)
+                if visibilityFilter != '':
+                    text += "  ?x0 %s\n" % (visibilityFilter)
 
                 items = typeFilters[0].split("=")
                 if len(items) > 1:
@@ -1264,8 +1270,8 @@ class cSparqlBuilder():
                 text += '        { ?x0 rdf:type %s . }\n' % item
 
             if text != "":
-                if self.visibilityFilter != '':
-                    text += "  ?x0 %s\n" % (self.visibilityFilter)
+                if visibilityFilter != '':
+                    text += "  ?x0 %s\n" % (visibilityFilter)
 
                 else:
                     text = ""
@@ -1283,8 +1289,8 @@ class cSparqlBuilder():
                         % (self.visibilityFilter, text)
 
             else:
-                if self.visibilityFilter != '':
-                    text = "  ?x0 %s\n" % (self.visibilityFilter)
+                if visibilityFilter != '':
+                    text = "  ?x0 %s\n" % (visibilityFilter)
 
                 else:
                     text = ""
@@ -1500,6 +1506,7 @@ class cSparqlBuilder():
         #print toUtf8(string)
         #print toUtf8(items)
 
+        self.command = ""
         command = ""
         commandsFound = 0
         addAnd = False
