@@ -971,7 +971,7 @@ class cDataFormat():
         return output
 
 
-    def formatAsText(self, data = [], structure = [], queryTime = 0, stdout = False):
+    def formatAsText(self, data = [], structure = [], queryTime = 0, pipeMode = False):
         text = ""
         numColumns = len(structure)
         for row in data:
@@ -1000,20 +1000,29 @@ class cDataFormat():
                 else:
                     resource = Nepomuk.Resource(uri)
 
-                altLabel = resource.property(NOC('nao:altLabel')).toString()
-                fullname = resource.property(NOC('nco:fullname')).toString()
-                identifier = resource.property(NOC('nao:identifier')).toString()
-                itemType = toUnicode(resource.type().split('#')[1])
-                prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                title = resource.property(NOC('nie:title')).toString()
-                url = resource.property(NOC('nie:url')).toString()
+                if pipeMode:
+                    line = toUnicode(resource.property(NOC('nie:url')).toString().toUtf8())
+                    if (line == "") or (line == None):
+                        line = uri
 
-                fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
-                fullTitle = fullTitle.strip().replace("  ", " - ")
-                line = "%s, %s, %s" % (url, fullTitle, itemType)
-                line = line.replace(", , ", ", ")
-                if line[:2] == ", ":
-                    line = line[2:]
+                    #else:
+                        #line = "\"" + line.replace('"', '\\\\"') + "\""
+
+                else:
+                    altLabel = resource.property(NOC('nao:altLabel')).toString()
+                    fullname = resource.property(NOC('nco:fullname')).toString()
+                    identifier = resource.property(NOC('nao:identifier')).toString()
+                    itemType = toUnicode(resource.type().split('#')[1])
+                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
+                    title = resource.property(NOC('nie:title')).toString()
+                    url = resource.property(NOC('nie:url')).toString()
+
+                    fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
+                    fullTitle = fullTitle.strip().replace("  ", " - ")
+                    line = "%s, %s, %s" % (url, fullTitle, itemType)
+                    line = line.replace(", , ", ", ")
+                    if line[:2] == ", ":
+                        line = line[2:]
 
             else:
                 for i in range(0, numColumns):

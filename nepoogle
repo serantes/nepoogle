@@ -1937,6 +1937,7 @@ def buildHelp():
           "commands:\n" \
           "  --help                 -- Shows this help\n" \
           "  --notindexed:FULLPATH  -- Check for not indexed files in FULLPATH\n" \
+          "  --pipe                 -- Only urls are printed to stdout"
           "  --gui[=MODE]           -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
           "  --results[=MODE]       -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
           "  --verbose[=MODE]       -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
@@ -2032,6 +2033,7 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
 def main(args):
     displayResults = None
     gui = not sys.stdout.isatty()
+    pipeMode = False
     verboseMode = None
     parameters = toUnicode('')
     paramOption = ""
@@ -2076,6 +2078,10 @@ def main(args):
 
             continue
 
+        elif parameter.lower() == "--pipe":
+            pipeMode = True
+            continue
+
         elif parameter.lower()[:9] == '--results':
             paramValue = parameter.lower()[9:]
             if paramValue == '':
@@ -2104,6 +2110,10 @@ def main(args):
                 parameter = '"' + parameter + '"'
 
         parameters += parameter + ' '
+
+    if pipeMode:
+        verboseMode = False
+        gui = False
 
     searchString = parameters.strip()
     if gui:
@@ -2149,8 +2159,9 @@ def main(args):
         if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
             searchEngine = int(searchString[1:2])
 
-        output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
-        print(toUtf8(output))
+        if not pipeMode:
+            output = "%(title)s\n" % {'title': 'Querying Nepomuk' }
+            print(toUtf8(output))
 
         #if True:
         try:
@@ -2191,17 +2202,21 @@ def main(args):
 
                 if displayResults in (None, True):
                     oDataFormat = cDataFormat(searchString)
-                    oDataFormat.formatAsText(data, structure, time)
+                    oDataFormat.formatAsText(data, structure, time, pipeMode)
 
-                output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
-                            "--\n" \
-                            "Powered by %(name)s %(version)s (%(date)s)" \
-                            % {'records': len(data), \
-                                'seconds': time, \
-                                'name': PROGRAM_NAME, \
-                                'version': PROGRAM_VERSION_VERSION, \
-                                'date': PROGRAM_VERSION_DATE \
-                                }
+                if not pipeMode:
+                    output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
+                                "--\n" \
+                                "Powered by %(name)s %(version)s (%(date)s)" \
+                                % {'records': len(data), \
+                                    'seconds': time, \
+                                    'name': PROGRAM_NAME, \
+                                    'version': PROGRAM_VERSION_VERSION, \
+                                    'date': PROGRAM_VERSION_DATE \
+                                    }
+
+                else:
+                    output = ""
 
                 # Handle possible warnings.
                 warningMsg = ""
@@ -2274,7 +2289,8 @@ def main(args):
                                 'date': PROGRAM_VERSION_DATE \
                                 }
 
-        print(toUtf8(output))
+        if output != "":
+            print(toUtf8(output))
 
 
 if __name__=="__main__":
