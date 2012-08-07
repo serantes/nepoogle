@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, gettext, md5, os, re, signal, subprocess, sys, time, tempfile
+import datetime, gettext, locale, md5, os, re, signal, subprocess, sys, time, tempfile
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

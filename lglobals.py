@@ -22,7 +22,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import gettext, os, sys
+import gettext, locale, os, sys
 
 import PyKDE4.kdecore as kdecore
 
@@ -83,7 +83,7 @@ INTERNAL_RESOURCE_IN_RESULTS_LIST = (USE_INTERNAL_RESOURCE or DO_NOT_USE_NEPOMUK
 
 PYKDE4_VERSION_STR = kdecore.versionString().split(" ")[0].strip()
 
-SYSTEM_ENCODING = os.environ["LANG"].split(".")[1]
+SYSTEM_ENCODING = locale.getpreferredencoding()
 if (SYSTEM_ENCODING == ""):
     SYSTEM_ENCODING = 'UTF-8' # Forcing UTF-8.
 
