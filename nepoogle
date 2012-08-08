@@ -1765,6 +1765,14 @@ class Nepoogle(QWidget):
                     searchString = "e%d %s" % (searchEngine, searchString)
 
                 externalParameters = []
+
+                # Very dirty hack to force commands to use searchEngine 1.
+                if searchEngine != 1:
+                    tmpSearchString = searchString[3:].strip()
+                    if ((len(tmpSearchString.split(" ")) == 1) and (tmpSearchString[:2] == "--")):
+                        searchEngine = 1
+                # Very dirty hack to force commands to use searchEngine 1.
+
                 if searchEngine == 0:
                     processedSearchString = searchString[3:]
                     if processedSearchString.find("--help") >= 0:
@@ -2168,6 +2176,13 @@ def main(args):
             warningsList = []
             oSparql = cSparqlBuilder()
             if searchString != '':
+
+                # Very dirty hack to force commands to use searchEngine 1.
+                if searchEngine != 1:
+                    tmpSearchString = searchString.strip()
+                    if ((len(tmpSearchString.split(" ")) == 1) and (tmpSearchString[:2] == "--")):
+                        searchEngine = 1
+                # Very dirty hack to force commands to use searchEngine 1.
 
                 if searchEngine == 0:
                     oNQP = Nepomuk.Query.QueryParser()
