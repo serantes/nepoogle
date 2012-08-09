@@ -228,12 +228,12 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:Contact", \
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
-                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
+                                "{nco:fullname|l|s:contact}%[<br />Preferred label: {nao:prefLabel}%]%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:PersonContact", \
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
-                                "{nco:fullname|l|s:contact}%[<br />Other labels: {nao:altLabel}%]", \
+                                "{nco:fullname|l|s:contact}%[<br />Preferred label: {nao:prefLabel}%]%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nexif:Photo", \
