@@ -1840,7 +1840,7 @@ class cDataFormat():
             while data.next():
                 isAnEmptyResource = False
                 currOnt = NOCR(data["ont"].toString())
-                if currOnt in self.hiddenOntologies:
+                if ((currOnt in self.hiddenOntologies) or (currOnt.find(":") < 0)):
                     continue
 
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
