@@ -359,13 +359,13 @@ def urlDecode(url):
     url = toUtf8(url)
     qUrl = QUrl()
     try:
-        print toUtf8(url)
+        #print(toUtf8(url))
         qUrl.setEncodedUrl(url)
 
     except:
         qUrl.setUrl(url)
 
-    print toUtf8(qUrl.toString())
+    #print(toUtf8(qUrl.toString()))
     return toUnicode(qUrl.toString())
 
 
