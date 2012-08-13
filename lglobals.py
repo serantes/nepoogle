@@ -26,6 +26,8 @@ import gettext, locale, os, sys
 
 import PyKDE4.kdecore as kdecore
 
+from PyKDE4.soprano import Soprano
+
 #BEGIN lglobals.py
 
 PROGRAM_URL = sys.argv[0]
@@ -97,9 +99,11 @@ NEPOOGLE_DOWNLOADS_PATH = NEPOOGLE_DATA_PATH + "downloads/"
 USE_NEW_INFERENCE_METHOD = (PYKDE4_VERSION_STR > "4.8.7")
 if USE_NEW_INFERENCE_METHOD:
     DEFAULT_ENGINE = 1
+    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
 
 else:
     DEFAULT_ENGINE = 1
+    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
 
 NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("CenterWeightedAverage"), _("Spot"), _("MultiSpot"), _("Pattern"), _("Partial"), _("Other")]
 NEXIF_WHITE_BALANCE = [_("Unknown"), _("Automatic"), _("Manual")]

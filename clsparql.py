@@ -246,7 +246,7 @@ def ontologyInfo(ontology = '', model = None):
                     "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
                 "}" % {"ont": shortOnt}
 
-        data = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        data = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         if data.isValid():
             while data.next():
                 ontType = lvalue(ontologyTypes, shortOnt.lower().strip(), 0, 1)
@@ -353,7 +353,7 @@ class cResource():
         if self.stdout:
             print toUtf8(query)
 
-        self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        self.data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         value = None
         if self.data.isValid():
             while self.data.next():
@@ -439,7 +439,7 @@ class cResource():
             if self.stdout:
                 print toUtf8(query)
 
-            self.data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            self.data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
             ontValue = 0
             if self.data.isValid():
@@ -454,7 +454,7 @@ class cResource():
                         if self.stdout:
                             print toUtf8(query)
 
-                        self.dataAux = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                         currOntValue = 0
                         if self.dataAux.isValid():
                             while self.dataAux.next():
@@ -1697,7 +1697,7 @@ class cSparqlBuilder():
                 model = Nepomuk.ResourceManager.instance().mainModel()
 
             queryTime = time.time()
-            result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            result = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             queryTime = time.time() - queryTime
 
         except:

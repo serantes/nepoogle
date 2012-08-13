@@ -357,24 +357,24 @@ class Nepoogle(QWidget):
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
         self.setWindowTitle(PROGRAM_NAME)
         #self.setWindowIcon(QIcon('icon.png'))
-        self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
 
         self.leSearch = QLineEdit(self)
         #self.leSearch.setCompleter(nCompleter())
         self.leSearch.selectOnEntry = True
 
         self.pbBackward = QPushButton(self)
-        self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
         #self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbBackward, SIGNAL("clicked()"), self.goBackward)
 
         self.pbForward = QPushButton(self)
-        self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbForward, SIGNAL("clicked()"), self.goForward)
 
         self.pbHelp = QPushButton(self)
-        self.pbHelp.setIcon(QIcon(KIconLoader().loadIcon('help-contents',  KIconLoader.NoGroup,  KIconLoader.SizeSmall)))
+        self.pbHelp.setIcon(QIcon(KIconLoader().loadIcon('help-contents', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbHelp, SIGNAL("clicked()"), self.showHelp)
 
@@ -941,7 +941,7 @@ class Nepoogle(QWidget):
                         [ONTOLOGY_SUBJECT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)], \
                         [ONTOLOGY_TITLE, "%s (%s)" % (ontologyInfo(ONTOLOGY_TITLE)[1], ONTOLOGY_TITLE)], \
                         ]
-            queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             if queryResultSet.isValid():
                 while queryResultSet.next():
                     ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
@@ -1101,7 +1101,7 @@ class Nepoogle(QWidget):
                 % (uri, ontology)
 
         values  = []
-        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         if queryResultSet.isValid():
             while queryResultSet.next():
                 values += [NOCR(toUnicode(queryResultSet["v"].toString()))]
@@ -1331,7 +1331,7 @@ class Nepoogle(QWidget):
 
                     values = [[ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK)], \
                                 [ONTOLOGY_SUBJECT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)]]
-                    queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                    queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                     if queryResultSet.isValid():
                         while queryResultSet.next():
                             ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
@@ -2011,7 +2011,7 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
                     model = Nepomuk.ResourceManager.instance().mainModel()
 
                 count = 0
-                queryResultSet = model.executeQuery(sparqlQuery, Soprano.Query.QueryLanguageSparql)
+                queryResultSet = model.executeQuery(sparqlQuery, SOPRANO_QUERY_LANGUAGE)
                 if queryResultSet.isValid():
                     while queryResultSet.next():
                         url = toUnicode(queryResultSet["url"].toString().toUtf8())

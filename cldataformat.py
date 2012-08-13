@@ -423,7 +423,7 @@ class cDataFormat():
                         "   where {\n" \
                         "       ?uri nao:hasSubResource <%s> .\n" \
                         "}\n" % toUnicode(res.uri())
-                data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                 if data.isValid():
                     while data.next():
                         resUri = toUnicode(data["uri"].toString())
@@ -551,7 +551,7 @@ class cDataFormat():
                 "}\n" % uri
 
         ontologies = []
-        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         if queryResultSet.isValid():
             while queryResultSet.next():
                 ontologies += [toUnicode(queryResultSet["p"].toString())]
@@ -1270,7 +1270,7 @@ class cDataFormat():
                 else:
                     query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
 
-            queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             if queryResultSet.isValid():
                 while queryResultSet.next():
                     values += [[toUnicode(queryResultSet["uri"].toString()), \
@@ -1289,7 +1289,7 @@ class cDataFormat():
                                     '\t<%s> %s ?value .\n' \
                                 '}\n' \
                                 % (uri, elements[1])
-                        queryResultSet = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+                        queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                         if queryResultSet.isValid():
                             value = ""
                             while queryResultSet.next():
@@ -1829,7 +1829,7 @@ class cDataFormat():
                 defaultType = NOCR(mainResource.type())
 
         if defaultType != "":
-            data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+            data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
 
         noc_nieUrl = NOC("nie:url", True)
         noc_nieTitle = NOC("nie:title", True)
@@ -2134,7 +2134,7 @@ class cDataFormat():
                 "       ?uri ?ont <%s>.\n" \
                 "}\n" \
                 "order by ?ont\n" % uri
-        data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+        data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         reverseResourcesItems = []
         reverseResourcesList = []
         if data.isValid():
