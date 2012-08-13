@@ -560,6 +560,9 @@ class cDataFormat():
             if not ontology in self.skippedOntologiesInResourceIsA:
                 result += [ontologyInfo(ontology)[1]]
 
+        # list -> to set (duplicates are removed) -> to list again.
+        result = list(set(result))
+
         result.sort()
 
         return  ", ".join(result)
