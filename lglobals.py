@@ -104,6 +104,7 @@ if USE_NEW_INFERENCE_METHOD:
 else:
     DEFAULT_ENGINE = 1
     SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
+    USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE = True
 
 NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("CenterWeightedAverage"), _("Spot"), _("MultiSpot"), _("Pattern"), _("Partial"), _("Other")]
 NEXIF_WHITE_BALANCE = [_("Unknown"), _("Automatic"), _("Manual")]
