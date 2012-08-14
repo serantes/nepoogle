@@ -606,6 +606,10 @@ class cDataFormat():
                 trackName = self.readProperty(res, 'nie:title', 'str')
                 if trackName == "":
                     trackName = os.path.basename(url)
+                    songSearch = ""
+
+                else:
+                    songSearch = "&quot;%s&quot;" % urlHtmlEncode(trackName)
 
                 trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                 % {"uri": item[1], "title": trackName}
@@ -643,6 +647,7 @@ class cDataFormat():
                         fullname = self.readProperty(resTmp, 'nco:fullname', 'str')
                         if fullname != None:
                             performers += [[itemUri, fullname]]
+                            songSearch += " &quot;%s&quot;" % urlHtmlEncode(fullname)
 
                 if (len(performers) > 0):
                     performers = sorted(performers, key=lambda item: toUtf8(item[1]))
@@ -844,8 +849,9 @@ class cDataFormat():
                                 + trackName
 
                 trackName = trackName.replace('"', '&quot;')
+                songSearch = ""
 
-            playList += [[item[1], i, url, trackName, sortColumn]]
+            playList += [[item[1], i, url, trackName, sortColumn, songSearch]]
             i += 1
 
         playList = sorted(playList, key=lambda item: toUtf8(item[4]))
@@ -886,17 +892,24 @@ class cDataFormat():
             i = 0
             for item in playList:
                 output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
-                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
+                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[0])}
                 iconRun = iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
                 iconDir = iconDir.replace('"', "'")
+                if songSearch != "":
+                    iconGoogleLyrics = self.htmlRenderLink('googlemultisearch', "lyrics " + item[5])
+                    iconGoogleLyrics = iconGoogleLyrics.replace('"', "'")
+
+                else:
+                    iconGoogleLyrics = ""
+
                 row = "<tr>"
                 row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
                             "%(trackNumber)02d</button></td>" % {"type": listType, "i": i, "trackNumber": i + 1 }
                 row += "<td id='%(type)strack%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='%(type)splayTrack(%(i)s)'>" \
                             "%(title)s</td>" % {"type": listType, "color": "LightBlue", "i": i, "title": item[3]}
-                row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s</td>" \
-                            % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir}
+                row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s%(iconGoogleLyrics)s</td>" \
+                            % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir, "iconGoogleLyrics": iconGoogleLyrics}
                 row += "</tr>"
                 output += "document.write(\"%s\");\n" % (row)
                 i += 1
@@ -1062,6 +1075,11 @@ class cDataFormat():
         elif id == 'googlesearch':
             title = "title=\"Search for &quot;%s&quot; using Google\"" % par1
             href = "href=\"googlesearch:/%%22%s%%22\"" % par1.replace(' ', '+')
+            value = self.htmlLinkSearchWebRender
+
+        elif id == 'googlemultisearch':
+            title = "title=\"Search for &quot;%s&quot; using Google\"" % par1
+            href = "href=\"googlesearch:/%s\"" % par1.replace(' ', '+')
             value = self.htmlLinkSearchWebRender
 
         elif id == 'navigator':
