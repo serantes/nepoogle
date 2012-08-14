@@ -119,7 +119,7 @@ ontologyTypes = [ \
                 ]
 
 ontologiesInfo = []
-ontologiesRank = []
+ontologiesRank = [["http://www.w3.org/2000/01/rdf-schema#Resource", 0]]
 resourcesCache = dict()
 
 def NOC(name = '', returnQUrl = False):
@@ -427,6 +427,39 @@ class cResource():
         return QVariant(self.typeValue)
 
 
+    def getOntologyRank(self, ontology = None):
+        if ontology == None:
+            return None
+
+        global ontologiesRank
+
+        query = "SELECT DISTINCT ?r AS ?ont\n" \
+                "WHERE {\n" \
+                    "\t<%s> rdfs:subClassOf ?r .\n" \
+                "}\n" \
+                "LIMIT 1" % ontology
+        if self.stdout:
+            print toUtf8(query)
+
+        self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
+        ontValue = None
+        if self.dataAux.isValid():
+            while self.dataAux.next():
+                ontType = self.dataAux["ont"].toString()
+                if ontType != ontology:
+                    i = lindex(ontologiesRank, ontType, column = 0)
+
+                    if i == None:
+                        ontValue = self.getOntologyRank(ontType)
+                        if ontValue != None:
+                            ontologiesRank += [[ontType, ontValue]]
+
+                    else:
+                        ontValue = ontologiesRank[i][1] + 1
+
+        return ontValue
+
+
     def type(self):
         if self.typeValue == None:
             global ontologiesRank
@@ -447,18 +480,24 @@ class cResource():
                     currOntType = self.data["val"].toString()
                     i = lindex(ontologiesRank, currOntType, column = 0)
                     if i == None:
-                        query = "SELECT DISTINCT COUNT(*) AS ?val\n" \
-                                "WHERE {\n" \
-                                    "\t<%s> rdfs:subClassOf ?r .\n" \
-                                "}\n" % currOntType
-                        if self.stdout:
-                            print toUtf8(query)
+                        if USE_NEW_INFERENCE_METHOD:
+                            currOntValue = self.getOntologyRank(currOntType)
+                            if currOntValue == None:
+                                currOntValue = 0
 
-                        self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-                        currOntValue = 0
-                        if self.dataAux.isValid():
-                            while self.dataAux.next():
-                                currOntValue = int(self.dataAux["val"].toString())
+                        else:
+                            query = "SELECT DISTINCT COUNT(*) AS ?val\n" \
+                                    "WHERE {\n" \
+                                        "\t<%s> rdfs:subClassOf ?r .\n" \
+                                    "}\n" % currOntType
+                            if self.stdout:
+                                print toUtf8(query)
+
+                            self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
+                            currOntValue = 0
+                            if self.dataAux.isValid():
+                                while self.dataAux.next():
+                                    currOntValue = int(self.dataAux["val"].toString())
 
                         ontologiesRank += [[currOntType, currOntValue]]
 
