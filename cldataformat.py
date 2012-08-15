@@ -766,21 +766,22 @@ class cDataFormat():
 
                     trackName = "<em>%s</em><br />%s" % (linkPerformers, trackName)
 
-                elif (albumTitle[0] == None) or (oldPerformers == []):
+                if (coverUrl == None):
                     # Probably a video or a music file without tags. Use a thumbnail is exists.
-                    if coverUrl == None:
-                        tmpCoverUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
-                        if tmpCoverUrl != None:
-                            coverUrl = tmpCoverUrl
+                    if (os.path.splitext(url)[1][1:].lower() in self.supportedVideoFormats):
+                        if coverUrl == None:
+                            tmpCoverUrl = getThumbnailUrl(url)
+                            if tmpCoverUrl != None:
+                                coverUrl = tmpCoverUrl
 
-                    # If there is no thumbnail then default image is displayed.
-                    if coverUrl == None:
-                        coverUrl = "file://" + self.iconNoCover
+                        # If there is no thumbnail then default image is displayed.
+                        if coverUrl == None:
+                            coverUrl = "file://" + self.iconNoCover
 
-                    trackName = "<img width=48 style='float:left; " \
-                                    "vertical-align:text-bottom; margin:2px' " \
-                                    "src='%s'>" % (coverUrl) \
-                                + trackName
+                        trackName = "<img width=48 style='float:left; " \
+                                        "vertical-align:text-bottom; margin:2px' " \
+                                        "src='%s'>" % (coverUrl) \
+                                    + trackName
 
                 trackName = trackName.replace('"', '&quot;')
                 if self.playlistDescendingOrderInAlbumYear:
