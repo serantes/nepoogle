@@ -590,6 +590,7 @@ class cDataFormat():
 
         for item in data:
             sortColumn = ""
+            songSearch = ""
             url = item[0]
             if url[:7] != "file://":
                 url = "file://" + url
@@ -606,7 +607,6 @@ class cDataFormat():
                 trackName = self.readProperty(res, 'nie:title', 'str')
                 if trackName == "":
                     trackName = os.path.basename(url)
-                    songSearch = ""
 
                 else:
                     songSearch = "&quot;%s&quot;" % urlHtmlEncode(trackName)
@@ -849,7 +849,6 @@ class cDataFormat():
                                 + trackName
 
                 trackName = trackName.replace('"', '&quot;')
-                songSearch = ""
 
             playList += [[item[1], i, url, trackName, sortColumn, songSearch]]
             i += 1
@@ -896,7 +895,7 @@ class cDataFormat():
                 iconRun = iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
                 iconDir = iconDir.replace('"', "'")
-                if songSearch != "":
+                if item[5] != "":
                     iconGoogleLyrics = self.htmlRenderLink('googlemultisearch', "lyrics " + item[5])
                     iconGoogleLyrics = iconGoogleLyrics.replace('"', "'")
 
