@@ -718,8 +718,14 @@ class cDataFormat():
 
                 # Final track name building.
                 if albumTitle[1] != "":
-                    linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
-                                    % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
+                    if (albumTitle[2] > 0):
+                        linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s (%(year)s)</a>" \
+                                        % {"uri": albumTitle[0], "title": albumTitle[1], "year": albumTitle[2]}
+
+                    else:
+                        linkTitle = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                        % {"uri": albumTitle[0], "title": albumTitle[1]}
+
                     if albumTitle[3] != "":
                         linkTitle += " by " + albumTitle[3]
 
