@@ -433,6 +433,10 @@ class cResource():
 
         global ontologiesRank
 
+        i = lindex(ontologiesRank, ontology, column = 0)
+        if i != None:
+            return ontologiesRank[i][1]
+
         query = "SELECT DISTINCT ?r AS ?ont\n" \
                 "WHERE {\n" \
                     "\t<%s> rdfs:subClassOf ?r .\n" \
@@ -448,11 +452,11 @@ class cResource():
                 ontType = self.dataAux["ont"].toString()
                 if ontType != ontology:
                     i = lindex(ontologiesRank, ontType, column = 0)
-
                     if i == None:
                         ontValue = self.getOntologyRank(ontType)
                         if ontValue != None:
-                            ontologiesRank += [[ontType, ontValue]]
+                            ontValue += 1
+                            ontologiesRank += [[ontology, ontValue]]
 
                     else:
                         ontValue = ontologiesRank[i][1] + 1
