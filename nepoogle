@@ -1966,7 +1966,9 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
             url = url[1:-1]
 
         if recursiveMode:
-            print(_("Finding all files in \"%s\" ..." % toUtf8(url)))
+            if verbose:
+                print(_("Finding all files in \"%s\" ..." % toUtf8(url)))
+
             resourcesCount, resources = findRecurseFiles(url)
 
         else:
@@ -1988,7 +1990,9 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
         for item in resources:
             item = unicode(item)
             if (sparqlQuery == None):
-                print(_("Finding all indexed files in \"%s\"..." % toUtf8(url)))
+                if verbose:
+                    print(_("Finding all indexed files in \"%s\"..." % toUtf8(url)))
+
                 sparqlQuery = \
                     "SELECT DISTINCT ?url\n" \
                     "WHERE {\n"\
@@ -2030,7 +2034,8 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
                     notIndexedCount += 1
                     print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
 
-        print(_("%s not indexed files were located." % notIndexedCount))
+        if verbose:
+            print(_("%s not indexed files were located." % notIndexedCount))
 
     except KeyboardInterrupt:
         print  "\nOperation aborted by user...\n" \
@@ -2273,6 +2278,7 @@ def main(args):
 
         except:
             msgError = "%s" % sys.exc_info()[1]
+            output = ""
             if msgError == 'help':
                 output = buildHelp()
 
@@ -2284,14 +2290,15 @@ def main(args):
                     path = ""
 
                 findNotIndexed(path)
-                output = "\n--\n" \
-                            "Powered by %(name)s %(version)s (%(date)s)" \
-                            % {'title': 'Querying Nepomuk', \
-                                'error': sys.exc_info()[1], \
-                                'name': PROGRAM_NAME, \
-                                'version': PROGRAM_VERSION_VERSION, \
-                                'date': PROGRAM_VERSION_DATE \
-                                }
+                if not pipeMode:
+                    output = "\n--\n" \
+                                "Powered by %(name)s %(version)s (%(date)s)" \
+                                % {'title': 'Querying Nepomuk', \
+                                    'error': sys.exc_info()[1], \
+                                    'name': PROGRAM_NAME, \
+                                    'version': PROGRAM_VERSION_VERSION, \
+                                    'date': PROGRAM_VERSION_DATE \
+                                    }
 
             else:
                 output = "\nerror: %(error)s\n" \
