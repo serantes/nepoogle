@@ -600,6 +600,7 @@ class cSparqlBuilder():
                 [_('--playmixed'), ['playmixed', [], [], []]], \
                 [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
+                [_('--showupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "%s"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--tags'), ['?x0 AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
                 [_('--topics'), ['?x0 AS ?id ?label', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
@@ -735,6 +736,12 @@ class cSparqlBuilder():
                     query = self.commands[idx][1][0].strip()
                     if self.stdoutQuery:
                         print toUtf8(query)
+
+                    if (query.find("%s") >= 0):
+                        if (len(self.filters) < 1):
+                            raise Exception("Command \"%s\"requires one parameter." % self.command)
+
+                        query = query % self.filters[0][0]
 
                     return query
 

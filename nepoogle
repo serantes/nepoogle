@@ -1445,7 +1445,12 @@ class Nepoogle(QWidget):
     def buildHelp(self, oSparqlBuilder):
         commands = '<p><b>Commands</b>:\n<ul>\n'
         for command in oSparqlBuilder.commands:
-            commands += '<li><a href="command:/%(command)s">%(command)s</a></li>\n' % {"command": command[0]}
+            if (command[1][0].find("%s") >= 0):
+                commands += '<li>%(command)s:"text"</a></li>\n' % {"command": command[0]}
+
+            else:
+                commands += '<li><a href="command:/%(command)s">%(command)s</a></li>\n' % {"command": command[0]}
+
         commands += '</ul></p>\n'
 
         shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + self.htmlTableHeader \
