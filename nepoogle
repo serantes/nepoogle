@@ -2032,7 +2032,11 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
             else:
                 if (lindex(recordsets, item) == None):
                     notIndexedCount += 1
-                    print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
+                    if verbose:
+                        print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
+
+                    else:
+                        print(_("\"%s\"" % toUtf8(item)))
 
         if verbose:
             print(_("%s not indexed files were located." % notIndexedCount))
