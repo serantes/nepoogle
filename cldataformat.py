@@ -214,7 +214,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["pimo:Topic", \
-                            "{pimo:tagLabel|l}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{pimo:tagLabel|l}%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nao:Agent", \
@@ -223,7 +223,7 @@ class cDataFormat():
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nao:Tag", \
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nao:hasSymbol->nie:url|1}\"'>%]" \
-                            "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{nao:prefLabel|l|of|ol|s:hasTag}%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nco:Contact", \
@@ -295,11 +295,12 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_SYSTEM_RUN], \
                         ["nie:InformationElement", \
-                            "{nfo:fileName|l|of|ol}%[<br />Other labels: {nao:altLabel}%]", \
+                            "{nfo:fileName|l|of|ol}%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:Movie", \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
+                                "%[<br /><b>Alternative titles</b>: {nao:altLabel}%]" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
                                 "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
