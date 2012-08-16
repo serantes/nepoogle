@@ -1955,7 +1955,7 @@ def buildHelp():
           % PROGRAM_NAME)
 
 
-def findNotIndexed(url = None, recursiveMode = True, verbose = False):
+def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
     if url == None or url == "":
         print(_("ERROR: a url is required."))
         return False
@@ -1966,7 +1966,7 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
             url = url[1:-1]
 
         if recursiveMode:
-            if verbose:
+            if not pipeMode:
                 print(_("Finding all files in \"%s\" ..." % toUtf8(url)))
 
             resourcesCount, resources = findRecurseFiles(url)
@@ -1984,29 +1984,30 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
         n3url = toUnicode(n3url.replace('?', '%3f'))
         n3url = n3url.replace('(', '\\\(').replace(')', '\\\)')
 
+        visibilityFilter = cSparqlBuilder().visibilityFilter
         notIndexedCount = 0
         sparqlQuery = None
         recordsets = []
         for item in resources:
             item = unicode(item)
             if (sparqlQuery == None):
-                if verbose:
+                if not pipeMode:
                     print(_("Finding all indexed files in \"%s\"..." % toUtf8(url)))
 
                 sparqlQuery = \
                     "SELECT DISTINCT ?url\n" \
                     "WHERE {\n"\
-                        "?x0 nao:userVisible 1 .\n" \
-                        "FILTER(\n" \
-                            "(bif:exists ((\n" \
-                            "SELECT *\n" \
-                            "WHERE {\n" \
-                                "{ ?x0 nie:url ?x1 . FILTER(REGEX(?x1, \"^file://%s\"^^xsd:string, 'i')) } . \n" \
-                            "}\n" \
-                            ")))\n" \
-                        ")\n" \
-                        "OPTIONAL { ?x0 nie:url ?url . } . \n" \
-                    "}\n" % n3url
+                        " ?x0 %s\n" \
+                        " FILTER(\n" \
+                            "  (bif:exists ((\n" \
+                            "  SELECT *\n" \
+                            "  WHERE {\n" \
+                                "   { ?x0 nie:url ?x1 . FILTER(REGEX(?x1, \"^file://%s\"^^xsd:string, 'i')) } . \n" \
+                            "  }\n" \
+                            "  )))\n" \
+                        " )\n" \
+                        " OPTIONAL { ?x0 nie:url ?url . } . \n" \
+                    "}\n" % (visibilityFilter, n3url)
 
                 if DO_NOT_USE_NEPOMUK:
                     model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -2026,19 +2027,19 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
                         count += 1
 
             if os.path.isdir(item):
-                if verbose:
+                if not pipeMode:
                     print(_("Checking \"%s\"..." % toUtf8(item)))
 
             else:
                 if (lindex(recordsets, item) == None):
                     notIndexedCount += 1
-                    if verbose:
+                    if not pipeMode:
                         print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
 
                     else:
                         print(toUtf8(item))
 
-        if verbose:
+        if not pipeMode:
             print(_("%s not indexed files were located." % notIndexedCount))
 
     except KeyboardInterrupt:
@@ -2293,7 +2294,7 @@ def main(args):
                 except:
                     path = ""
 
-                findNotIndexed(path)
+                findNotIndexed(path, True, pipeMode) # Recursive, pimeMode.
                 if not pipeMode:
                     output = "\n--\n" \
                                 "Powered by %(name)s %(version)s (%(date)s)" \
