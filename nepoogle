@@ -2036,7 +2036,7 @@ def findNotIndexed(url = None, recursiveMode = True, verbose = False):
                         print(_("NOT Indexed: \"%s\"" % toUtf8(item)))
 
                     else:
-                        print(_("\"%s\"" % toUtf8(item)))
+                        print(toUtf8(item))
 
         if verbose:
             print(_("%s not indexed files were located." % notIndexedCount))
