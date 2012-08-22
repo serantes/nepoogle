@@ -153,49 +153,71 @@ def downloadFile(remoteUrl, localUrl):
     remoteUrl = str(QUrl(toUnicode(remoteUrl)).toEncoded())
 
     result = False
-    NEPOOGLE_DOWNLOAD_METHOD = None
-    try:
-        import urllib
-        NEPOOGLE_DOWNLOAD_METHOD = "urllib"
+    #NEPOOGLE_DOWNLOAD_METHOD = "curl"
 
-        if (url.find(".imgur.com/") < 0):
-            import pycurl, StringIO
-            NEPOOGLE_DOWNLOAD_METHOD = "curl"
+    #if (NEPOOGLE_DOWNLOAD_METHOD == None):
+        #try:
+            #if (remoteUrl.find(".imgur.com/") < 0):
+                #import pycurl, StringIO
+                #NEPOOGLE_DOWNLOAD_METHOD = "libcurl"
 
-    except:
-        pass
+            ##elif (remoteUrl.find(".wikimedia.org/") < 0):
+            ##    NEPOOGLE_DOWNLOAD_METHOD = "curl"
 
-    if (NEPOOGLE_DOWNLOAD_METHOD == "urllib"):
+            #else:
+                #import urllib
+                #NEPOOGLE_DOWNLOAD_METHOD = "urllib"
+
+        #except:
+            #pass
+
+    #if (NEPOOGLE_DOWNLOAD_METHOD == "urllib"):
+        #try:
+            #urllib.urlretrieve(remoteUrl, localUrl)
+            #result = True
+
+        #except:
+            #pass
+
+    #elif (NEPOOGLE_DOWNLOAD_METHOD == "libcurl"):
+        #cUrl = pycurl.Curl()
+        #cUrl.setopt(pycurl.URL, remoteUrl)
+        #strIO = StringIO.StringIO()
+        #cUrl.setopt(pycurl.WRITEFUNCTION, strIO.write)
+        ##cUrl.setopt(pycurl.FOLLOWLOCATION, 1)
+        ##cUrl.setopt(pycurl.MAXREDIRS, 5)
+        #cUrl.setopt(pycurl.POST, 1)
+        #cUrl.perform()
+
+        ## Data must be written to file.
+        #try:
+            #buffer = strIO.getvalue()
+            #if buffer.find("<HTML>") < 0:
+                #f = open(localUrl, "w")
+
+                #try:
+                    #f.write(strIO.getvalue())
+                    #result = True
+
+                #finally:
+                    #f.close()
+
+            #else:
+                #NEPOOGLE_DOWNLOAD_METHOD = "curl"
+
+        #except:
+            #NEPOOGLE_DOWNLOAD_METHOD = "curl"
+            #result = False
+
+    #if (NEPOOGLE_DOWNLOAD_METHOD == "curl"):
+    if True:
         try:
-            urllib.urlretrieve(remoteUrl, localUrl)
-            result = True
+            subprocess.check_call(["curl", "-q", "--raw", "--fail", "-o", localUrl, remoteUrl])
 
         except:
             pass
 
-    elif (NEPOOGLE_DOWNLOAD_METHOD == "curl"):
-        cUrl = pycurl.Curl()
-        cUrl.setopt(pycurl.URL, remoteUrl)
-        strIO = StringIO.StringIO()
-        cUrl.setopt(pycurl.WRITEFUNCTION, strIO.write)
-        #cUrl.setopt(pycurl.FOLLOWLOCATION, 1)
-        #cUrl.setopt(pycurl.MAXREDIRS, 5)
-        cUrl.setopt(pycurl.POST, 1)
-        cUrl.perform()
-
-        # Data must be written to file.
-        try:
-            f = open(localUrl, "w")
-
-            try:
-                f.write(strIO.getvalue())
-                result = True
-
-            finally:
-                f.close()
-
-        except:
-            result = False
+        result = os.path.exists(localUrl)
 
     return result
 
