@@ -377,7 +377,7 @@ def toVariant(value):
     return Nepomuk.Variant(value)
 
 
-def urlDecode(url):
+def urlDecode(url, retryIfThereArePercentCharacters = True):
     url = toUtf8(url)
     qUrl = QUrl()
     try:
@@ -387,8 +387,14 @@ def urlDecode(url):
     except:
         qUrl.setUrl(url)
 
-    #print(toUtf8(qUrl.toString()))
-    return toUnicode(qUrl.toString())
+    if (retryIfThereArePercentCharacters and (qUrl.toString().indexOf("%") >= 0)):
+        result = urlDecode(qUrl.toString(), False)
+
+    else:
+        result = toUnicode(qUrl.toString())
+
+    #print(toUtf8(result))
+    return result
 
 
 def urlHtmlEncode(url):

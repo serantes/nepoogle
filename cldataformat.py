@@ -1489,6 +1489,10 @@ class cDataFormat():
                             if addLinkDelete:
                                 displayValue += " " + self.htmlLinkDelete % {"uri": value[1]}
 
+                    # Uris must be decoded for better user display.
+                    if displayValue.find("://") > 0: # A bad assumption :?
+                        displayValue = urlDecode(displayValue)
+
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
                 elif addImage:
@@ -1583,22 +1587,22 @@ class cDataFormat():
             idx = 0
 
         isValid = False
+        columns = []
         for i in range(1, self.columnsCount + 1):
-            exec "pattern = self.ontologyFormat[%s][%s]" % (idx, i)
-            if vartype(pattern) == "int":
-                exec "column%s = self.getResourceIcons(toUnicode(uri), pattern)" % i
+            pattern = self.ontologyFormat[idx][i]
+            if (vartype(pattern) == "int"):
+                columns += [self.getResourceIcons(toUnicode(uri), pattern)]
+
+            elif (pattern == "{type}"):
+                columns += ["<b title='%s'>" + ontologyToHuman(itemType) + "</b>"]
 
             else:
-                if pattern == "{type}":
-                    exec "column%s = \"<b title='%s'>\" + ontologyToHuman(itemType) + \"</b>\"" % (i, itemType)
-
-                else:
-                    exec "column%s = self.formatResource(resource, pattern)" % i
-                    isValid = True
+                columns += [self.formatResource(resource, pattern)]
+                isValid = True
 
         if isValid:
             #TODO: columnsformat, this must be automatic.
-            line = self.htmlTableRow % (column1, column2, column3)
+            line = self.htmlTableRow % (columns[0], columns[1], columns[2])
 
         else:
             line = ""
