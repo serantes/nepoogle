@@ -710,11 +710,9 @@ class cSparqlBuilder():
 
     def __init__(self):
         if USE_NEW_INFERENCE_METHOD:
-            #self.visibilityFilter = "a [ nao:userVisible \"true\"^^xsd:boolean ] ."
-            self.visibilityFilter = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. } ."
+            self.visibilityFilter = "%s ." % VISIBILITY_FILTER_METHOD
             for i in range(len(self.commands)):
-                #self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1", "a [ nao:userVisible \"true\"^^xsd:boolean ]")
-                self.commands[i][1][0] = self.commands[i][1][0].replace("?x0 nao:userVisible 1", "graph ?g { ?x0 rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }")
+                self.commands[i][1][0] = self.commands[i][1][0].replace("?x0 nao:userVisible 1", VISIBILITY_FILTER_METHOD % "?x0")
 
         else:
             self.visibilityFilter = "%s nao:userVisible 1 ."
