@@ -703,19 +703,21 @@ class cSparqlBuilder():
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
 
-    visibilityFilter = "nao:userVisible 1 ."
+    visibilityFilter = "%s nao:userVisible 1 ."
 
     warningsList = []
 
 
     def __init__(self):
         if USE_NEW_INFERENCE_METHOD:
-            self.visibilityFilter = "a [ nao:userVisible \"true\"^^xsd:boolean ] ."
+            #self.visibilityFilter = "a [ nao:userVisible \"true\"^^xsd:boolean ] ."
+            self.visibilityFilter = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. } ."
             for i in range(len(self.commands)):
-                self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1 .", "a [ nao:userVisible \"true\"^^xsd:boolean ]")
+                #self.commands[i][1][0] = self.commands[i][1][0].replace("nao:userVisible 1", "a [ nao:userVisible \"true\"^^xsd:boolean ]")
+                self.commands[i][1][0] = self.commands[i][1][0].replace("?x0 nao:userVisible 1", "graph ?g { ?x0 rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }")
 
         else:
-            self.visibilityFilter = "nao:userVisible 1 ."
+            self.visibilityFilter = "%s nao:userVisible 1 ."
 
 
     def __del__(self):
@@ -1282,11 +1284,10 @@ class cSparqlBuilder():
             if len(items) > 1:
                 i = 0
                 text = ''
-                #oldVarName = 'x0'
                 for item in items:
                     if item != '':
                         if visibilityFilter != '':
-                            text += "  ?x%s %s\n" % (i, visibilityFilter)
+                            text += "  %s\n" % (visibilityFilter % ("?x%s" % i))
 
                         if item == items[-1]:
                             varName = '%s' % (item.split(':')[-1])
@@ -1296,12 +1297,11 @@ class cSparqlBuilder():
 
                         text += "  ?x%(oldVarName)s %(ontology)s ?%(varName)s .\n" \
                                 % {'oldVarName': i, 'varName': varName, 'ontology': item}
-                        #oldVarName = varName
                         i += 1
 
             else:
                 if visibilityFilter != '':
-                    text += "  ?x0 %s\n" % (visibilityFilter)
+                    text += "  %s\n" % (visibilityFilter % ("?x0"))
 
                 items = typeFilters[0].split("=")
                 if len(items) > 1:
@@ -1321,13 +1321,13 @@ class cSparqlBuilder():
 
             if text != "":
                 if visibilityFilter != '':
-                    text += "  ?x0 %s\n" % (visibilityFilter)
+                    text += "  %s\n" % (visibilityFilter % ("?x0"))
 
                 else:
                     text = ""
 
                 text += \
-                        "  ?x0 %s\n" \
+                        "  %s\n" \
                         "  FILTER(\n" \
                             "    bif:exists ((\n" \
                                 "      SELECT *\n" \
@@ -1336,11 +1336,11 @@ class cSparqlBuilder():
                                 "      }\n" \
                             "    ))\n" \
                         "  )\n" \
-                        % (self.visibilityFilter, text)
+                        % (self.visibilityFilter % "?x0", text)
 
             else:
                 if visibilityFilter != '':
-                    text = "  ?x0 %s\n" % (visibilityFilter)
+                    text += "  %s\n" % (visibilityFilter % ("?x0"))
 
                 else:
                     text = ""
