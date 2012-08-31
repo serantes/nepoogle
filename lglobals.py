@@ -100,8 +100,8 @@ USE_NEW_INFERENCE_METHOD = (PYKDE4_VERSION_STR > "4.8.7")
 if USE_NEW_INFERENCE_METHOD:
     DEFAULT_ENGINE = 1
     SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
-    #VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
-    VISIBILITY_FILTER_METHOD = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }"
+    VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
+    #VISIBILITY_FILTER_METHOD = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }"
 
 else:
     DEFAULT_ENGINE = 1
