@@ -1950,7 +1950,7 @@ def buildHelp():
           "commands:\n" \
           "  --help                 -- Shows this help\n" \
           "  --notindexed:FULLPATH  -- Check for not indexed files in FULLPATH\n" \
-          "  --pipe                 -- Only urls are printed to stdout"
+          "  --pipe                 -- Only urls are printed to stdout\n"
           "  --gui[=MODE]           -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
           "  --results[=MODE]       -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
           "  --verbose[=MODE]       -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
