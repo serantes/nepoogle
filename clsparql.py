@@ -25,7 +25,7 @@
 import gettext, time
 
 from PyQt4.QtCore import *
-from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.nepomuk2 import Nepomuk2
 from PyKDE4.soprano import Soprano
 
 from PyQt4.QtGui import *
@@ -148,6 +148,9 @@ def NOC(name = '', returnQUrl = False):
 
 
 def NOCR(ontology = ''):
+    if vartype(ontology) == 'QUrl':
+        ontology = ontology.toString()
+
     if ontology[:7] == "http://":
         return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('22-rdf-syntax-ns:', 'rdf:').replace('rdf-schema:', 'rdfs:')
 
@@ -238,7 +241,7 @@ def ontologyInfo(ontology = '', model = None):
                 model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
             else:
-                model = Nepomuk.ResourceManager.instance().mainModel()
+                model = Nepomuk2.ResourceManager.instance().mainModel()
 
         query = "SELECT ?label ?range\n" \
                 "WHERE {\n" \
@@ -295,7 +298,7 @@ class cResource():
             self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
         else:
-            self.model = Nepomuk.ResourceManager.instance().mainModel()
+            self.model = Nepomuk2.ResourceManager.instance().mainModel()
 
         if uri != None:
             #TODO: fix this issue.
@@ -1742,7 +1745,7 @@ class cSparqlBuilder():
                 model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
             else:
-                model = Nepomuk.ResourceManager.instance().mainModel()
+                model = Nepomuk2.ResourceManager.instance().mainModel()
 
             queryTime = time.time()
             result = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)

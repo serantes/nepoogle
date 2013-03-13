@@ -25,7 +25,7 @@
 import datetime, fractions, os, re
 
 from PyKDE4.kdeui import KIconLoader
-from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.nepomuk2 import Nepomuk2
 from PyKDE4.soprano import Soprano
 
 from clsparql import *
@@ -54,7 +54,7 @@ class cDataFormat():
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
     hiddenOntologiesInverse = [NOC("nao:hasSubResource")]
     model = None
-    ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
+    ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
@@ -356,7 +356,7 @@ class cDataFormat():
                 self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
             else:
-                self.model = Nepomuk.ResourceManager.instance().mainModel()
+                self.model = Nepomuk2.ResourceManager.instance().mainModel()
 
         else:
             self.model = model
@@ -377,7 +377,7 @@ class cDataFormat():
                 res = cResource(res)
 
             else:
-                res = Nepomuk.Resource(res)
+                res = Nepomuk2.Resource(res)
 
         # Setting default cover.
         coverUrl = self.iconNoCover
@@ -397,7 +397,7 @@ class cDataFormat():
                     resTmp = cResource(uri)
 
                 else:
-                    resTmp = Nepomuk.Resource(uri)
+                    resTmp = Nepomuk2.Resource(uri)
 
                 tmpCoverUrl = self.readProperty(resTmp, 'nie:url', 'str')
                 if tmpCoverUrl[:7] == "file://":
@@ -433,7 +433,7 @@ class cDataFormat():
                             resType = NOCR(resTrack.type())
 
                         else:
-                            resTrack = Nepomuk.Resource(resUri)
+                            resTrack = Nepomuk2.Resource(resUri)
                             if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
                                 resType = NOCR(cResource(resUri).type())
 
@@ -600,7 +600,7 @@ class cDataFormat():
                 res = cResource(item[1])
 
             else:
-                res = Nepomuk.Resource(item[1])
+                res = Nepomuk2.Resource(item[1])
 
             if listType == 'audio':
                 trackNumber = self.readProperty(res, 'nmm:trackNumber', 'int')
@@ -629,21 +629,21 @@ class cDataFormat():
 
                 # Performers.
                 performers = []
-                if res.hasProperty(NOC('nmm:performer')):
+                if res.hasProperty(NOC('nmm:performer', True)):
                     if INTERNAL_RESOURCE_IN_PLAYLIST:
-                        resUris = res.property(NOC('nmm:performer'))
+                        resUris = res.property(NOC('nmm:performer', True))
                         if vartype(resUris) != "list":
                             resUris = [resUris]
 
                     else:
-                        resUris = res.property(NOC('nmm:performer')).toStringList()
+                        resUris = res.property(NOC('nmm:performer', True)).toStringList()
 
                     for itemUri in resUris:
                         if INTERNAL_RESOURCE_IN_PLAYLIST:
                             resTmp = cResource(itemUri)
 
                         else:
-                            resTmp = Nepomuk.Resource(itemUri)
+                            resTmp = Nepomuk2.Resource(itemUri)
 
                         fullname = self.readProperty(resTmp, 'nco:fullname', 'str')
                         if fullname != None:
@@ -664,14 +664,14 @@ class cDataFormat():
 
                 # Album title.
                 albumTitle = [None, "", 0, ""]
-                if res.hasProperty(NOC('nmm:musicAlbum')):
+                if res.hasProperty(NOC('nmm:musicAlbum', True)):
                     if INTERNAL_RESOURCE_IN_PLAYLIST:
-                        resUri = res.property(NOC('nmm:musicAlbum'))
+                        resUri = res.property(NOC('nmm:musicAlbum', True))
                         resTmp = cResource(resUri)
 
                     else:
-                        resUri = res.property(NOC('nmm:musicAlbum')).toStringList()[0]
-                        resTmp = Nepomuk.Resource(resUri)
+                        resUri = res.property(NOC('nmm:musicAlbum', True)).toStringList()[0]
+                        resTmp = Nepomuk2.Resource(resUri)
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
@@ -681,21 +681,21 @@ class cDataFormat():
                     elif not (oldTitle[1] == albumTitle):
                         # Obtain album artists.
                         albumArtists = []
-                        if resTmp.hasProperty(NOC('nmm:albumArtist')):
+                        if resTmp.hasProperty(NOC('nmm:albumArtist', True)):
                             if INTERNAL_RESOURCE_IN_PLAYLIST:
-                                resUris = resTmp.property(NOC('nmm:albumArtist'))
+                                resUris = resTmp.property(NOC('nmm:albumArtist', True))
                                 if vartype(resUris) != "list":
                                     resUris = [resUris]
 
                             else:
-                                resUris = resTmp.property(NOC('nmm:albumArtist')).toStringList()
+                                resUris = resTmp.property(NOC('nmm:albumArtist', True)).toStringList()
 
                             for itemUri in resUris:
                                 if INTERNAL_RESOURCE_IN_PLAYLIST:
                                     resTmp2 = cResource(itemUri)
 
                                 else:
-                                    resTmp2 = Nepomuk.Resource(itemUri)
+                                    resTmp2 = Nepomuk2.Resource(itemUri)
 
                                 fullname = self.readProperty(resTmp2, 'nco:fullname', 'str')
                                 if fullname != None:
@@ -796,7 +796,7 @@ class cDataFormat():
             elif listType == 'video':
                 # Thumbnail.
                 thumbnailUrl = None
-                if res.hasProperty(NOC('nie:url')):
+                if res.hasProperty(NOC('nie:url', True)):
                     thumbnailUrl = getThumbnailUrl(toUnicode(self.readProperty(res, 'nie:url', 'str')))
 
                     if thumbnailUrl == None:
@@ -830,22 +830,22 @@ class cDataFormat():
                         trackName = dummyVal + trackName
 
                     # Watched?.
-                    if res.hasProperty(NOC('nuao:usageCount')):
-                        if res.property(NOC('nuao:usageCount')).toString() == '1':
+                    if res.hasProperty(NOC('nuao:usageCount', True)):
+                        if res.property(NOC('nuao:usageCount', True)).toString() == '1':
                             trackName += ' <b><em>(watched)</em></b>'
 
                     # Series title.
-                    if res.hasProperty(NOC('nmm:series')):
+                    if res.hasProperty(NOC('nmm:series', True)):
                         if INTERNAL_RESOURCE:
-                            resUri = res.property(NOC('nmm:series'))
+                            resUri = res.property(NOC('nmm:series', True))
                             resTmp = cResource(resUri)
 
                         else:
-                            resUri = res.property(NOC('nmm:series')).toStringList()[0]
-                            resTmp = Nepomuk.Resource(resUri)
+                            resUri = res.property(NOC('nmm:series', True)).toStringList()[0]
+                            resTmp = Nepomuk2.Resource(resUri)
 
-                        if resTmp.hasProperty(NOC('nie:title')):
-                            dummyVal = resTmp.property(NOC('nie:title')).toString()
+                        if resTmp.hasProperty(NOC('nie:title', True)):
+                            dummyVal = resTmp.property(NOC('nie:title', True)).toString()
                             sortColumn = dummyVal + sortColumn
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
                                             % {"uri": resTmp.uri(), "title": dummyVal, "trackName": trackName}
@@ -1021,10 +1021,10 @@ class cDataFormat():
                     resource = cResource(uri)
 
                 else:
-                    resource = Nepomuk.Resource(uri)
+                    resource = Nepomuk2.Resource(uri)
 
                 if pipeMode:
-                    line = toUnicode(resource.property(NOC('nie:url')).toString().toUtf8())
+                    line = toUnicode(resource.property(NOC('nie:url', True)).toString().toUtf8())
                     if (line == "") or (line == None):
                         line = uri
 
@@ -1032,13 +1032,13 @@ class cDataFormat():
                         #line = "\"" + line.replace('"', '\\\\"') + "\""
 
                 else:
-                    altLabel = resource.property(NOC('nao:altLabel')).toString()
-                    fullname = resource.property(NOC('nco:fullname')).toString()
-                    identifier = resource.property(NOC('nao:identifier')).toString()
-                    itemType = toUnicode(resource.type().split('#')[1])
-                    prefLabel = resource.property(NOC('nao:prefLabel')).toString()
-                    title = resource.property(NOC('nie:title')).toString()
-                    url = resource.property(NOC('nie:url')).toString()
+                    altLabel = resource.property(NOC('nao:altLabel', True)).toString()
+                    fullname = resource.property(NOC('nco:fullname', True)).toString()
+                    identifier = resource.property(NOC('nao:identifier', True)).toString()
+                    itemType = toUnicode(str(resource.type()).split('#')[1])
+                    prefLabel = resource.property(NOC('nao:prefLabel', True)).toString()
+                    title = resource.property(NOC('nie:title', True)).toString()
+                    url = resource.property(NOC('nie:url', True)).toString()
 
                     fullTitle = "%s  %s  %s  %s" % (fullname, title, prefLabel, altLabel)
                     fullTitle = fullTitle.strip().replace("  ", " - ")
@@ -1145,6 +1145,7 @@ class cDataFormat():
 
     def fmtValue(self, value, valueType):
         valueType = valueType.lower()
+        #if True:
         try:
             if valueType == 'boolean':
                 result = value
@@ -1256,21 +1257,26 @@ class cDataFormat():
 
 
     def readProperty(self, resource, propertyOntology, propertyType = "str"):
+        #if True:
         try:
             if vartype(resource) in ("str", "QString"):
                 if INTERNAL_RESOURCE:
                     resource = cResource(resource)
 
                 else:
-                    resource = Nepomuk.Resource(resource)
+                    resource = Nepomuk2.Resource(resource)
 
-            result = resource.property(NOC(propertyOntology))
+            result = resource.property(NOC(propertyOntology, True))
             if result != None:
                 if (propertyType == "int"):
                     result = int(result.toString())
 
                 elif (propertyType == "year"):
-                    result = int(result.toString()[:4])
+                    try:
+                        result = int(result.toString()[:4])
+
+                    except:
+                        result = 0
 
                 else:
                     result = toUnicode(result.toString())
@@ -1293,7 +1299,7 @@ class cDataFormat():
                     query = query.replace("%(" + var + ")s", toUnicode(resource.uri()))
 
                 else:
-                    query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var)).toString()))
+                    query = query.replace("%(" + var + ")s", toUnicode(resource.property(NOC(var, True)).toString()))
 
             queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             if queryResultSet.isValid():
@@ -1305,7 +1311,7 @@ class cDataFormat():
             elements = valuesName.split("->")
             if len(elements) > 1:
                 # A simple relation.
-                uris = toUnicode(resource.property(NOC(elements[0])).toStringList())
+                uris = toUnicode(resource.property(NOC(elements[0], True)).toStringList())
                 for uri in uris:
                     # Handling cases where there is no uri and value is stored directly.
                     if uri[:13] == "nepomuk:/res/":
@@ -1320,6 +1326,9 @@ class cDataFormat():
                             while queryResultSet.next():
                                 if value != "":
                                     value += ", "
+
+                                if (vartype(uri) == "QUrl"):
+                                    uri = uri.toString()
 
                                 values += [[uri, toUnicode(queryResultSet["value"].toString())]]
 
@@ -1339,7 +1348,7 @@ class cDataFormat():
                     values += [[toUnicode(resource.uri()), NOCR(resource.type())]]
 
                 else:
-                    propertyValue = toUnicode(resource.property(NOC(elements[0])).toString())
+                    propertyValue = toUnicode(resource.property(NOC(elements[0], True)).toString())
                     if elements[0] == "nie:url":
                         #propertyValue = fromPercentEncoding(propertyValue)
                         if propertyValue[:8] == "filex://":
@@ -1574,7 +1583,7 @@ class cDataFormat():
             resource = cResource(uri)
 
         else:
-            resource = Nepomuk.Resource(uri)
+            resource = Nepomuk2.Resource(uri)
 
         if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE and not INTERNAL_RESOURCE_IN_RESULTS_LIST:
             itemType = NOCR(cResource(uri).type())
@@ -1668,6 +1677,7 @@ class cDataFormat():
                         value += column
 
                 if uri != "":
+                    #if True:
                     try:
                         line = self.formatHtmlLine(uri)
 
@@ -1753,7 +1763,7 @@ class cDataFormat():
                     resource = cResource(item[0])
 
                 else:
-                    resource = Nepomuk.Resource(QUrl(item[0]))
+                    resource = Nepomuk2.Resource(QUrl(item[0]))
 
                 if resource.hasProperty(nieUrl):
                     url = fromPercentEncoding(toUnicode(resource.property(nieUrl).toString().toUtf8()))
@@ -1850,7 +1860,7 @@ class cDataFormat():
             defaultType = NOCR(mainResource.type())
 
         else:
-            mainResource = Nepomuk.Resource(uri)
+            mainResource = Nepomuk2.Resource(uri)
             if USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE:
                 defaultType = NOCR(cResource(uri).type())
 
@@ -1882,7 +1892,7 @@ class cDataFormat():
                         resource = cResource(value)
 
                     else:
-                        resource = Nepomuk.Resource(value)
+                        resource = Nepomuk2.Resource(value)
 
                     value = ''
                     if resource.hasType(NOC('nao:Tag', True)):
@@ -2017,6 +2027,7 @@ class cDataFormat():
                         pass
 
                 else:
+                    #if True:
                     try:
                         # Must check for full paths to avoid file detection in execution path.
                         if (((value[0] == "/") or (value[:7] == "file://")) and fileExists(value)):
@@ -2044,7 +2055,7 @@ class cDataFormat():
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
                     processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
 
-            if (not isAnEmptyResource and not mainResource.hasProperty(NOC("nao:numericRating"))):
+            if (not isAnEmptyResource and not mainResource.hasProperty(NOC("nao:numericRating", True))):
                 try:
                     processedData += [["nao:numericRating", ontologyToHuman("nao:numericRating"), self.getRatingHtml(0, 16)]]
 
@@ -2082,12 +2093,12 @@ class cDataFormat():
                 # Adding the header.
 
                 if defaultType == ONTOLOGY_TYPE_CONTACT:
-                    ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT)
+                    ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT, True)
                     symbol = toUnicode(self.iconNoPhoto)
                     newResource = "&nbsp;<a title=\"%s\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % (_("Create an empty %s") % ONTOLOGY_TYPE_CONTACT, self.iconListAdd)
 
                 elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
-                    ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER)
+                    ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
                     symbol = toUnicode(self.iconNoCover)
                     newResource = ""
 
@@ -2104,6 +2115,7 @@ class cDataFormat():
                     else:
                         symbol = urlDecode(self.readProperty(symbols.toStringList()[0], "nie:url", "str"))
 
+                #if True:
                 try:
                     if ((symbol[0] == "/") or (symbol[:7] == "file://")):
                         if fileExists(symbol):
@@ -2129,7 +2141,7 @@ class cDataFormat():
                         output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1], "newResource": newResource}
 
                         if defaultType == ONTOLOGY_TYPE_CONTACT:
-                            fullname = toUnicode(mainResource.property(NOC("nco:fullname")).toString())
+                            fullname = toUnicode(mainResource.property(NOC("nco:fullname", True)).toString())
                             resourceIsA = self.resourceIsA(mainResource)
                             output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                         % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
@@ -2140,7 +2152,7 @@ class cDataFormat():
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
                         else:
-                            title = toUnicode(mainResource.property(NOC("nao:prefLabel")).toString())
+                            title = toUnicode(mainResource.property(NOC("nao:prefLabel", True)).toString())
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
@@ -2177,7 +2189,7 @@ class cDataFormat():
                     res = cResource(resUri)
 
                 else:
-                    res = Nepomuk.Resource(resUri)
+                    res = Nepomuk2.Resource(resUri)
 
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 url = None

@@ -32,7 +32,7 @@ from PyQt4.QtWebKit import *
 import PyKDE4.kdecore as kdecore
 from PyKDE4.kdecore import i18n, KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, KUrl
 from PyKDE4.kdeui import KApplication, KIconLoader
-from PyKDE4.nepomuk import Nepomuk
+from PyKDE4.nepomuk2 import Nepomuk2
 from PyKDE4.soprano import Soprano
 
 
@@ -351,7 +351,7 @@ class Nepoogle(QWidget):
             self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
         else:
-            self.model = Nepomuk.ResourceManager.instance().mainModel()
+            self.model = Nepomuk2.ResourceManager.instance().mainModel()
 
         #self.setGeometry(300, 300, 250, 150)
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
@@ -613,14 +613,14 @@ class Nepoogle(QWidget):
                         resource = cResource(uri)
 
                     else:
-                        resource = Nepomuk.Resource(uri)
+                        resource = Nepomuk2.Resource(uri)
 
                     fullname = toUnicode(resource.property(NOC("nao:prefLabel", True)).toString())
 
                 if fullname == "":
                     fullname = _("New contact")
 
-                newResource = Nepomuk.Resource(QString(fullname), NOC(ontology, True))
+                newResource = Nepomuk2.Resource(QString(fullname), NOC(ontology, True))
                 newResource.addProperty(NOC(ONTOLOGY_FULLNAME, True), toVariant(fullname))
                 newResource.removeProperty(NOC(ONTOLOGY_IDENTIFIER, True))
 
@@ -760,7 +760,7 @@ class Nepoogle(QWidget):
         elif url[:8] == 'remove:/':
             reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
-                resource = Nepomuk.Resource(QUrl(url[8:]))
+                resource = Nepomuk2.Resource(QUrl(url[8:]))
                 resource.remove()
                 self.pendingQuery = True
                 self.queryMethod = "refresh"
@@ -861,7 +861,7 @@ class Nepoogle(QWidget):
                 resource = cResource(uri)
 
             else:
-                resource = Nepomuk.Resource(uri)
+                resource = Nepomuk2.Resource(uri)
 
         if vartype(rating) == "int":
             pass
@@ -915,7 +915,7 @@ class Nepoogle(QWidget):
             resource = cResource(uri)
 
         else:
-            resource = Nepomuk.Resource(uri)
+            resource = Nepomuk2.Resource(uri)
 
         resourceMainType = NOCR(resource.type())
         if ontology == "":
@@ -1018,7 +1018,7 @@ class Nepoogle(QWidget):
             resource = cResource(uri)
 
         else:
-            resource = Nepomuk.Resource(uri)
+            resource = Nepomuk2.Resource(uri)
 
         try:
             text = resource.property(NOC(ontology))
@@ -1114,7 +1114,7 @@ class Nepoogle(QWidget):
                         label = cResource(value).genericLabel()
 
                     else:
-                        label = toUnicode(Nepomuk.Resource(value).genericLabel())
+                        label = toUnicode(Nepomuk2.Resource(value).genericLabel())
 
                 else:
                     label = value
@@ -1143,12 +1143,12 @@ class Nepoogle(QWidget):
                     print("%s: property %s removed" % (uri, ontology))
                     #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
                     if (len(values) == 1):
-                        resource = Nepomuk.Resource(uri)
+                        resource = Nepomuk2.Resource(uri)
                         resource.removeProperty(QUrl(NOC(ontology)))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:
-                        resource = Nepomuk.Resource(uri)
+                        resource = Nepomuk2.Resource(uri)
                         resource.removeProperty(QUrl(NOC(ontology)), toVariant(value))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1242,7 +1242,7 @@ class Nepoogle(QWidget):
                         imageReply = QMessageBox.Yes
 
                     if imageReply == QMessageBox.Yes:
-                        uriResource = Nepomuk.Resource(uri)
+                        uriResource = Nepomuk2.Resource(uri)
                         uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1275,16 +1275,16 @@ class Nepoogle(QWidget):
                         downloadTo = downloadTo + md5.new(url).hexdigest() + os.path.splitext(url)[1].lower()
                         if downloadFile(url, downloadTo):
                             # Remote resource creation to store the original url.
-                            urlRemoteResource = Nepomuk.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
+                            urlRemoteResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
                             urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
 
                             # Local resource creation to store where file is copied.
-                            urlLocalResource = Nepomuk.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
+                            urlLocalResource = Nepomuk2.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
                             urlLocalResource.addProperty(NOC(ONTOLOGY_TITLE, True), toVariant(os.path.basename(url)))
                             urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
 
                             # Assigning local resource to the resource.
-                            uriResource = Nepomuk.Resource(uri)
+                            uriResource = Nepomuk2.Resource(uri)
                             uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
                             mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1296,9 +1296,9 @@ class Nepoogle(QWidget):
                             #urlResource.addType(NOC("nfo:Website", True))
                             #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
                             #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
-                            urlResource = Nepomuk.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
+                            urlResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
                             urlResource.addType(NOC("nfo:Website", True))
-                            uriResource = Nepomuk.Resource(uri)
+                            uriResource = Nepomuk2.Resource(uri)
                             uriResource.addProperty(NOC(ONTOLOGY_LINK, True), toVariant(urlResource))
                             mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1310,7 +1310,7 @@ class Nepoogle(QWidget):
                         resource = cResource(url)
 
                     else:
-                        resource = Nepomuk.Resource(url)
+                        resource = Nepomuk2.Resource(url)
 
                     resourceMainType = NOCR(resource.type())
                     resourceGenericLabel = resource.genericLabel()
@@ -1363,7 +1363,7 @@ class Nepoogle(QWidget):
                         if resourceReply == QMessageBox.Yes:
                             print("%s: property %s added" % (uri, ontologyResource))
                             #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
-                            resourceResource = Nepomuk.Resource(uri)
+                            resourceResource = Nepomuk2.Resource(uri)
                             resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(url))
                             mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1716,8 +1716,8 @@ class Nepoogle(QWidget):
 
         #if True:
         try:
-            if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
-                Nepomuk.ResourceManager.instance().clearCache()
+            #if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
+                #Nepomuk.ResourceManager.instance().clearCache()
 
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':
@@ -1784,7 +1784,7 @@ class Nepoogle(QWidget):
                         self.execQuery("e1 " + processedSearchString)
                         return True
 
-                    oNQP = Nepomuk.Query.QueryParser()
+                    oNQP = Nepomuk2.Query.QueryParser()
                     for command in ["--playlist", "--playmixed"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
@@ -1805,7 +1805,7 @@ class Nepoogle(QWidget):
                         self.execQuery("e1 " + processedSearchString)
                         return True
 
-                    oNQP = Nepomuk.Query.QueryParser()
+                    oNQP = Nepomuk2.Query.QueryParser()
                     for command in ["--playlist", "--playmixed"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
@@ -2018,7 +2018,7 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
                     model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
                 else:
-                    model = Nepomuk.ResourceManager.instance().mainModel()
+                    model = Nepomuk2.ResourceManager.instance().mainModel()
 
                 count = 0
                 queryResultSet = model.executeQuery(sparqlQuery, SOPRANO_QUERY_LANGUAGE)
@@ -2175,6 +2175,9 @@ def main(args):
         sys.exit(app.exec_())
 
     else:
+        # Whithout this nepomuk don't works.
+        app = QCoreApplication(sys.argv)
+
         if verboseMode == None:
             verboseMode == False
 
@@ -2200,7 +2203,7 @@ def main(args):
                 # Very dirty hack to force commands to use searchEngine 1.
 
                 if searchEngine == 0:
-                    oNQP = Nepomuk.Query.QueryParser()
+                    oNQP = Nepomuk2.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
                     oNQP = None
                     if verboseMode:
@@ -2211,7 +2214,7 @@ def main(args):
                     data, structure, time = oSparql.executeQuery(query)
 
                 elif searchEngine == 2:
-                    oNQP = Nepomuk.Query.QueryParser()
+                    oNQP = Nepomuk2.Query.QueryParser()
                     query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
                     oNQP = None
                     query = hackQueryParser(query, 'e2')

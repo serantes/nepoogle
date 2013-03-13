@@ -26,8 +26,8 @@ import datetime, md5, os, re, subprocess, sys, tempfile
 
 from PyQt4.QtCore import *
 from PyKDE4.kdecore import KUrl
+from PyKDE4.nepomuk2 import Nepomuk2
 from PyKDE4.soprano import Soprano
-from PyKDE4.nepomuk import Nepomuk
 
 from lglobals import *
 
@@ -349,11 +349,13 @@ def toUtf8(string):
 
 def toUnicode(string):
     try:
-
-        if vartype(string) == 'QString':
+        if (vartype(string) == 'QString'):
             return unicode(str(string.toUtf8()), gSysEncoding)
 
-        if vartype(string) == 'unicode':
+        elif (vartype(string) == 'QUrl'):
+            return unicode(str(string.toString()), gSysEncoding)
+
+        if (vartype(string) == 'unicode'):
             return string
 
         return unicode(string, gSysEncoding)
@@ -374,7 +376,7 @@ def toVariant(value):
         if ((value.find("://") > 0) or (value[:13] == "nepomuk:/res/")):
             value = QUrl(value)
 
-    return Nepomuk.Variant(value)
+    return Nepomuk2.Variant(value)
 
 
 def urlDecode(url, retryIfThereArePercentCharacters = True):

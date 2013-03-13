@@ -35,7 +35,7 @@ PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_BASENAME = os.path.splitext(PROGRAM_NAME)[0]
 PROGRAM_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 PROGRAM_VERSION_VERSION = 'v0.9.4git'
-PROGRAM_VERSION_DATE = '2012-xx-xx'
+PROGRAM_VERSION_DATE = '2013-xx-xx'
 PROGRAM_AUTHOR_NAME = 'Ignacio Serantes'
 PROGRAM_AUTHOR_EMAIL = 'kde@aynoa.net'
 PROGRAM_HTML_POWERED = "<hr>--<br /><b>Powered by</b> <em>%(name)s</em> <b>%(version)s</b> released (%(date)s)" \
@@ -99,7 +99,8 @@ NEPOOGLE_DOWNLOADS_PATH = NEPOOGLE_DATA_PATH + "downloads/"
 USE_NEW_INFERENCE_METHOD = (PYKDE4_VERSION_STR > "4.8.7") or (PYKDE4_VERSION_STR >= "4.10.0")
 if USE_NEW_INFERENCE_METHOD:
     DEFAULT_ENGINE = 1
-    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
+    #SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
+    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
     VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
     #VISIBILITY_FILTER_METHOD = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }"
 
