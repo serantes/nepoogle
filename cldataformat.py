@@ -1064,6 +1064,12 @@ class cDataFormat():
 
 
     def htmlRenderLink(self, id = 'uri', par1 = '', par2 = ''):
+        if (vartype(par1) == "QUrl"):
+            par1 = par1.toString()
+
+        if (vartype(par2) == "QUrl"):
+            par2 = par2.toString()
+
         if id == 'uri':
             title = "title=\"%s\"" % par1
             href = "href=\"%s\"" % par1
@@ -1909,13 +1915,14 @@ class cDataFormat():
                     elif resource.hasType(NOC('nmm:MusicAlbum', True)):
                         ontLabel = currOnt + '->nie:title'
 
-                    elif resource.type() == NOC('nmm:TVSeason'):
+                    elif resource.type() == NOC('nmm:TVSeason', True):
                         ontLabel = currOnt + '->nmm:seasonNumber'
                         seasonNumber = "%d" % self.readProperty(resource, 'nmm:seasonNumber', 'int')
                         value = '<!--' + toUnicode(seasonNumber) + '-->' \
                                     + self.htmlRenderLink('uri', resource.uri(), seasonNumber)
 
-                    elif resource.hasType(NOC('rdfs:Resource', True)):
+                    else:
+                    #elif resource.hasType(NOC('rdfs:Resource', True)):
                         ontLabel = ''
                         # Better don't add remote resources.
                         if not (resource.hasType(NOC('nfo:RemoteDataObject', True))):
@@ -1930,8 +1937,8 @@ class cDataFormat():
                                         else:
                                             images += [[url, os.path.basename(url)]]
 
-                    else:
-                        value = toUnicode(resource.type())
+                    #else:
+                    #    value = toUnicode(resource.type())
 
                     if value == '':
                         shorcut = lvalue(knownShortcuts, ontLabel, 0, 1)
@@ -2103,7 +2110,7 @@ class cDataFormat():
                     newResource = ""
 
                 else:
-                    ontologySymbol = NOC(ONTOLOGY_SYMBOL)
+                    ontologySymbol = NOC(ONTOLOGY_SYMBOL, True)
                     symbol = toUnicode(self.iconNoSymbol)
                     newResource = "&nbsp;<a title=\"%s\" href=\"addresource:/nco:Contact&%s\"><img valign=\"middle\" src=\"file://%s\"></a>" % (_("Create a %s based on this tag") % ONTOLOGY_TYPE_CONTACT, uri, self.iconListAdd)
 
