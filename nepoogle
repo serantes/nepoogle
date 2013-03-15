@@ -981,7 +981,7 @@ class Nepoogle(QWidget):
                         self.setRating(resource, value)
 
                     else:
-                        resource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(value))
+                        resource.addProperty(NOC(ontologyResource, True), toVariant(value))
 
                     #stderr_data = redirector.read()
                     #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _(stderr_data))
@@ -1021,7 +1021,7 @@ class Nepoogle(QWidget):
             resource = Nepomuk2.Resource(uri)
 
         try:
-            text = resource.property(NOC(ontology))
+            text = resource.property(NOC(ontology, True))
             if text.isStringList():
                 parameters = []
                 status = "on"
@@ -1042,7 +1042,7 @@ class Nepoogle(QWidget):
                     return False
 
             else:
-                text = toUnicode(resource.property(NOC(ontology)).toString())
+                text = toUnicode(resource.property(NOC(ontology, True)).toString())
 
             if text[:13] == "nepomuk:/res/":
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't edit resources here, click in the resource and edit directly."))
@@ -1061,7 +1061,7 @@ class Nepoogle(QWidget):
                         self.setRating(resource, newText)
 
                     else:
-                        ontologyFull = QUrl(NOC(ontology, True))
+                        ontologyFull = NOC(ontology, True)
                         if ontology in ("nie:url"):
                             # Caution!, strip() is mandatory here because only one line is supported.
                             newText = QUrl(newText.strip())
@@ -1144,12 +1144,12 @@ class Nepoogle(QWidget):
                     #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
                     if (len(values) == 1):
                         resource = Nepomuk2.Resource(uri)
-                        resource.removeProperty(QUrl(NOC(ontology)))
+                        resource.removeProperty(NOC(ontology, True))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                     else:
                         resource = Nepomuk2.Resource(uri)
-                        resource.removeProperty(QUrl(NOC(ontology)), toVariant(value))
+                        resource.removeProperty(NOC(ontology, True), toVariant(value))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
         if mustRefresh > SLEEP_NO_SLEEP:
@@ -1364,7 +1364,7 @@ class Nepoogle(QWidget):
                             print("%s: property %s added" % (uri, ontologyResource))
                             #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
                             resourceResource = Nepomuk2.Resource(uri)
-                            resourceResource.addProperty(QUrl(NOC(ontologyResource, True)), toVariant(url))
+                            resourceResource.addProperty(NOC(ontologyResource, True), toVariant(url))
                             mustRefresh = SLEEP_AFTER_UPDATE
 
                             self.lastOntologySelected = ontologyResource
@@ -1717,7 +1717,7 @@ class Nepoogle(QWidget):
         #if True:
         try:
             #if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
-                #Nepomuk.ResourceManager.instance().clearCache()
+            #    Nepomuk2.ResourceManager.instance().clearCache()
 
             self.sparql = cSparqlBuilder()
             if searchString[:9] == 'nepomuk:/':

@@ -51,8 +51,8 @@ class cDataFormat():
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
     enableImageViewer = True
-    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
-    hiddenOntologiesInverse = [NOC("nao:hasSubResource")]
+    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
+    hiddenOntologiesInverse = [NOC("nao:hasSubResource"), NOC("dces:contributor"), NOC("nco:contributor")]
     model = None
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
     outFormat = 1  # 1- Text, 2- Html
@@ -422,7 +422,7 @@ class cDataFormat():
                 #        "}\n" % toUnicode(res.uri())
                 query = "select ?uri\n" \
                         "   where {\n" \
-                        "       ?uri nao:hasSubResource <%s> .\n" \
+                        "       ?uri nie:isLogicalPartOf <%s> .\n" \
                         "}\n" % toUnicode(res.uri())
                 data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                 if data.isValid():
@@ -1637,6 +1637,9 @@ class cDataFormat():
         htmlQueryTime = time.time()
 
         text = self.htmlHeader % ("Query results", "")
+        if (self.searchString[:3] != "e0 "):
+            text += "WARNING! this kind of query is slow with Nepomuk2, don't use prefix or use e0 prefix."
+
         text += self.htmlTableHeader
 
         if vartype(param1) == "list":

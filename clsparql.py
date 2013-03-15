@@ -85,7 +85,8 @@ knownOntologies = [ \
                     ['nmm', '2009/02/19'], ['nmo', '2007/03/22'], \
                     ['nrl', '2007/08/15'], ['nuao', '2010/01/25'], \
                     ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'], \
-                    ['nbib', 'http://www.example.com/'] \
+                    ['nbib', 'http://www.example.com/'],  \
+                    ['dces', 'http://purl.org/dc/elements/1.1/']
                 ]
 
 ontologyTypes = [ \
