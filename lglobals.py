@@ -101,7 +101,8 @@ if USE_NEW_INFERENCE_METHOD:
     DEFAULT_ENGINE = 1
     SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
     #SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
-    VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
+    #VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
+    VISIBILITY_FILTER_METHOD = "%s a ?dummy"
     #VISIBILITY_FILTER_METHOD = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }"
 
 else:
