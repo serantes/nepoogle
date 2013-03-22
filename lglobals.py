@@ -99,8 +99,8 @@ NEPOOGLE_DOWNLOADS_PATH = NEPOOGLE_DATA_PATH + "downloads/"
 USE_NEW_INFERENCE_METHOD = (PYKDE4_VERSION_STR > "4.8.7") or (PYKDE4_VERSION_STR >= "4.10.0")
 if USE_NEW_INFERENCE_METHOD:
     DEFAULT_ENGINE = 1
-    #SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
-    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
+    SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparqlNoInference
+    #SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
     VISIBILITY_FILTER_METHOD = "%s a [ nao:userVisible \"true\"^^xsd:boolean ]"
     #VISIBILITY_FILTER_METHOD = "graph ?g { %s rdf:type ?type . } FILTER NOT EXISTS { ?g a nrl:Ontology. }"
 

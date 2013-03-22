@@ -51,8 +51,10 @@ class cDataFormat():
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
     enableImageViewer = True
-    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
-    hiddenOntologiesInverse = [NOC("nao:hasSubResource"), NOC("dces:contributor"), NOC("nco:contributor")]
+    #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
+    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
+    #hiddenOntologiesInverse = [NOC("nao:hasSubResource"), NOC("dces:contributor"), NOC("nco:contributor")]
+    hiddenOntologiesInverse = [NOC("nao:hasSubResource")]
     model = None
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
     outFormat = 1  # 1- Text, 2- Html
@@ -321,7 +323,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeason", \
-                            "<b>Title</b>: {nmm:seasonOf->nie:title|l} <br /><b>Season</b>: {nmm:seasonNumber|l}", \
+                            "<b>Title</b>: {nao:prefLabel}<br /><b>Season</b>: {nmm:seasonNumber|l} of {nmm:seasonOf->nie:title|l} ", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nmm:TVSeries", \
@@ -424,7 +426,7 @@ class cDataFormat():
                         "   where {\n" \
                         "       ?uri nie:isLogicalPartOf <%s> .\n" \
                         "}\n" % toUnicode(res.uri())
-                data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
+                data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
                 if data.isValid():
                     while data.next():
                         resUri = toUnicode(data["uri"].toString())
@@ -808,12 +810,12 @@ class cDataFormat():
                     dummyVal = os.path.basename(url)
                     sortColumn = dummyVal
                     trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                    % {"uri": res.uri(), "title": dummyVal}
+                                    % {"uri": toUnicode(res.uri()), "title": dummyVal}
 
                 else:
                     sortColumn = trackName
                     trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
-                                    % {"uri": res.uri(), "title": trackName}
+                                    % {"uri": toUnicode(res.uri()), "title": trackName}
 
                     # Episode number.
                     episodeNumber = self.readProperty(res, 'nmm:episodeNumber', 'int')
@@ -848,7 +850,7 @@ class cDataFormat():
                             dummyVal = resTmp.property(NOC('nie:title', True)).toString()
                             sortColumn = dummyVal + sortColumn
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
-                                            % {"uri": resTmp.uri(), "title": dummyVal, "trackName": trackName}
+                                            % {"uri": toUnicode(resTmp.uri()), "title": dummyVal, "trackName": trackName}
 
                 if thumbnailUrl != None:
                     trackName = "<img width=48 style='float:left; " \
@@ -1179,7 +1181,9 @@ class cDataFormat():
                 result = "%.4f" % float(value)
 
             elif valueType == 'duration':
+                print int(value)
                 result = "%s" % datetime.timedelta(0, int(value), 0)
+                print result
 
             elif valueType == 'size':
                 result = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
@@ -1609,7 +1613,7 @@ class cDataFormat():
                 columns += [self.getResourceIcons(toUnicode(uri), pattern)]
 
             elif (pattern == "{type}"):
-                columns += ["<b title='%s'>" + ontologyToHuman(itemType) + "</b>"]
+                columns += ["<b title='%s'>" % itemType + ontologyToHuman(itemType) + "</b>"]
 
             else:
                 columns += [self.formatResource(resource, pattern)]
@@ -1637,8 +1641,8 @@ class cDataFormat():
         htmlQueryTime = time.time()
 
         text = self.htmlHeader % ("Query results", "")
-        if (self.searchString[:3] != "e0 "):
-            text += "WARNING! this kind of query is slow with Nepomuk2, don't use prefix or use e0 prefix."
+        #if (self.searchString[:3] != "e0 "):
+        #    text += "WARNING! this kind of query is slow with Nepomuk2, don't use prefix or use e0 prefix."
 
         text += self.htmlTableHeader
 

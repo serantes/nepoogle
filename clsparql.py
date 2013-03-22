@@ -104,7 +104,7 @@ ontologyTypes = [ \
                     ['nexif:orientation', 'orientation'], \
                     ['nexif:whitebalance', 'whitebalance'], \
                     ['nfo:averagebitrate', 'number'], \
-                    ['nfo:duration', 'seconds'], \
+                    ['nfo:duration', 'duration'], \
                     ['nfo:height', 'number'], \
                     ['nfo:samplerate', 'int'], \
                     ['nfo:width', 'number'], \
@@ -968,6 +968,7 @@ class cSparqlBuilder():
         except:
             pass
 
+        #BUG: nfo:duration>3:25 da error.
         try:
             splitTime = val.split(":")
             if len(splitTime) == 3:
@@ -1096,7 +1097,7 @@ class cSparqlBuilder():
                 elif ((valType == "datetime") or (valType == "datetimep")):
                     filterExpression = self.buildDateFilter(val, i, operator)
 
-                elif ((valType == "seconds") or (valType == "time")):
+                elif ((valType == "seconds") or (valType == "time") or (valType == "duration")):
                     filterExpression = self.buildTimeFilter(val, i, operator)
 
                 elif valType == "aperturevalue":
