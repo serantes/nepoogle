@@ -1759,10 +1759,10 @@ class cDataFormat():
         output = toUnicode(output)
 
         # Build playlist here.
-        nfoVideo = NOC('nfo:Video')
-        nieUrl = NOC('nie:url')
-        nieTitle = NOC('nie:title')
-        nmmMusicPiece = NOC('nmm:MusicPiece')
+        nfoVideo = NOC('nfo:Video', True)
+        nieUrl = NOC('nie:url', True)
+        nieTitle = NOC('nie:title', True)
+        nmmMusicPiece = NOC('nmm:MusicPiece', True)
 
         audios = []
         images = []
