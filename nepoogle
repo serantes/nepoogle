@@ -276,6 +276,7 @@ class Nepoogle(QWidget):
     screenHeight = 600
     screenWidth = 800
     sparql = None
+    sparqlBuilderV1 = False
     textToFind = ""
     verboseMode = False
     warningsList = []
@@ -344,7 +345,7 @@ class Nepoogle(QWidget):
                             #% ('%s', htmlImgStyle, 'system run', iconSystemRun)
 
 
-    def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None):
+    def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None, SPARQLBuilderV1 = False):
         super(Nepoogle, self).__init__(parent)
 
         if (screenRect != None):
@@ -358,6 +359,8 @@ class Nepoogle(QWidget):
 
         else:
             self.model = Nepomuk2.ResourceManager.instance().mainModel()
+
+        self.sparqlBuilderV1 = SPARQLBuilderV1
 
         #self.setGeometry(300, 300, 250, 150)
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
@@ -1483,14 +1486,13 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program was developed on <b>KDE 4.8.4</b> but works with <b>KDE 4.9</b> if at least <b>Virtuoso 6.1.6</b> is installed." \
+                    "<li>This program needs <b>KDE 4.10.1</b> and <a href=\"http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git\">Python Nepomuk2 Bindings</a> installed and Nepomuk running to work." \
                     "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
-                    "<li>By default Nepoogle searchs text only in identifiers, descriptions, tags, fullnames, titles and urls.</li>\n" \
                     "<li>Parenthesis for group queries are not supported.</li>\n" \
                     "<li>You can use regular expressions searching strings.</li>\n" \
                     "<li>Nepoogle uses own query engine but Nepomuk query parser it's available using prefix e0.</li>\n" \
                     "<li>Be cautious, certain ontologies combinations in a same query may offer 0 results.</li>\n" \
-                    "<li>Noticed that edition resources it's an experimental feature in alpha stage.</li>\n" \
+                    "<li>Resorces can be edited but that functionality it's an experimental feature in alpha stage.</li>\n" \
                     "</ul></p>\n"
 
         commandsList = ''
@@ -1546,10 +1548,19 @@ class Nepoogle(QWidget):
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
                     "<br />\n" \
-                    "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.8-api/kdelibs-apidocs/nepomuk/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> so query syntax it's different.<br />" \
+                    "Some shorcutontologies has special values:<br />\n" \
+                    "-flash: [ %(flash)s ]<br />\n" \
+                    "-meteringmode: [ %(meteringmode)s ]<br />\n" \
+                    "-whitebalance: [ %(whitebalance)s ]<br />\n" \
+                    "<br />\n" \
+                    "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.10-api/kdelibs-apidocs/nepomuk/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> so query syntax it's different.<br />" \
                     "</ul>" \
                     "</p>\n" \
-                    % {'shortcuts': shortcutsList, 'instructions': commandsList}
+                    % {'shortcuts': shortcutsList, 'instructions': commandsList, \
+                        'flash': " | ".join(NEXIF_FLASH), \
+                        'meteringmode': " | ".join(NEXIF_METERING_MODE), \
+                        'whitebalance': " | ".join(NEXIF_WHITE_BALANCE) \
+                        }
 
         examples = "<p><b>Examples</b>:\n" \
                     + self.htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
@@ -1596,7 +1607,7 @@ class Nepoogle(QWidget):
                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
                     "\n  </head>\n<body>\n" \
                     "<p><h3>%(program)s's help</h3></p>\n" \
-                    "<p><b>%(program)s</b> is a system to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system so that only returns results that are pre-collected in <em>Nepomuk's database</em>.</p>\n" \
+                    "<p><b>%(program)s</b> is a tool to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system but search indexed data in <em>Nepomuk's database</em>.</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(commands)s" \
@@ -1725,7 +1736,12 @@ class Nepoogle(QWidget):
             #if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
             #    Nepomuk2.ResourceManager.instance().clearCache()
 
-            self.sparql = cSparqlBuilder2()
+            if self.sparqlBuilderV1:
+                self.sparql = cSparqlBuilder()
+
+            else:
+                self.sparql = cSparqlBuilder2()
+
             if searchString[:9] == 'nepomuk:/':
                 self.currUri = searchString
                 if self.queryMethod in ("manual", "refresh"):
@@ -1995,7 +2011,12 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
         n3url = toUnicode(n3url.replace('?', '%3f'))
         n3url = n3url.replace('(', '\\\(').replace(')', '\\\)')
 
-        visibilityFilter = cSparqlBuilder2().visibilityFilter
+        if SPARQLBuilderV1:
+            visibilityFilter = cSparqlBuilder().visibilityFilter
+
+        else:
+            visibilityFilter = cSparqlBuilder2().visibilityFilter
+
         notIndexedCount = 0
         sparqlQuery = None
         recordsets = []
@@ -2067,6 +2088,7 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
 
 def main(args):
     displayResults = None
+    SPARQLBuilderV1 = False
     gui = not sys.stdout.isatty()
     pipeMode = False
     verboseMode = None
@@ -2115,6 +2137,10 @@ def main(args):
 
         elif parameter.lower() == "--pipe":
             pipeMode = True
+            continue
+
+        elif parameter.lower() == "--v1":
+            SPARQLBuilderV1 = True
             continue
 
         elif parameter.lower()[:9] == '--results':
@@ -2178,7 +2204,7 @@ def main(args):
         #    window.execQuery()
 
         #app = QApplication(args)
-        nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1))
+        nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
         nepoogle.show()
         nepoogle.repaint()
         if searchString != '':
@@ -2204,7 +2230,12 @@ def main(args):
         #if True:
         try:
             warningsList = []
-            oSparql = cSparqlBuilder2()
+            if SPARQLBuilderV1:
+                oSparql = cSparqlBuilder()
+
+            else:
+                oSparql = cSparqlBuilder2()
+
             if searchString != '':
 
                 # Very dirty hack to force commands to use searchEngine 1.
