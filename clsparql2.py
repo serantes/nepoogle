@@ -51,41 +51,41 @@ class cSparqlBuilder2():
     caseInsensitiveSort = True
     columns = ""
     command = ""
-    # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
+    # [id, ['columns', [[id, 'ontology', optional, sort]...], [filter], [type]]]
     commands = [ \
-                [_('--actors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
-                [_('--albums'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
-                [_('--audios'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
+                [_('--actors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nco:Contact']]], \
+                [_('--albums'), ['?r AS ?id', [[0, 'nie:title', True, True]], ['nie:title'], ['nmm:MusicAlbum']]], \
+                [_('--audios'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Audio']]], \
                 #[_('--connect'), ['', [], [], []]], \
-                [_('--composers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
-                [_('--contacts'), ['?x0 AS ?id', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
-                [_('--creators'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
+                [_('--composers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:Contact']]], \
+                [_('--contacts'), ['?r AS ?id', [[0, 'nco:fullname', True, True]], ['nco:fullname'], ['nco:Contact']]], \
+                [_('--creators'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:Contact']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
-                [_('--directors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
+                [_('--directors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nco:Contact']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
                 [_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
-                [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
+                [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], []]], \
                 [_('--help'), ['help', [], [], []]], \
-                [_('--images'), ['?x0 AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
-                [_('--movies'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
-                [_('--musicpieces'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
+                [_('--images'), ['?r AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:url'], ['nfo:RasterImage']]], \
+                [_('--movies'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nie:title']]], \
+                [_('--musicpieces'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:MusicPiece']]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode . FILTER(?season*1000+?episode = ?se)\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s*1000+?e) AS ?se ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
                 [_('--notindexed'), ['notindexed', [], [], []]], \
-                [_('--performers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                [_('--performers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nco:Contact']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--playmixed'), ['playmixed', [], [], []]], \
-                [_('--producers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
+                [_('--producers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nco:Contacts']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--showupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "%s"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
-                [_('--tags'), ['?x0 AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
-                [_('--topics'), ['?x0 AS ?id', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
-                [_('--tvseries'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
-                [_('--tvshows'), ['?x0 AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
-                [_('--videos'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
+                [_('--tags'), ['?r AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['nao:Tag->nao:prefLabel'], ['nao:Tag']]], \
+                [_('--topics'), ['?r AS ?id', [[0, 'pimo:tagLabel', True, True]], ['pimo:Topic->nao:identifier'], ['pimo:Topic']]], \
+                [_('--tvseries'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:TVSeries']]], \
+                [_('--tvshows'), ['?r AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:title'], ['nmm:TVShow']]], \
+                [_('--videos'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Video']]], \
                 [_('--writers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
 
@@ -112,6 +112,7 @@ class cSparqlBuilder2():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
+    resultField = "?r"
     resultsetLimit = 0
     resultsetOffset = 0
     sortSuffix = '_sort'
@@ -139,11 +140,13 @@ class cSparqlBuilder2():
                     ['nmm:setNumber', _('discnumber'), _('dn')], \
                     ['nfo:duration', _('duration'), _('du')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
+                    ['nexif:flash', _('flash'), _('fl')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['!nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('he')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
+                    ['nexif:meteringMode', _('meteringmode'), _('mm')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
                     ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
                     ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
@@ -172,10 +175,11 @@ class cSparqlBuilder2():
                     ['%nie:url', _('url'), _('ur')], \
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
                     ['nfo:width', _('width'), _('wi')], \
+                    ['nexif:whiteBalance', _('whitebalance'), _('wb')], \
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
 
-    subqueryResultField = "?r"
+    subqueryResultField = resultField
 
     tempData = ['', [], [], []]
 
@@ -260,8 +264,8 @@ class cSparqlBuilder2():
         limits = self.bsResulsetLimits()
         optionalFields = self.bsOptionalFields()
         sort = self.bsSort()
+        subqueries = self.bsSubqueries()
 
-        #AQUÍ
         #SELECT DISTINCT ?r AS ?id
         #WHERE {
         #
@@ -271,11 +275,6 @@ class cSparqlBuilder2():
         #
         #}
         #ORDER BY bif:lower(?v)...
-
-        #mainFilter = self.bsMainFilter() + '\n'
-        #searchFilter = self.bsFilter() + '\n'
-
-        subqueries = self.bsSubqueries()
 
         query = header \
                 + subqueries \
@@ -469,22 +468,18 @@ class cSparqlBuilder2():
             value = value.lower()
             if (value.lower() in NEXIF_FLASH_LOWER):
                 value = lindex(NEXIF_FLASH_LOWER, value)
-                if (value > 0):
-                    operator = ">="
-
-                else:
-                    operator = "="
-
-            elif (value == "1"):
-                operator = ">="
-                value = "0"
 
             else:
-                operator = "="
-                value = "0"
+                value = 0
 
-            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+            if (value == 1):
+                if (operator == "="):
+                    operator = ">="
 
+                if (operator == "!="):
+                    operator = "<"
+
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "focallength"):
             valTerms = value.split("/")
@@ -499,10 +494,9 @@ class cSparqlBuilder2():
                 value = lindex(NEXIF_METERING_MODE_LOWER, value)
 
             else:
-                operator = ">"
-                value = len(NEXIF_METERING_MODE)
+                value = "-1" # A value not defined in NEXIF_METERING_MODE
 
-            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "orientation"):
             if operator == "==":
@@ -516,13 +510,12 @@ class cSparqlBuilder2():
                 value = lindex(NEXIF_WHITE_BALANCE_LOWER, value)
 
             else:
-                operator = ">"
-                value = len(NEXIF_WHITE_BALANCE)
+                value = "-1" # A value not defined in NEXIF_WHITE_BALANCE
 
-            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         else:
-            # Basically strings.
+            # String.
             if (operator == "=="):
                 filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': "=", 'val': value}
 
@@ -532,7 +525,6 @@ class cSparqlBuilder2():
                     filterExpression = "FILTER(REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
                 elif (operator == "!="):
-                    #TODO: falta los optional.
                     filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
                 else:
@@ -711,34 +703,40 @@ class cSparqlBuilder2():
                     subqueryUsage = True
 
                 valType = self.ontologyVarType(ontology)
-                if not optionalUsage:
-                    if (ontology.find('=') >= 0):
-                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology.split('=')[0], 'r': i, 'v': ontology.split('=')[1]}
+                if (ontology.find('=') >= 0):
+                    rName = "?x%d" % (i)
+                    clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology.split('=')[0], 'r': rName, 'v': ontology.split('=')[1]}
+
+                else:
+                    # Here is where relations are stablished:
+                    # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
+                    # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
+
+                    try:
+                        doSwap = (ontologyRelations[i] == "<-")
+
+                    except:
+                        doSwap = False
+
+                    if doSwap:
+                        vName = "?x%d" % i
+                        rName = "?x%d" % (i + 1)
 
                     else:
-                        # Here is where relations are stablished:
-                        # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
-                        # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
+                        rName = "?x%d" % i
+                        vName = "?x%d" % (i + 1)
 
-                        try:
-                            doSwap = (ontologyRelations[i] == "<-")
+                    clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                    i += 1
 
-                        except:
-                            doSwap = False
+            clause = clause.replace("?x0 ", self.subqueryResultField + " ").replace("?x%d " % i, "?v ")
+            if optionalUsage:
+                strTerm = indent + self.subqueryResultField + " a ?v1 . FILTER NOT EXISTS {\n" \
+                            + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
+                            + indent + "}\n"
 
-                        if doSwap:
-                            vName = "?x%d" % i
-                            rName = "?x%d" % (i + 1)
-
-                        else:
-                            rName = "?x%d" % i
-                            vName = "?x%d" % (i + 1)
-
-                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
-                        i += 1
-
-            clause = clause.replace("?x0 ", "?r ").replace("?x%d " % i, "?v ")
-            strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+            else:
+                strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
 
         return strTerm
 
@@ -763,14 +761,27 @@ class cSparqlBuilder2():
 
     def bsSubqueries(self):
         subqueries = ""
-
         # Por el momento los ignoro esto tiene que valer para añadir
         # como primer término: ?r rdf:type nmm:Movie
-        if (self.tempData[2] == []):
+        if (self.tempData[3] == []):
             typeFilters = self.typeFilters
 
         else:
-            typeFilters = self.tempData[2]
+            typeFilters = self.tempData[3]
+
+        for item in typeFilters:
+            # Two spaces for indentation level.
+            subqueries += "  %s rdf:type %s .\n" % (self.resultField, item)
+
+        for item in self.tempData[2]:
+            if (self.filters == []):
+                filterValue = ".*"
+
+            else:
+                filterValue = self.filters[0][0]
+                self.filters = []
+
+            subqueries += self.bsSubqueryTerm([filterValue, "=", item], 1)
 
         #[termino [<and | or> termino]...
         #[[u'iu', '=', u'performer'], ['and', '', ''], [u'iu', '=', u'_nco:creator->nco:fullname']]
@@ -788,339 +799,6 @@ class cSparqlBuilder2():
                     subqueries += unionClause + subquery + " "
 
         return subqueries + "\n\n"
-
-
-    #TODO: borrar
-    def bsIndividualFilter(self, value = ''):
-        ontologies = [self.ontologyConversion(value[2])]
-        if ontologies == ['']:
-            if self.tempData[3] == []:
-                ontologies = self.ontologyFilters
-
-            else:
-                ontologies = self.tempData[3]
-
-        text = ""
-        relationAdjustmentResource = relationAdjustmentValue = 0
-        numInverseRelations = 0
-        for item in ontologies:
-            textAux = ""
-            ontologyElements = item.split("->")
-            if len(ontologyElements) == 1:
-                # Must try inverse elements.
-                ontologyElements = item.split("<-")
-                numInverseRelations = len(ontologyElements) - 1
-
-            if item.find('?x0') >= 0:
-                i = 1
-
-            else:
-                i = 0
-
-            optionalUsage = False
-            subqueryUsage = False
-            for ontology in ontologyElements:
-                ontology = ontology.strip()
-
-                try:
-                    val = value[0]
-
-                except:
-                    val = ""
-
-                try:
-                    operator = value[1]
-                    if operator == '':
-                        operator = '='
-
-                except:
-                    operator = '='
-
-                valType = ""
-                if ontology[0] == "%":
-                    ontology = ontology[1:]
-                    val = toN3(val)
-
-                elif ontology[0] == "_":
-                    ontology = ontology[1:]
-                    optionalUsage = optionalUsage or (operator == "!=")
-
-                elif ontology[0] == "!":
-                    ontology = ontology[1:]
-                    subqueryUsage = subqueryUsage or (operator == "!=")
-
-                elif ((val == "") and (operator == "!=")):
-                    subqueryUsage = True
-
-                valType = self.ontologyVarType(ontology)
-                #optionalUsage = (optionalUsage and (operator == '!='))
-                if not optionalUsage:
-                    if ontology.find('=') >= 0:
-                        textAux += "?x%(v1)s %(ont)s %(v2)s . " % {'ont': ontology.split('=')[0], 'v1': i, 'v2': ontology.split('=')[1]}
-
-                    else:
-                        # Here is where relations are stablished: ?x0 ontology ?x1
-                        if numInverseRelations > 0:
-                            resourceIndex = i + 1
-                            valueIndex = i
-                            numInverseRelations -= 1
-
-                        else:
-                            resourceIndex = i
-                            valueIndex = i + 1
-
-                        textAux += "?x%(v1)s %(ont)s ?x%(v2)s . " % {'ont': ontology, 'v1': resourceIndex, 'v2': valueIndex}
-                        i += 1
-
-            #AQUÍ
-
-            if val == '':
-                filterExpression = '}\n'
-
-            else:
-                # Sometimes " character must be removed.
-                if val[0] == val[-1] == '"':
-                    val = val[1:-1]
-
-                # Caution: valType could be none.
-                if val == ".*":
-                    filterExpression = " }\n"
-
-                elif valType in ('number', 'int', 'integer'):
-                    if operator == "==":
-                        operator = "="
-
-                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
-
-                elif valType == "float":
-                    filterExpression = self.buildFloatFilter(val, i, operator)
-
-                elif ((valType == "date") or (valType == "datep")):
-                    filterExpression = self.buildDateFilter(val, i, operator)
-
-                elif ((valType == "datetime") or (valType == "datetimep")):
-                    filterExpression = self.buildDateFilter(val, i, operator)
-
-                elif ((valType == "seconds") or (valType == "time") or (valType == "duration")):
-                    filterExpression = self.buildTimeFilter(val, i, operator)
-
-                elif valType == "aperturevalue":
-                    if val[0].lower() == 'f':
-                        val = val[1:]
-
-                    filterExpression = self.buildFloatFilter(val, i, operator)
-
-                elif valType == "exposurebiasvalue":
-                    valTerms = val.split("/")
-                    if (len(valTerms) > 1):
-                        val = float(valTerms[0])/float(valTerms[1])
-
-                    filterExpression = self.buildFloatFilter(val, i, operator)
-
-                elif valType == "exposuretime":
-                    valTerms = val.split("/")
-                    if (len(valTerms) > 1):
-                        val = float(valTerms[0])/float(valTerms[1])
-
-                    filterExpression = self.buildFloatFilter(val, i, operator, 6)
-
-                elif valType == "flash":
-                    raise Exception(_("Can't search using \"%s\".") % "nexif:flash")
-
-                elif valType == "focallength":
-                    valTerms = val.split("/")
-                    if (len(valTerms) > 1):
-                        val = float(valTerms[0])/float(valTerms[1])
-
-                    filterExpression = self.buildFloatFilter(val, i, operator)
-
-                elif valType == "meteringmode":
-                    raise Exception(_("Can't search using \"%s\".") % "nexif:meteringMode")
-
-                elif valType == "orientation":
-                    if operator == "==":
-                        operator = "="
-
-                    filterExpression = "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': i, 'op': operator, 'val': val}
-
-                elif valType == "whitebalance":
-                    raise Exception(_("Can't search using \"%s\".") % "nexif:whiteBalance")
-
-                else:
-                    if operator == "==":
-                        filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': "=", 'val': val}
-
-                    else:
-                        val = val.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
-                        if operator == "=":
-                            filterExpression = "FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
-
-                        elif operator == "!=":
-                            if optionalUsage:
-                                filterExpression = "?x%(v1)s %(ontbase)s ?x%(v2)s . optional { ?x%(v2)s %(ont)s ?x%(v3)s . FILTER(!REGEX(?x%(v3)s, \"%(val)s\"^^xsd:string, 'i')) } FILTER(!BOUND(?x%(v3)s)) }\n" \
-                                                        % {'v1': i, 'v2': i+1, 'v3': i+2, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
-
-                            elif subqueryUsage:
-                                filterExpression = "FILTER(bif:exists((SELECT * WHERE { { ?x%(v1)s %(ontbase)s ?x%(v2)s . FILTER(REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) } . } ))) . } .\n" \
-                                                        % {'v1': i-1, 'v2': i, 'val': val, 'ontbase': ontologyElements[0][1:], 'ont': ontology}
-
-                            else:
-                                filterExpression = "FILTER(!REGEX(?x%(v2)s, \"%(val)s\"^^xsd:string, 'i')) }\n" % {'v2': i, 'val': val}
-
-                        else:
-                            filterExpression = "FILTER(?x%(v2)s %(op)s \"%(val)s\"^^xsd:string) }\n" % {'v2': i, 'op': operator, 'val': val}
-
-            if optionalUsage or subqueryUsage:
-                        #"      }\n" \
-                        #"    ))\n" \
-                        #"    &&\n" \
-                textAux = \
-                        "    (!bif:exists ((\n" \
-                        "      SELECT *\n" \
-                        "      WHERE {\n" \
-                        "        { " + textAux + filterExpression
-
-            else:
-                if text != "":
-                    text += "      UNION\n"
-                    textAux = "        { " + textAux + filterExpression
-
-                else:
-                    textAux = "    (bif:exists ((\n" \
-                                "      SELECT *\n" \
-                                "      WHERE {\n" \
-                                "        { " + textAux + filterExpression
-
-            text += textAux
-
-        if text != "":
-            if text[0] == '!':
-                text += \
-                            "      }\n" \
-                        "    )))\n" \
-
-            else:
-                text = \
-                                    "%(text)s" \
-                            "      }\n" \
-                        "    )))\n" \
-                        % {'text': text}
-
-        return text
-
-
-    def bsFilter(self):
-        filters = self.filters
-        text = ""
-        for item in filters:
-            if item == []:
-                continue
-
-            if item[0].lower() == 'or':
-                text += '    ||\n'
-
-            elif item[0].lower() == 'and':
-                text += '    &&\n'
-
-            else:
-                if text != "" and text[-2] == ')':
-                    text += '    &&\n'
-                text += self.bsIndividualFilter(item)
-
-        if text != "":
-            text = \
-                    "  FILTER(\n" \
-                        "%s" \
-                    "  )\n" \
-                    % text
-
-        return text
-
-
-    def bsMainFilter(self):
-        text = ""
-        if self.tempData[2] == []:
-            typeFilters = self.typeFilters
-
-        else:
-            typeFilters = self.tempData[2]
-
-        if (self.command[:2] == "--" and not (self.command in ("--playlist", "--playmixed"))):
-            visibilityFilter = ""
-
-        else:
-            visibilityFilter = self.visibilityFilter
-
-        if len(typeFilters) == 1:
-            items = typeFilters[0].split("->")
-            if len(items) > 1:
-                i = 0
-                text = ''
-                for item in items:
-                    if item != '':
-                        if visibilityFilter != '':
-                            text += "  %s\n" % (visibilityFilter % ("?x%s" % i))
-
-                        if item == items[-1]:
-                            varName = '%s' % (item.split(':')[-1])
-
-                        else:
-                            varName = 'x%s' % (i+1)
-
-                        text += "  ?x%(oldVarName)s %(ontology)s ?%(varName)s .\n" \
-                                % {'oldVarName': i, 'varName': varName, 'ontology': item}
-                        i += 1
-
-            else:
-                if visibilityFilter != '':
-                    text += "  %s\n" % (visibilityFilter % ("?x0"))
-
-                items = typeFilters[0].split("=")
-                if len(items) > 1:
-                    text += "  ?x0 %(ontology1)s %(ontology2)s .\n" \
-                            % {'ontology1': items[0], 'ontology2': items[1]}
-
-                else:
-                    text += "  ?x0 %(ontology)s ?x1 .\n" \
-                            % {'ontology': items[0]}
-
-        else:
-            #TODO: cambiar el rdf:type igual que arriba.
-            for item in typeFilters:
-                if text != '':
-                    text += '        UNION\n'
-                text += '        { ?x0 rdf:type %s . }\n' % item
-
-            if text != "":
-                if visibilityFilter != '':
-                    text += "  %s\n" % (visibilityFilter % ("?x0"))
-
-                else:
-                    text = ""
-
-                text += \
-                        "  %s\n" \
-                        "  FILTER(\n" \
-                            "    bif:exists ((\n" \
-                                "      SELECT *\n" \
-                                "      WHERE {\n" \
-                                "%s" \
-                                "      }\n" \
-                            "    ))\n" \
-                        "  )\n" \
-                        % (self.visibilityFilter % "?x0", text)
-
-            else:
-                if visibilityFilter != '':
-                    text += "  %s\n" % (visibilityFilter % ("?x0"))
-
-                else:
-                    text = ""
-
-                #text += \
-                #        "  ?x0 rdf:type ?type .\n" \
-
-        return text
 
 
     def ontologyVarType(self, ontology = ''):
