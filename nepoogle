@@ -103,6 +103,12 @@ from clsparql import *
 #ENDIF
 
 #IF BUILD
+#INCLUDE clsparql2.py
+#ELSE
+from clsparql2 import *
+#ENDIF
+
+#IF BUILD
 #INCLUDE cldataformat.py
 #ELSE
 from cldataformat import *
@@ -1719,7 +1725,7 @@ class Nepoogle(QWidget):
             #if not DO_NOT_USE_NEPOMUK and self.clearResourceManagerCache:
             #    Nepomuk2.ResourceManager.instance().clearCache()
 
-            self.sparql = cSparqlBuilder()
+            self.sparql = cSparqlBuilder2()
             if searchString[:9] == 'nepomuk:/':
                 self.currUri = searchString
                 if self.queryMethod in ("manual", "refresh"):
@@ -1823,7 +1829,7 @@ class Nepoogle(QWidget):
                 else:
                     searchString = searchString[3:]
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
-                    self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
+                    self.sparql.columns = '?r AS ?id ' + self.sparql.columns
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
@@ -1989,7 +1995,7 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
         n3url = toUnicode(n3url.replace('?', '%3f'))
         n3url = n3url.replace('(', '\\\(').replace(')', '\\\)')
 
-        visibilityFilter = cSparqlBuilder().visibilityFilter
+        visibilityFilter = cSparqlBuilder2().visibilityFilter
         notIndexedCount = 0
         sparqlQuery = None
         recordsets = []
@@ -1999,20 +2005,26 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
                 if not pipeMode:
                     print(_("Finding all indexed files in \"%s\"..." % toUtf8(url)))
 
+                #sparqlQuery = \
+                    #"SELECT DISTINCT ?url\n" \
+                    #"WHERE {\n"\
+                        #" ?x0 %s\n" \
+                        #" FILTER(\n" \
+                            #"  (bif:exists ((\n" \
+                            #"  SELECT *\n" \
+                            #"  WHERE {\n" \
+                                #"   { ?x0 nie:url ?x1 . FILTER(REGEX(?x1, \"^file://%s\"^^xsd:string, 'i')) } . \n" \
+                            #"  }\n" \
+                            #"  )))\n" \
+                        #" )\n" \
+                        #" OPTIONAL { ?x0 nie:url ?url . } . \n" \
+                    #"}\n" % (visibilityFilter, n3url)
+
                 sparqlQuery = \
                     "SELECT DISTINCT ?url\n" \
-                    "WHERE {\n"\
-                        " ?x0 %s\n" \
-                        " FILTER(\n" \
-                            "  (bif:exists ((\n" \
-                            "  SELECT *\n" \
-                            "  WHERE {\n" \
-                                "   { ?x0 nie:url ?x1 . FILTER(REGEX(?x1, \"^file://%s\"^^xsd:string, 'i')) } . \n" \
-                            "  }\n" \
-                            "  )))\n" \
-                        " )\n" \
-                        " OPTIONAL { ?x0 nie:url ?url . } . \n" \
-                    "}\n" % (visibilityFilter, n3url)
+                    "WHERE {\n" \
+                        "  ?r nie:url ?url . FILTER(REGEX(?url, \"^file://%s\"^^xsd:string, 'i')) . \n" \
+                    "}\n" % (n3url)
 
                 if DO_NOT_USE_NEPOMUK:
                     model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -2021,7 +2033,7 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
                     model = Nepomuk2.ResourceManager.instance().mainModel()
 
                 count = 0
-                queryResultSet = model.executeQuery(sparqlQuery, SOPRANO_QUERY_LANGUAGE)
+                queryResultSet = model.executeQuery(sparqlQuery, Soprano.Query.QueryLanguageSparqlNoInference)
                 if queryResultSet.isValid():
                     while queryResultSet.next():
                         url = toUnicode(queryResultSet["url"].toString().toUtf8())
@@ -2192,7 +2204,7 @@ def main(args):
         #if True:
         try:
             warningsList = []
-            oSparql = cSparqlBuilder()
+            oSparql = cSparqlBuilder2()
             if searchString != '':
 
                 # Very dirty hack to force commands to use searchEngine 1.
@@ -2226,7 +2238,7 @@ def main(args):
 
                 else:
                     oSparql.stdoutQuery = verboseMode
-                    oSparql.columns = '?x0 AS ?id ' + oSparql.columns
+                    oSparql.columns = '?r AS ?id ' + oSparql.columns
                     data, structure, time = oSparql.executeQuery(oSparql.buildQuery(searchString))
                     warningsList =  oSparql.warningsList
                     oSparql.warningsList = []

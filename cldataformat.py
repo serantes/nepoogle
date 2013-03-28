@@ -53,8 +53,8 @@ class cDataFormat():
     enableImageViewer = True
     #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
-    #hiddenOntologiesInverse = [NOC("nao:hasSubResource"), NOC("dces:contributor"), NOC("nco:contributor")]
-    hiddenOntologiesInverse = [NOC("nao:hasSubResource")]
+    #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
+    hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
     model = None
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
     outFormat = 1  # 1- Text, 2- Html
@@ -64,7 +64,7 @@ class cDataFormat():
     renderSize = 50
     renderedDataRows = 0
     renderedDataText = ""
-    skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource")]
+    skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource", False)]
     structure = []
     uri = None
     videojsEnabled = False
@@ -1212,11 +1212,11 @@ class cDataFormat():
 
             elif valueType == 'flash':
                 try:
-                    if value == "0":
-                        result = _("No")
+                    if (value == "0"):
+                        result = NEXIF_FLASH[0]
 
                     else:
-                        result = _("Yes")
+                        result = NEXIF_FLASH[1]
 
                 except:
                     result = "%s" % value
@@ -2207,7 +2207,7 @@ class cDataFormat():
 
                 #val = fromPercentEncoding(toUnicode(res.genericLabel()))
                 url = None
-                if res.type() == NOC('nmm:TVSeason'):
+                if res.type() == NOC('nmm:TVSeason', True):
                     val = "%d" % self.readProperty(res, 'nmm:seasonNumber', 'int')
 
                 else:

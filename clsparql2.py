@@ -30,595 +30,68 @@ from PyKDE4.soprano import Soprano
 
 from PyQt4.QtGui import *
 
+from clsparql import *
 from lfunctions import *
 from lglobals import *
+
 
 _ = gettext.gettext
 
 
-# FECHAS
-#SELECT DISTINCT bif:year(?date) count(*) AS ?count
-#WHERE {
-#  ?r nie:lastModified ?date . FILTER(bif:year(?date) = 2012) .
-#  ?r nao:userVisible ?visible . FILTER(?visible > 0) .
-#}
-#GROUP BY bif:year(?date)
-#ORDER BY DESC(bif:year(?date))
+#BEGIN clsparql2.py
 #
-# Filtro de año: FILTER(bif:year(?date) = 2012)
-# Filtro de mes: FILTER(bif:month(?date) = 1)
-# Filtro de día: FILTER(bif:dayofmonth(?date) = 1)
-# Filtro de fecha: FILTER(xsd:date(?date) = "20120101"^^xsd:date)
-# nao:created
-# nao:lastModified
-# nie:lastModified
-# nie:contentCreated --> album year
-# nmm:releaseDate --> movie year
-
-# Date formats
-# fulldate :== yyyy[-]mm[-]dd
-# month :== 1..12[m]
-# day :== 13..31 | 1..31d
-# year :== 31..9999 | 1..9999y
-
-# time
-# nfo:duration
-
-# Time formats
-# fulltime :== hh:mm:ss
-# hour := 1..24[h]
-# minutes :== 24..60 | 1..60[m]
-# seconds :== 1..60[s]
-
-
-#BEGIN clsparql.py
+# cSparqlBuilder2 class
 #
-# cSparqlBuilder class
-#
-RDF_SCHEMA_RESOURCE = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+class cSparqlBuilder2():
 
-knownOntologies = [ \
-                    ['nao', '2007/08/15'], ['ncal', '2007/04/02'], \
-                    ['nco', '2007/03/22'], ['ndo', '2010/04/30'], \
-                    ['nexif', '2007/05/10'], ['nfo', '2007/03/22'], \
-                    ['nid3', '2007/05/10'], ['nie', '2007/01/19'], \
-                    ['nmm', '2009/02/19'], ['nmo', '2007/03/22'], \
-                    ['nrl', '2007/08/15'], ['nuao', '2010/01/25'], \
-                    ['pimo', '2007/11/01'], ['tmo',  '2008/05/20'], \
-                    ['nbib', 'http://www.example.com/'],  \
-                    ['dces', 'http://purl.org/dc/elements/1.1/']
-                ]
-
-ontologyTypes = [ \
-                    ['kext:unixfilemode', 'unixfilemode'], \
-                    ['nao:created', 'datetime'], \
-                    ['nao:lastmodified', 'datetime'], \
-                    ['nao:numericrating', 'int'], \
-                    ['nexif:aperturevalue', 'aperturevalue'], \
-                    ['nexif:exposurebiasvalue', 'exposurebiasvalue'], \
-                    ['nexif:exposuretime', 'exposuretime'], \
-                    ['nexif:flash', 'flash'], \
-                    ['nexif:fnumber', 'aperturevalue'], \
-                    ['nexif:focallength', 'focallength'], \
-                    ['nexif:meteringmode', 'meteringmode'], \
-                    ['nexif:orientation', 'orientation'], \
-                    ['nexif:whitebalance', 'whitebalance'], \
-                    ['nfo:averagebitrate', 'number'], \
-                    ['nfo:duration', 'duration'], \
-                    ['nfo:height', 'number'], \
-                    ['nfo:samplerate', 'int'], \
-                    ['nfo:width', 'number'], \
-                    ['nie:contentcreated', 'datetimep'], \
-                    ['nie:contentsize', 'size'], \
-                    ['nie:lastmodified', 'datetime'], \
-                    ['nmm:episodenumber', 'number'], \
-                    ['nmm:releasedate', 'datep'], \
-                    ['nmm:season', 'number'], \
-                    ['nmm:setnumber', 'number'], \
-                    ['nmm:tracknumber', 'number'], \
-                    ['nuao:usagecount', 'number'] \
-                ]
-
-ontologiesInfo = []
-ontologiesRank = [["http://www.w3.org/2000/01/rdf-schema#Resource", 0]]
-resourcesCache = dict()
-
-def NOC(name = '', returnQUrl = False):
-    ontology, property = name.strip().split(':')
-    date = lvalue(knownOntologies, ontology, 0, 1)
-    if date != None:
-        if date[:7] == "http://":
-            value = "%s/%s#%s" % (date, ontology, property)
-
-        else:
-            value = 'http://www.semanticdesktop.org/ontologies/%s/%s#%s' % (date, ontology, property)
-
-    else:
-        value = 'Soprano.Vocabulary.%s.%s().toString()' % (ontology.upper(), property)
-        try:
-            value = eval(value)
-
-        except:
-            value = ''
-
-    if returnQUrl:
-        return QUrl(value)
-
-    else:
-        return value
-
-
-def NOCR(ontology = ''):
-    if vartype(ontology) == 'QUrl':
-        ontology = ontology.toString()
-
-    if ontology[:7] == "http://":
-        return os.path.basename(toUnicode(ontology)).replace('#', ':').replace('22-rdf-syntax-ns:', 'rdf:').replace('rdf-schema:', 'rdfs:')
-
-    else:
-        return ontology
-
-
-def ontologyToHuman(ontology = '', reverse = False):
-    #TODO: En la propia base de datos está esta información. Ejemplo:
-    #select *
-    #where {
-        #nao:lastModified rdfs:label ?v
-    #}
-    #Resultado: "last modified at"
-    #result = ''
-    #if ontology == '':
-    #    return result
-
-    result = ontologyInfo(ontology)[1]
-    if result != "":
-        tmpResult = result
-        result = tmpResult[0].upper()
-        for i in range(1, len(tmpResult)):
-            if tmpResult[i] == tmpResult[i].upper():
-                result += ' ' + tmpResult[i].lower().strip()
-
-            else:
-                result += tmpResult[i]
-
-        if reverse:
-            if result == 'Actor':
-                result = 'Acting in'
-
-            if result == 'Creator':
-                result = 'Creates'
-
-            elif result == 'Has tag':
-                result = 'Tagged resources'
-
-            elif result == 'Performer':
-                result = 'Performing'
-
-            elif result == 'Series':
-                result = 'Episodes'
-
-    return result
-
-
-def ontologyInfo(ontology = '', model = None):
-    global ontologiesInfo
-
-    if (ontology == ""):
-        return ["", "", ""]
-
-    # Ontology cleanup because sometimes has additional information as
-    # suffix like in nmm:musicAlbum=?x0.
-    ontology = ontology.split("=")[0].split("->")[0]
-    shortOnt = NOCR(ontology)
-    i = lindex(ontologiesInfo, shortOnt, column = 0)
-    if i == None:
-        # Data tipes
-        #SELECT DISTINCT ?range
-        #WHERE {
-        #    [] rdfs:range ?range . FILTER(REGEX(?range, "^http://www.w3.org/2001/XMLSchema")) .
-        #}
-        #ORDER BY ?range
-        #Result: boolean, date, dateTime, duration, float, int, integer, nonNegativeInteger, string
-        #http://www.w3.org/2001XMLSchema#boolean
-        #SELECT DISTINCT ?range
-        #WHERE {
-        #    nao:userVisible rdfs:range ?range .
-        #}
-        #ORDER BY ?range
-        #SELECT DISTINCT *
-        #WHERE {
-        #    ?r nao:userVisible ?v . FILTER(?v != "false"^^xsd:boolean) .
-        #}
-
-        # Must search for ontology.
-        #query = "SELECT ?label ?range\n" \
-                #"WHERE {\n" \
-                    #"\t%(ont)s rdfs:range ?range\n" \
-                    #"\tOPTIONAL { %(ont)s rdfs:label ?label . }\n" \
-                #"}" % {"ont": ontology}
-
-        if (model == None):
-            if DO_NOT_USE_NEPOMUK:
-                model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
-
-            else:
-                model = Nepomuk2.ResourceManager.instance().mainModel()
-
-        query = "SELECT ?label ?range\n" \
-                "WHERE {\n" \
-                    "\t%(ont)s rdfs:label ?label .\n" \
-                    "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
-                "}" % {"ont": shortOnt}
-
-        data = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-        if data.isValid():
-            while data.next():
-                ontType = lvalue(ontologyTypes, shortOnt.lower().strip(), 0, 1)
-                if ontType == None:
-                    ontologyRange = toUnicode(data["range"].toString())
-                    if ontologyRange.find("#") >= 0:
-                        ontType = toUnicode(ontologyRange.split("#")[1])
-
-                    else:
-                        ontType = ontologyRange
-
-                ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
-                i = -1
-
-    if i == None:
-        return [shortOnt, shortOnt, "string"]
-
-    else:
-        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
-
-
-def toN3(url = ''):
-    if url[0] == '^':
-        result = '^' + QUrl(url[1:]).toEncoded()
-
-    else:
-        result = QUrl(url).toEncoded()
-
-    return toUnicode(result.replace('?', '%3f'))
-
-
-# DEPRECATED An experimental readonly alternative to Nepomuk.Resource().
-class cResource():
-    cacheEnabled = True
-    data = None
-    model = None
-    ontologies = None
-    stdout = False
-    typeValue = None
-    valUri = None
-    notCachedOntologies = ["nie:url"]
-
-    def __init__(self, uri = None, prefechData = False, useCache = True):
-
-        if DO_NOT_USE_NEPOMUK:
-            self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
-
-        else:
-            self.model = Nepomuk2.ResourceManager.instance().mainModel()
-
-        if uri != None:
-            #TODO: fix this issue.
-            if vartype(uri) == "list":
-                 uri = uri[0]
-
-            if vartype(uri) not in ("unicode", "string"):
-
-                if (vartype(uri) == "QString"):
-                    uri = toUnicode(uri)
-
-                else:
-                    try:
-                        uri = uri.toString()
-
-                    except:
-                        uri = None
-
-            if uri != None:
-                self.valUri = uri
-                if prefechData:
-                    self.ontologies = dict()
-                    self.read()
-
-                else:
-                    if (useCache and self.cacheEnabled and resourcesCache.has_key(self.valUri)):
-                        self.ontologies = resourcesCache[self.valUri]
-
-                    else:
-                        self.ontologies = dict()
-
-
-    def __del__(self):
-        if self.cacheEnabled:
-            resourcesCache[self.valUri] = self.ontologies
-
-
-    def read(self, ont = None, uri = None):
-        if uri == self.valUri == None:
-            return False
-
-        if uri == None:
-            uri = self.valUri
-
-        if ont == None:
-            ont = "?p"
-
-        else:
-            ont = NOCR(ont)
-
-        query = "SELECT DISTINCT %(ont)s AS ?ont ?val\n" \
-                "WHERE {\n" \
-                    "\t<%(uri)s> %(ont)s ?val .\n"\
-                "}\n" % {'uri': uri, 'ont': ont}
-        if self.stdout:
-            print toUtf8(query)
-
-        self.data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-        value = None
-        if self.data.isValid():
-            while self.data.next():
-                ontology = self.data["ont"].toString()
-                name = NOCR(ontology)
-                #value = toUnicode(self.data["val"].toString())
-                value = self.data["val"]
-                if not self.ontologies.has_key(name):
-                    self.ontologies[name] = []
-
-                valueType = ontologyInfo(ontology)[2]
-                #print name, valueType, value.toString()
-                # Other types: "date", "dateTime", "int", "integer", "nonNegativeInteger", "float", "duration", "size"
-                if valueType == 'boolean':
-                    value = toUnicode(value.toString())
-                    if ((value.lower() == "false") or (value.lower() == "0")):
-                        self.ontologies[name] += [QVariant(False)]
-
-                    else:
-                        self.ontologies[name] += [QVariant(True)]
-
-                #elif valueType == 'string':
-                #    self.ontologies[name] += [value.replace('"', '\\"').replace("\n", "\\\n'").replace("\r", "\\\r'")]
-
-                else:
-                    self.ontologies[name] += [QVariant(value.toString())]
-
-
-        if ((ont != "?p") and (value == None)):
-            # There is no ontology but we must create the key for avoid recheck.
-            self.ontologies[ont] = [None]
-
-
-    def getValue(self, ontology = None):
-        result = None
-        if ontology != None:
-            if not self.ontologies.has_key(ontology):
-                self.read(ontology)
-
-            if (len(self.ontologies[ontology]) == 1):
-                result = self.ontologies[ontology][0]
-
-            else:
-                result = self.ontologies[ontology]
-
-        return result
-
-
-    def property(self, ontology = None):
-        ontology = NOCR(ontology)
-        if ontology in self.notCachedOntologies:
-            if self.ontologies.has_key(ontology):
-                del self.ontologies[ontology]
-
-        value = self.getValue(ontology)
-        #print NOCR(ontology), toUnicode(value.toString())
-        if value == None:
-            value = QVariant(u"")
-
-        return value
-
-
-    def getAllValues(self):
-        return self.ontologies.items()
-
-
-    def resourceType(self):
-        if self.typeValue == None:
-            self.type()
-
-        return QVariant(self.typeValue)
-
-
-    def getOntologyRank(self, ontology = None):
-        if ontology == None:
-            return None
-
-        global ontologiesRank
-
-        i = lindex(ontologiesRank, ontology, column = 0)
-        if i != None:
-            return ontologiesRank[i][1]
-
-        query = "SELECT DISTINCT ?r AS ?ont\n" \
-                "WHERE {\n" \
-                    "\t<%s> rdfs:subClassOf ?r .\n" \
-                "}\n" \
-                "LIMIT 1" % ontology
-        if self.stdout:
-            print toUtf8(query)
-
-        self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-        ontValue = None
-        if self.dataAux.isValid():
-            while self.dataAux.next():
-                ontType = self.dataAux["ont"].toString()
-                if ontType != ontology:
-                    i = lindex(ontologiesRank, ontType, column = 0)
-                    if i == None:
-                        ontValue = self.getOntologyRank(ontType)
-                        if ontValue != None:
-                            ontValue += 1
-                            ontologiesRank += [[ontology, ontValue]]
-
-                    else:
-                        ontValue = ontologiesRank[i][1] + 1
-
-        return ontValue
-
-
-    def type(self):
-        if self.typeValue == None:
-            global ontologiesRank
-
-            query = "SELECT DISTINCT ?val\n" \
-                    "WHERE {\n" \
-                        "\t<" + self.valUri + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?val .\n"\
-                    "}\n" \
-                    "ORDER BY ?val"
-            if self.stdout:
-                print toUtf8(query)
-
-            self.data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-            ontType = "http://www.w3.org/2000/01/rdf-schema#Resource"
-            ontValue = 0
-            if self.data.isValid():
-                while self.data.next():
-                    currOntType = self.data["val"].toString()
-                    i = lindex(ontologiesRank, currOntType, column = 0)
-                    if i == None:
-                        if USE_NEW_INFERENCE_METHOD:
-                            currOntValue = self.getOntologyRank(currOntType)
-                            if currOntValue == None:
-                                currOntValue = 0
-
-                        else:
-                            query = "SELECT DISTINCT COUNT(*) AS ?val\n" \
-                                    "WHERE {\n" \
-                                        "\t<%s> rdfs:subClassOf ?r .\n" \
-                                    "}\n" % currOntType
-                            if self.stdout:
-                                print toUtf8(query)
-
-                            self.dataAux = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
-                            currOntValue = 0
-                            if self.dataAux.isValid():
-                                while self.dataAux.next():
-                                    currOntValue = int(self.dataAux["val"].toString())
-
-                        ontologiesRank += [[currOntType, currOntValue]]
-
-                    else:
-                        currOntValue = ontologiesRank[i][1]
-
-                    if (currOntValue > ontValue):
-                        ontType = currOntType
-                        ontValue = currOntValue
-
-            self.typeValue = ontType
-
-        return self.typeValue
-
-
-    def uri(self):
-        return self.valUri
-
-
-    def hasType(self, uri):
-        if not self.ontologies.has_key("rdf:type"):
-            self.read("rdf:type")
-
-        return uri in self.ontologies["rdf:type"]
-
-
-    def hasProperty(self, uri):
-        uri = NOCR(uri)
-        if not self.ontologies.has_key(uri):
-            self.read(uri)
-
-        return self.ontologies[uri] != None
-
-
-    def genericLabel(self):
-        result = self.getValue("nao:prefLabel")
-
-        if result == None:
-            result = self.getValue("nco:fullname")
-            if result == None:
-                result = self.getValue("nie:title")
-                if result == None:
-                    result = self.getValue("nfo:fileName")
-                    if result == None:
-                        result = self.getValue("nie:url")
-                        if result == None:
-                            result = self.getValue("nfo:hashValue")
-                            if result == None:
-                                # self.valUri is not a QString().
-                                return self.valUri
-
-        if result == None:
-            result = u""
-
-        else:
-            result = toUnicode(result.toString())
-
-        return result
-
-
-class cSparqlBuilder():
-
-    _private_main_header = \
-                            "SELECT DISTINCT %s\n" \
+    _private_query_header = "SELECT DISTINCT %s\n" \
                             "WHERE {\n\n"
-    _private_main_footer = "}\n"
+    _private_query_footer = "}\n"
 
     caseInsensitiveSort = True
-    #columns = '*'
-    # ?x0+>prefLabel ?x0*>url + si * opcional
-    #columns = '?url ?title AS ?label ?prefLabel ?fullname ?altlabel min(?type) AS ?type'
-    #columns = '?url ?title ?prefLabel ?fullname ?altLabel'
     columns = ""
     command = ""
     # [id, ['columns', [[id, 'ontology', optional, sort]...], [bsTypeFilter], [bsIndividualFilter]]]
     commands = [ \
-                [_('--actors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
-                [_('--albums'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
-                [_('--audios'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
+                [_('--actors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nmm:actor->nco:fullname']]], \
+                [_('--albums'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicAlbum'], ['nie:title']]], \
+                [_('--audios'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Audio'], ['nie:title']]], \
                 #[_('--connect'), ['', [], [], []]], \
-                [_('--composers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
-                [_('--contacts'), ['?x0 AS ?id ?fullname', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
-                [_('--creators'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
+                [_('--composers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:composer->nco:fullname']]], \
+                [_('--contacts'), ['?x0 AS ?id', [[0, 'nco:fullname', True, True]], ['rdf:type=nco:Contact'], ['nco:fullname']]], \
+                [_('--creators'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:creator->nco:fullname']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
-                [_('--directors'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
+                [_('--directors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nmm:director->nco:fullname']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
                 [_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], ['nmm:genre']]], \
                 [_('--help'), ['help', [], [], []]], \
-                [_('--images'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
-                [_('--movies'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
-                [_('--musicpieces'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
+                [_('--images'), ['?x0 AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nfo:RasterImage'], ['nie:url']]], \
+                [_('--movies'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:Movie'], ['nie:title']]], \
+                [_('--musicpieces'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:MusicPiece'], ['nie:title']]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode . FILTER(?season*1000+?episode = ?se)\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s*1000+?e) AS ?se ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
                 [_('--notindexed'), ['notindexed', [], [], []]], \
-                [_('--performers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
+                [_('--performers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nmm:performer->nco:fullname']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--playmixed'), ['playmixed', [], [], []]], \
-                [_('--producers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
+                [_('--producers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nmm:producer->nco:fullname']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--showupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "%s"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--tags'), ['?x0 AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['rdf:type=nao:Tag'], ['rdf:type=nao:Tag->nao:prefLabel']]], \
-                [_('--topics'), ['?x0 AS ?id ?label', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
-                [_('--tvseries'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
-                [_('--tvshows'), ['?x0 AS ?id ?url ?title', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
-                [_('--videos'), ['?x0 AS ?id ?url ?title', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
-                [_('--writers'), ['?x1 AS ?id ?fullname', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
+                [_('--topics'), ['?x0 AS ?id', [[0, 'pimo:tagLabel', True, True]], ['rdf:type=pimo:Topic'], ['rdf:type=pimo:Topic->nao:identifier']]], \
+                [_('--tvseries'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nmm:TVSeries'], ['nie:title']]], \
+                [_('--tvshows'), ['?x0 AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['rdf:type=nmm:TVShow'], ['nie:title']]], \
+                [_('--videos'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['rdf:type=nfo:Video'], ['nie:title']]], \
+                [_('--writers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
             ]
 
-    engine = 0 # 0- Nepomuk.QueryParse(), 1- v1, 2- v2
+    enableInference = False
+
+    engine = 0 # 0- Nepomuk.QueryParse(), 1- internal
 
     externalParameters = []
 
@@ -634,7 +107,7 @@ class cSparqlBuilder():
             ]
     filters = []
 
-    getAllFields = True
+    getOptionalFields = True
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
@@ -702,24 +175,20 @@ class cSparqlBuilder():
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
                 ]
 
+    subqueryResultField = "?r"
+
     tempData = ['', [], [], []]
 
     #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
     typeFilters = []
 
-    visibilityFilter = "%s nao:userVisible 1 ."
+    visibilityFilter = ""
 
     warningsList = []
 
 
     def __init__(self):
-        if USE_NEW_INFERENCE_METHOD:
-            self.visibilityFilter = "%s ." % VISIBILITY_FILTER_METHOD
-            for i in range(len(self.commands)):
-                self.commands[i][1][0] = self.commands[i][1][0].replace("?x0 nao:userVisible 1", VISIBILITY_FILTER_METHOD % "?x0")
-
-        else:
-            self.visibilityFilter = "%s nao:userVisible 1 ."
+        pass
 
 
     def __del__(self):
@@ -730,16 +199,16 @@ class cSparqlBuilder():
         if ((self.command == '') and (self.filters == []) and (searchString != '')):
             self.filters = self.stringQueryConversion(searchString.strip())
 
-        if self.command == '':
+        if (self.command == ''):
             pass
 
         else:
             idx = lindex(self.commands, self.command, 0)
-            if idx >= 0:
-                if self.commands[idx][1][0] == '':
+            if (idx >= 0):
+                if (self.commands[idx][1][0] == ''):
                     raise Exception("Sorry, command <b>%s</b> not implemented yet." % self.command)
 
-                elif self.commands[idx][1][0].strip().upper()[:7] == "SELECT ":
+                elif (self.commands[idx][1][0].strip().upper()[:7] == "SELECT "):
                     # It's a full query.
                     query = self.commands[idx][1][0].strip()
                     if self.stdoutQuery:
@@ -772,40 +241,45 @@ class cSparqlBuilder():
 
                 raise Exception(self.tempData[0])
 
-            elif self.tempData[0] == 'newcontact':
+            elif (self.tempData[0] == 'newcontact'):
                 raise Exception(self.tempData[0])
 
-            elif self.tempData[0] in ('playlist', 'playmixed'):
+            elif (self.tempData[0] in ('playlist', 'playmixed')):
                 self.externalParameters = [self.tempData[0]]
                 self.tempData = ['', [], [], []]
 
-        if self.tempData[0] == '':
+        if (self.tempData[0] == ''):
             columns = self.columns
 
         else:
             columns = self.tempData[0]
 
-        footer = self._private_main_footer
+        footer = self._private_query_footer
+        header = self._private_query_header % columns
         having = self.bsHaving()
-        sort, sortColumns = self.bsSort()
         limits = self.bsResulsetLimits()
+        optionalFields = self.bsOptionalFields()
+        sort = self.bsSort()
 
-        columns += sortColumns
-        header = self._private_main_header % columns
+        #AQUÍ
+        #SELECT DISTINCT ?r AS ?id
+        #WHERE {
+        #
+        #  { subquery } [[UNION] { subquery }...
+        #
+        #  [optional { ?r ?p ?v . }]...
+        #
+        #}
+        #ORDER BY bif:lower(?v)...
 
-        mainFilter = self.bsMainFilter() + '\n'
-        if self.getAllFields:
-            fields = self.bsFields() + '\n'
+        #mainFilter = self.bsMainFilter() + '\n'
+        #searchFilter = self.bsFilter() + '\n'
 
-        else:
-            fields = ''
-
-        searchFilter = self.bsFilter() + '\n'
+        subqueries = self.bsSubqueries()
 
         query = header \
-                + mainFilter \
-                + fields \
-                + searchFilter \
+                + subqueries \
+                + optionalFields \
                 + footer \
                 + having \
                 + sort \
@@ -819,61 +293,15 @@ class cSparqlBuilder():
         return query
 
 
-    def bsFields(self):
-        if self.tempData[1] == []:
-            fields = self.fields
-
-        else:
-            fields = self.tempData[1]
-
-        text = ""
-        for item in fields:
-            if not item[3]:
-                continue
-
-            try:
-                text += "  optional { ?x0 %(ontology)s ?%(field)s . }\n" \
-                            % {'ontology': item[1], 'field': item[1].split(":")[1]}
-
-            except:
-                pass
-
-        return text
-
-
-    def ontologyConversion(self, ontology = ''):
-        ont = ontology.strip().lower()
-
-        if ont == '':
-            ontology = ''
-
-        elif ont.find(':') > 0:
-            pass
-
-        else:
-            idx = lindex(self.shortcuts, ont, 1)
-            if idx == None:
-                # Miramos en las abreviaturas.
-                idx = lindex(self.shortcuts, ont, 2)
-
-            if idx >= 0:
-                ontology = self.shortcuts[idx][0]
-
-            else:
-                raise Exception("Unknown ontology <b>%s</b>." % ontology)
-
-        return ontology
-
-
-    def buildDateFilter(self, val, var, op):
-        if op == "==":
+    def buildDateFilter(self, val, op):
+        if (op == "=="):
             op = "="
 
         dateType = None
         val = val.upper()
         typeMark = val[-1]
 
-        if typeMark in ("Y", "M", "D"):
+        if (typeMark in ("Y", "M", "D")):
             val = val[:-1]
 
         else:
@@ -881,7 +309,7 @@ class cSparqlBuilder():
 
         try:
             intVal = int(val)
-            if typeMark == None:
+            if (typeMark == None):
                 if ((intVal >= 1) and (intVal <= 12)):
                     typeMark = "M"
 
@@ -893,27 +321,27 @@ class cSparqlBuilder():
 
             val = intVal
 
-            if typeMark == "Y":
-                dateFilter = "FILTER(bif:year(?x%s) %s %s) . }\n" % (var, op, val)
+            if (typeMark == "Y"):
+                dateFilter = "FILTER(bif:year(?v) %s %s) ." % (op, val)
 
-            elif typeMark == "M":
-                dateFilter = "FILTER(bif:month(?x%s) %s %s) . }\n" % (var, op, val)
+            elif (typeMark == "M"):
+                dateFilter = "FILTER(bif:month(?v) %s %s) ." % (op, val)
 
-            elif typeMark == "D":
-                dateFilter = "FILTER(bif:dayofmonth(?x%s) %s %s) . }\n" % (var, op, val)
+            elif (typeMark == "D"):
+                dateFilter = "FILTER(bif:dayofmonth(?v) %s %s) ." % (op, val)
 
             else:
                 raise Exception("Can't recognized <b>%s</b> as date format." % self.command)
 
         except:
-            dateFilter =  "FILTER(xsd:date(?x%s) %s \"%s\"^^xsd:date) . }\n" % (var, op, val)
+            dateFilter =  "FILTER(xsd:date(?v) %s \"%s\"^^xsd:date) ." % (op, val)
 
         return dateFilter
 
 
-    def buildFloatFilter(self, val, var, op, precision = 4):
-        if op in ("=", "=="):
-            # There is no method to do and equal because precision so this is a workaround.
+    def buildFloatFilter(self, val, op, precision = 4):
+        if (op in ("=", "==")):
+            # Workaround for the precision problem.
             if vartype(val) in ("str", "unicode"):
                 val = round(float(val), precision)
 
@@ -922,13 +350,13 @@ class cSparqlBuilder():
             adjustmentNumber = float(adjustmentNumber % 0)
             val2 = val + adjustmentNumber
             val -= adjustmentNumber
-            return "FILTER((?x%(v2)s >= %(val)s) and (?x%(v2)s < %(val2)s))}\n" % {'v2': var, 'op': op, 'val': val, 'val2': val2}
+            return "FILTER((?v >= %(val)s) and (?v < %(val2)s)) ." % {'op': op, 'val': val, 'val2': val2}
 
         else:
-            return "FILTER(?x%(v2)s %(op)s %(val)s) }\n" % {'v2': var, 'op': op, 'val': val}
+            return "FILTER(?v %(op)s %(val)s) ." % {'op': op, 'val': val}
 
 
-    def buildTimeFilter(self, val, var, op):
+    def buildTimeFilter(self, val, op):
         if op == "==":
             op = "="
 
@@ -936,7 +364,7 @@ class cSparqlBuilder():
         val = val.upper()
         typeMark = val[-1]
 
-        if typeMark in ("H", "M", "S"):
+        if (typeMark in ("H", "M", "S")):
             val = val[:-1]
 
         else:
@@ -944,7 +372,7 @@ class cSparqlBuilder():
 
         try:
             intVal = int(val)
-            if typeMark == None:
+            if (typeMark == None):
                 if ((intVal >= 1) and (intVal <= 24)):
                     typeMark = "H"
 
@@ -954,16 +382,16 @@ class cSparqlBuilder():
                 else:
                     typeMark = "S"
 
-            if typeMark == "H":
+            if (typeMark == "H"):
                 intVal = intVal*60*60
 
-            elif typeMark == "M":
+            elif (typeMark == "M"):
                 intVal = intVal*60
 
             else:
                 pass
 
-            return "FILTER(?x%s %s %s) . }\n" % (var, op, intVal)
+            return "FILTER(?v %s %s) ." % (op, intVal)
 
         except:
             pass
@@ -986,9 +414,383 @@ class cSparqlBuilder():
         except:
             raise Exception("Can't recognized <b>%s</b> as time format." % self.command)
 
-        return "FILTER(?x%s %s %s) . }\n" % (var, op, intVal)
+        return "FILTER(?v %s %s) ." % (op, intVal)
 
 
+    def buildExpressionFilter(self, valType, operator, value):
+        # If string is between " they must be removed.
+        if (value[0] == value[-1] == '"'):
+            value = value[1:-1]
+
+        filterExpression = ""
+
+        if (value == "") or (value == ".*"):
+            pass
+
+        elif (valType in ('number', 'int', 'integer')):
+            if (operator == "=="):
+                operator = "="
+
+            filterExpression = "FILTER(?v %(op)s %(val)s) ." % {'op': operator, 'val': value}
+
+        elif (valType == "float"):
+            filterExpression = self.buildFloatFilter(value, operator)
+
+        elif ((valType == "date") or (valType == "datep")):
+            filterExpression = self.buildDateFilter(value, operator)
+
+        elif ((valType == "datetime") or (valType == "datetimep")):
+            filterExpression = self.buildDateFilter(value, operator)
+
+        elif ((valType == "seconds") or (valType == "time") or (valType == "duration")):
+            filterExpression = self.buildTimeFilter(value, operator)
+
+        elif (valType == "aperturevalue"):
+            if value[0].lower() == 'f':
+                value = value[1:]
+
+            filterExpression = self.buildFloatFilter(value, operator)
+
+        elif (valType == "exposurebiasvalue"):
+            valTerms = value.split("/")
+            if (len(valTerms) > 1):
+                value = float(valTerms[0])/float(valTerms[1])
+
+            filterExpression = self.buildFloatFilter(value, operator)
+
+        elif (valType == "exposuretime"):
+            valTerms = value.split("/")
+            if (len(valTerms) > 1):
+                value = float(valTerms[0])/float(valTerms[1])
+
+            filterExpression = self.buildFloatFilter(value, operator, 6)
+
+        elif (valType == "flash"):
+            value = value.lower()
+            if (value.lower() in NEXIF_FLASH_LOWER):
+                value = lindex(NEXIF_FLASH_LOWER, value)
+                if (value > 0):
+                    operator = ">="
+
+                else:
+                    operator = "="
+
+            elif (value == "1"):
+                operator = ">="
+                value = "0"
+
+            else:
+                operator = "="
+                value = "0"
+
+            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+
+
+        elif (valType == "focallength"):
+            valTerms = value.split("/")
+            if (len(valTerms) > 1):
+                value = float(valTerms[0])/float(valTerms[1])
+
+            filterExpression = self.buildFloatFilter(value, operator)
+
+        elif (valType == "meteringmode"):
+            value = value.lower()
+            if (value.lower() in NEXIF_METERING_MODE_LOWER):
+                value = lindex(NEXIF_METERING_MODE_LOWER, value)
+
+            else:
+                operator = ">"
+                value = len(NEXIF_METERING_MODE)
+
+            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+
+        elif (valType == "orientation"):
+            if operator == "==":
+                operator = "="
+
+            filterExpression = "FILTER(?v %(op)s %(val)s) ." % {'op': operator, 'val': value}
+
+        elif (valType == "whitebalance"):
+            value = value.lower()
+            if (value.lower() in NEXIF_WHITE_BALANCE_LOWER):
+                value = lindex(NEXIF_WHITE_BALANCE_LOWER, value)
+
+            else:
+                operator = ">"
+                value = len(NEXIF_WHITE_BALANCE)
+
+            filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+
+        else:
+            # Basically strings.
+            if (operator == "=="):
+                filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': "=", 'val': value}
+
+            else:
+                value = value.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
+                if (operator == "="):
+                    filterExpression = "FILTER(REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
+
+                elif (operator == "!="):
+                    #TODO: falta los optional.
+                    filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
+
+                else:
+                    filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+
+        return filterExpression
+
+
+    def ontologyConversion(self, ontology = ''):
+        ont = ontology.strip().lower()
+
+        if (ont == ''):
+            ontology = ''
+
+        elif (ont.find(':') > 0):
+            pass
+
+        else:
+            idx = lindex(self.shortcuts, ont, 1)
+            if (idx == None):
+                # Miramos en las abreviaturas.
+                idx = lindex(self.shortcuts, ont, 2)
+
+            if (idx >= 0):
+                ontology = self.shortcuts[idx][0]
+
+            else:
+                raise Exception("Unknown ontology <b>%s</b>." % ontology)
+
+        return ontology
+
+
+    def bsOptionalFields(self):
+        if not self.getOptionalFields:
+            return ""
+
+        if (self.tempData[1] == []):
+            fields = self.fields
+
+        else:
+            fields = self.tempData[1]
+
+        text = ""
+        for item in fields:
+            if not item[3]:
+                continue
+
+            try:
+                text += "  optional { %(resultField)s %(ontology)s ?%(field)s . }\n" \
+                            % {'resultField': self.subqueryResultField, 'ontology': item[1], 'field': item[1].split(":")[1]}
+
+            except:
+                pass
+
+        return text + "\n"
+
+
+    def bsHaving(self):
+        return '\n'
+        #return "HAVING !(?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
+        #return "HAVING (?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
+        #return "GROUP BY (?x0)\n"
+
+
+    def bsResulsetLimits(self):
+        text = ''
+        if self.resultsetLimit > 0:
+            text += "LIMIT %s\n" % self.resultsetLimit
+
+        if self.resultsetOffset > 0:
+            text += "OFFSET %s" % self.resultsetOffset
+
+        return text
+
+
+    def bsSort(self):
+        if self.tempData[1] == []:
+            fields = self.fields
+
+        else:
+            fields = self.tempData[1]
+
+        sortText = ""
+        for item in fields:
+            if item[2]:
+                try:
+                    columnName = "?" + item[1].split(":")[1]
+                    if self.caseInsensitiveSort:
+                        sortText += "bif:lower(%s) " % columnName
+
+                    else:
+                        sortText += columnName + " "
+
+                except:
+                    pass
+
+        if sortText != "":
+            sortText = "ORDER BY " + sortText + "\n"
+
+        return sortText
+
+
+    def bsSubqueryTerm(self, term, indentationLevel = 2):
+        # term[0] - value
+        # term[1] - operator
+        # term[2] - ontology
+        indent = ("%%%ds" % (indentationLevel*2)) % ""
+        indent2 = ("%%%ds" % ((indentationLevel+1)*2)) % ""
+        indent3 = ("%%%ds" % ((indentationLevel+2)*2)) % ""
+        strTerm = ""
+
+        try:
+            value = term[0]
+
+        except:
+            value = ""
+
+        try:
+            operator = term[1]
+            if (operator == ''):
+                operator = '='
+
+        except:
+            operator = "="
+
+        try:
+            ontologies = term[2]
+
+        except:
+            ontologies = ""
+
+        if (ontologies == ""):
+            # There aren't ontologies, generic text search.
+            if (operator == "!="):
+                strTerm += indent + "%s a ?v1 . FILTER NOT EXISTS {\n" % (self.subqueryResultField)
+                strTerm += indent2 + "{\n"
+                strTerm += indent3 + "%s ?p1 ?v2 . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent2 + "} UNION {\n"
+                strTerm += indent3 + "%s ?p2 [ ?p3 ?v2 ] . FILTER(bif:contains(?v2, \"'%s\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent2 + "} .\n"
+                strTerm += indent + "} .\n"
+
+            else:
+                strTerm += indent + "{\n"
+                strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent + "} UNION {\n"
+                strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent + "}\n"
+
+        else:
+            # There are ontologies.
+            i = numInverseRelations = relationAdjustmentResource = relationAdjustmentValue = 0
+            ontologies = self.ontologyConversion(ontologies)
+            ontologyElements = re.split('->|<-', ontologies)
+            ontologyRelations = re.findall('->|<-', ontologies)
+
+            optionalUsage = False
+            subqueryUsage = False
+            clause = ""
+            for ontology in ontologyElements:
+                ontology = self.ontologyConversion(ontology)
+                valType = ""
+                if (ontology[0] == "%"):
+                    ontology = ontology[1:]
+                    value = toN3(value)
+
+                elif (ontology[0] == "_"):
+                    ontology = ontology[1:]
+                    optionalUsage = optionalUsage or (operator == "!=")
+
+                elif (ontology[0] == "!"):
+                    ontology = ontology[1:]
+                    subqueryUsage = subqueryUsage or (operator == "!=")
+
+                elif ((value == "") and (operator == "!=")):
+                    subqueryUsage = True
+
+                valType = self.ontologyVarType(ontology)
+                if not optionalUsage:
+                    if (ontology.find('=') >= 0):
+                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology.split('=')[0], 'r': i, 'v': ontology.split('=')[1]}
+
+                    else:
+                        # Here is where relations are stablished:
+                        # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
+                        # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
+
+                        try:
+                            doSwap = (ontologyRelations[i] == "<-")
+
+                        except:
+                            doSwap = False
+
+                        if doSwap:
+                            vName = "?x%d" % i
+                            rName = "?x%d" % (i + 1)
+
+                        else:
+                            rName = "?x%d" % i
+                            vName = "?x%d" % (i + 1)
+
+                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                        i += 1
+
+            clause = clause.replace("?x0 ", "?r ").replace("?x%d " % i, "?v ")
+            strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+
+        return strTerm
+
+
+    def bsSubquery(self, term, indentationLevel = 1):
+        strTerm = self.bsSubqueryTerm(term, indentationLevel + 2)
+        subquery = ""
+
+        if (strTerm != ""):
+            indent = "%%%ds" % (indentationLevel*2)
+            subquery += (indent + "{\n") % ("")
+            subquery += "\n"
+            subquery += (indent + indent + "SELECT DISTINCT %s\n") % ("", "", self.subqueryResultField)
+            subquery += (indent + indent + "WHERE {\n\n") % ("", "")
+            subquery += strTerm + '\n'
+            subquery += (indent + indent + "}\n") % ("", "")
+            subquery += "\n"
+            subquery += (indent + "}") % ("")
+
+        return subquery
+
+
+    def bsSubqueries(self):
+        subqueries = ""
+
+        # Por el momento los ignoro esto tiene que valer para añadir
+        # como primer término: ?r rdf:type nmm:Movie
+        if (self.tempData[2] == []):
+            typeFilters = self.typeFilters
+
+        else:
+            typeFilters = self.tempData[2]
+
+        #[termino [<and | or> termino]...
+        #[[u'iu', '=', u'performer'], ['and', '', ''], [u'iu', '=', u'_nco:creator->nco:fullname']]
+        unionClause = ""
+        for term in self.filters:
+            if (term[0] == "and"):
+                unionClause = ""
+
+            elif (term[0] == "or"):
+                unionClause = "UNION"
+
+            else:
+                subquery = self.bsSubquery(term)
+                if (subquery != ""):
+                    subqueries += unionClause + subquery + " "
+
+        return subqueries + "\n\n"
+
+
+    #TODO: borrar
     def bsIndividualFilter(self, value = ''):
         ontologies = [self.ontologyConversion(value[2])]
         if ontologies == ['']:
@@ -1069,6 +871,8 @@ class cSparqlBuilder():
 
                         textAux += "?x%(v1)s %(ont)s ?x%(v2)s . " % {'ont': ontology, 'v1': resourceIndex, 'v2': valueIndex}
                         i += 1
+
+            #AQUÍ
 
             if val == '':
                 filterExpression = '}\n'
@@ -1233,41 +1037,6 @@ class cSparqlBuilder():
         return text
 
 
-    def bsHaving(self):
-        return '\n'
-        #return "HAVING !(?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
-        #return "HAVING (?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
-        #return "GROUP BY (?x0)\n"
-
-
-    def bsSort(self):
-        if self.tempData[1] == []:
-            fields = self.fields
-
-        else:
-            fields = self.tempData[1]
-
-        sortText = ""
-        sortColumns = ""
-        for item in fields:
-            if item[2]:
-                try:
-                    columnName = "?" + item[1].split(":")[1]
-                    if self.caseInsensitiveSort:
-                        sortText += "bif:lower(%s) " % columnName
-
-                    else:
-                        sortText += columnName + " "
-
-                except:
-                    pass
-
-        if sortText != "":
-            sortText = "ORDER BY " + sortText + "\n"
-
-        return sortText, sortColumns
-
-
     def bsMainFilter(self):
         text = ""
         if self.tempData[2] == []:
@@ -1352,53 +1121,6 @@ class cSparqlBuilder():
                 #        "  ?x0 rdf:type ?type .\n" \
 
         return text
-
-
-    def bsResulsetLimits(self):
-        text = ''
-        if self.resultsetLimit > 0:
-            text += "LIMIT %s\n" % self.resultsetLimit
-
-        if self.resultsetOffset > 0:
-            text += "OFFSET %s" % self.resultsetOffset
-
-        return text
-
-
-    def addField(self, name = ''):
-        pass
-
-
-    def removeField(self, name = '', logop = ''):
-        pass
-
-
-    def addFilter(self, name = ''):
-        pass
-
-
-    def removeFilter(self, name = ''):
-        pass
-
-
-    def addOntologyFilter(self, name = ''):
-        pass
-
-
-    def removeOntologyFilter(self, name = ''):
-        pass
-
-
-    def addTypeFilter(self, name = ''):
-        pass
-
-
-    def removeTypeFilter(self, name = ''):
-        pass
-
-
-    def setOrder(self, orderList = []):
-        pass
 
 
     def ontologyVarType(self, ontology = ''):
@@ -1495,12 +1217,12 @@ class cSparqlBuilder():
         #string = self.crappyNormalizer(string)
         specialChars = [":", "+", "-", ">", "<", "="]
         results = []
-        if string != '':
+        if (string != ''):
             breakChar = ' '
             newItem = True
             for i in range(0, len(string)):
                 #print breakChar, string[i], results
-                if string[i] == breakChar:
+                if (string[i] == breakChar):
                     if breakChar in ("'", '"'):
                         results[-1] += breakChar
 
@@ -1516,20 +1238,20 @@ class cSparqlBuilder():
                     if breakChar == ' ':
                         breakChar = string[i]
 
-                if breakChar == " ":
+                if (breakChar == " "):
                     if string[i] in ("(", ")"):
                         results += [string[i]]
                         newItem = True
                         continue
 
-                if newItem and ((results == []) or (results[-1] != '')):
+                if (newItem and ((results == []) or (results[-1] != ''))):
                     results += ['']
                     newItem = False
 
                 results[-1] += string[i]
 
         for result in results:
-            if result != "" and result[0] == "-" and result[1] != "-":
+            if ((result != "") and (result[0] == "-") and (result[1] != "-")):
                 i = lindex(self.warningsList, "BUG001", 0)
 
                 if i != None:
@@ -1750,7 +1472,12 @@ class cSparqlBuilder():
                 model = Nepomuk2.ResourceManager.instance().mainModel()
 
             queryTime = time.time()
-            result = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
+            if self.enableInference:
+                result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
+
+            else:
+                result = model.executeQuery(query, Soprano.Query.QueryLanguageSparqlNoInference)
+
             queryTime = time.time() - queryTime
 
         except:
