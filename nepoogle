@@ -1533,7 +1533,7 @@ class Nepoogle(QWidget):
                     "<em>date</em> :== yyyy-mm-dd | month | day | year<br />\n" \
                     "<em>month</em> :== 1..12[m]<br />\n" \
                     "<em>day</em> :== 13..31 | 1..31d<br />\n" \
-                    "<em>year</em> :== 31..9999 | 1..9999y<br />\n" \
+                    "<em>year</em> :== 32..9999 | 1..9999y<br />\n" \
                     "<em>number</em> :== posnumber | negnumber | fraction<br />\n" \
                     "<em>posnumber</em> :== 0..9<br />\n" \
                     "<em>negnumber</em> :== compop-0..9<br />\n" \
@@ -1548,7 +1548,7 @@ class Nepoogle(QWidget):
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
                     "<br />\n" \
-                    "Some shorcutontologies has special values:<br />\n" \
+                    "Some shorcutontologies have special values:<br />\n" \
                     "-flash: [ %(flash)s ]<br />\n" \
                     "-meteringmode: [ %(meteringmode)s ]<br />\n" \
                     "-whitebalance: [ %(whitebalance)s ]<br />\n" \
