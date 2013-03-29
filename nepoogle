@@ -1977,7 +1977,7 @@ def buildHelp():
           "  --pipe                 -- Only urls are printed to stdout\n"
           "  --gui[=MODE]           -- Mode: ON, OFF, force gui mode (defaults ON)\n" \
           "  --results[=MODE]       -- Mode: ON, OFF, displays results in console mode (defaults ON)\n" \
-          "  --verbose[=MODE]       -- Mode: ON, OFF (defaults ON with --gui parameter)\n" \
+          "  --verbose[=MODE]       -- Mode: ON, PROFILE, OFF (defaults ON with --gui parameter)\n" \
           "\n" \
           "query:\n" \
           "  Query syntax documentation is available in the gui mode help\n" \
@@ -2092,6 +2092,7 @@ def main(args):
     displayResults = None
     SPARQLBuilderV1 = False
     gui = not sys.stdout.isatty()
+    displayTime = None
     pipeMode = False
     verboseMode = None
     parameters = toUnicode('')
@@ -2129,6 +2130,11 @@ def main(args):
 
             elif paramValue == '=off':
                 verboseMode = False
+
+            elif paramValue == '=profile':
+                verboseMode = False
+                pipeMode = True
+                displayTime = True
 
             else:
                 print("ERROR: Unknown parameter \"%s\".\n" % parameter)
@@ -2284,7 +2290,7 @@ def main(args):
                     oDataFormat = cDataFormat(searchString)
                     oDataFormat.formatAsText(data, structure, time, pipeMode)
 
-                if not pipeMode:
+                if ((displayTime == None) and not pipeMode):
                     output = "\n%(records)s records found in %(seconds).4f seconds.\n" \
                                 "--\n" \
                                 "Powered by %(name)s %(version)s (%(date)s)" \
@@ -2294,6 +2300,10 @@ def main(args):
                                     'version': PROGRAM_VERSION_VERSION, \
                                     'date': PROGRAM_VERSION_DATE \
                                     }
+
+                elif (displayTime):
+                    output = "%(records)s records found in %(seconds).4f seconds." \
+                                % {'records': len(data), 'seconds': time}
 
                 else:
                     output = ""
