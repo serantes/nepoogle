@@ -1984,7 +1984,7 @@ def buildHelp():
           % PROGRAM_NAME)
 
 
-def findNotIndexed(url = None, recursiveMode = True, pipeMode = False):
+def findNotIndexed(url = None, recursiveMode = True, pipeMode = False, SPARQLBuilderV1 = False):
     if url == None or url == "":
         print(_("ERROR: a url is required."))
         return False
@@ -2349,7 +2349,7 @@ def main(args):
                 except:
                     path = ""
 
-                findNotIndexed(path, True, pipeMode) # Recursive, pimeMode.
+                findNotIndexed(path, True, pipeMode, SPARQLBuilderV1) # Recursive, pimeMode.
                 if not pipeMode:
                     output = "\n--\n" \
                                 "Powered by %(name)s %(version)s (%(date)s)" \
