@@ -2371,15 +2371,19 @@ def main(args):
                                     }
 
             else:
-                output = "\nerror: %(error)s\n" \
-                            "\n--\n" \
-                            "Powered by %(name)s %(version)s (%(date)s)" \
-                            % {'title': 'Querying Nepomuk', \
-                                'error': sys.exc_info()[1], \
-                                'name': PROGRAM_NAME, \
-                                'version': PROGRAM_VERSION_VERSION, \
-                                'date': PROGRAM_VERSION_DATE \
-                                }
+                if not pipeMode:
+                    output = "\nerror: %(error)s\n" \
+                                "\n--\n" \
+                                "Powered by %(name)s %(version)s (%(date)s)" \
+                                % {'title': 'Querying Nepomuk', \
+                                    'error': sys.exc_info()[1], \
+                                    'name': PROGRAM_NAME, \
+                                    'version': PROGRAM_VERSION_VERSION, \
+                                    'date': PROGRAM_VERSION_DATE \
+                                    }
+
+                else:
+                    output = "ERROR: %s" % sys.exc_info()[1]
 
         if output != "":
             print(toUtf8(output))
