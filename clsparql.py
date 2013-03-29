@@ -1411,88 +1411,8 @@ class cSparqlBuilder():
         return ontType
 
 
-    def crappyNormalizer(self, string):
-        # Space normalization.
-        splitString = string.split(" ")
-        print splitString
-        normString1 = []
-        quoteChar = None
-        for string in splitString:
-            if quoteChar == None:
-                if string.find('\"') >= 0:
-                    quoteChar = '"'
-                    normString1 += [string]
-                    continue
-
-                elif string.find("'") >= 0:
-                    quoteChar = "'"
-                    normString1 += [string]
-                    continue
-
-            if quoteChar == None:
-                normString1 += ['']
-
-            if normString1[-1] == "":
-                normString1[-1] += string
-
-            else:
-                normString1[-1] += " " + string
-
-            if quoteChar != None and string.find(quoteChar) >= 0:
-                quoteChar = None
-
-        # And operator, commands and parenthesis normalization.
-        normString2 = []
-        normString3 = []
-        for string in normString1:
-            if (string[:2] == "--"):
-                normString3 += [string]
-                continue
-
-            elif string[:1] in ('(', ')'):
-                if len(string) > 1:
-                    normString2 += [string[:1], string[1:]]
-
-                else:
-                    normString2 += [string[:1]]
-                continue
-
-            elif string[-1] in (')'):
-                normString2 += [string[:-1], string[-1]]
-                continue
-
-            elif (string.lower() == "and"):
-                normString2 += [string]
-                continue
-
-            elif (string.lower() != "or"):
-                lastElement = None
-                if (len(normString2) > 1):
-                    lastElement = normString2[-1]
-
-                print lastElement
-                if lastElement not in (None, "or", "and"):
-                    normString2 += ['and']
-
-            normString2 += [string]
-
-        normString2 = normString3 + normString2
-
-        # Parenthesis normalization.
-        normString3 = []
-        for string in normString2:
-            normString3 += [string]
-
-        print '1', normString1
-        print '2', normString2
-        print '3', normString3
-        print " ".join(normString3)
-        return " ".join(normString3)
-
-
     def split(self, string = ''):
         #print string
-        #string = self.crappyNormalizer(string)
         specialChars = [":", "+", "-", ">", "<", "="]
         results = []
         if string != '':
