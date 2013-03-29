@@ -1,3 +1,21 @@
+v1.0.0 -- 2013/04/01
+-BUG: several bugs fixed. More info are available in git repository.
+-CHANGE: from Nepomuk to Nepomuk2. Nepoogle only works since this version with Nepomuk2.
+-CHANGE: nepoogle now tries to detect system encoding instead of using UTF-8.
+-NEW: added several icons to improve application aspect.
+-NEW: added "profile" option to parameter --verbose.
+-NEW: basic ontologies edition using drag&drop.
+-NEW: command --newcontact to create nco:Contact from.
+-NEW: command --notindexed available only in console mode.
+-NEW: command --v1 to force Nepoogle to use old SPARQL query engine.
+-NEW: find text window invocable using CTRL+F.
+-NEW: inverse relations in ontologies using "<-".
+-NEW: link to detect album cover and add it as nmm:artwork.
+-NEW: ontologies can be added, edited or removed in the resource view.
+-NEW: rating can be changed clicking with the mouse in the stars.
+-NEW: several new shorcuts.
+-NEW: SPARQL query engine version 2 with several internal improvements adapted to Nepomuk2.
+
 v0.9.3 -- 2012/06/10
 -BUG: Fixed empty performers visualization when there are more than one peformer in a music piece.
 -BUG: Fixed problem with NEF images preview.
