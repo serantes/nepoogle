@@ -1845,7 +1845,9 @@ class Nepoogle(QWidget):
                 else:
                     searchString = searchString[3:]
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
-                    self.sparql.columns = '?r AS ?id ' + self.sparql.columns
+                    if self.sparqlBuilderV1:
+                        self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
+
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
@@ -2269,7 +2271,9 @@ def main(args):
 
                 else:
                     oSparql.stdoutQuery = verboseMode
-                    oSparql.columns = '?r AS ?id ' + oSparql.columns
+                    if SPARQLBuilderV1:
+                        oSparql.columns = '?x0 AS ?id ' + oSparql.columns
+
                     data, structure, time = oSparql.executeQuery(oSparql.buildQuery(searchString))
                     warningsList =  oSparql.warningsList
                     oSparql.warningsList = []

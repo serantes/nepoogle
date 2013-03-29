@@ -51,42 +51,43 @@ class cSparqlBuilder2():
     caseInsensitiveSort = True
     columns = ""
     command = ""
-    # [id, ['columns', [[id, 'ontology', optional, sort]...], [filter], [type]]]
+    # [id, ['resultColumn', [fields], [ontologyFilter], [ontologyTypeFilter]]]
+    # fields: [id, 'ontology', useAsOptional, useToSort]...
     commands = [ \
-                [_('--actors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nco:Contact']]], \
-                [_('--albums'), ['?r AS ?id', [[0, 'nie:title', True, True]], ['nie:title'], ['nmm:MusicAlbum']]], \
-                [_('--audios'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Audio']]], \
+                [_('--actors'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:actor->nco:fullname'], ['nco:Contact']]], \
+                [_('--albums'), ['?r', [[0, 'nie:title', True, True]], ['nie:title'], ['nmm:MusicAlbum']]], \
+                [_('--audios'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Audio']]], \
                 #[_('--connect'), ['', [], [], []]], \
-                [_('--composers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:Contact']]], \
-                [_('--contacts'), ['?r AS ?id', [[0, 'nco:fullname', True, True]], ['nco:fullname'], ['nco:Contact']]], \
-                [_('--creators'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:Contact']]], \
+                [_('--composers'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:composer->nco:fullname'], ['nco:Contact']]], \
+                [_('--contacts'), ['?r', [[0, 'nco:fullname', True, True]], ['nco:fullname'], ['nco:Contact']]], \
+                [_('--creators'), ['?x1', [[0, 'nco:fullname', True, False]], ['nco:creator->nco:fullname'], ['nco:Contact']]], \
                 #[_('--daemonize'), ['', [], [], []]], \
-                [_('--directors'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nco:Contact']]], \
+                [_('--directors'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:director->nco:fullname'], ['nco:Contact']]], \
                 #[_('--disconnect'), ['', [], [], []]], \
                 [_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], []]], \
                 [_('--help'), ['help', [], [], []]], \
-                [_('--images'), ['?r AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:url'], ['nfo:RasterImage']]], \
-                [_('--movies'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nie:title']]], \
-                [_('--musicpieces'), ['?x0 AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:MusicPiece']]], \
+                [_('--images'), ['?r', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:url'], ['nfo:RasterImage']]], \
+                [_('--movies'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nie:title']]], \
+                [_('--musicpieces'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:MusicPiece']]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode . FILTER(?season*1000+?episode = ?se)\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s*1000+?e) AS ?se ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
                 [_('--notindexed'), ['notindexed', [], [], []]], \
-                [_('--performers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nco:Contact']]], \
+                [_('--performers'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:performer->nco:fullname'], ['nco:Contact']]], \
                 [_('--playlist'), ['playlist', [], [], []]], \
                 [_('--playmixed'), ['playmixed', [], [], []]], \
-                [_('--producers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nco:Contacts']]], \
+                [_('--producers'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:producer->nco:fullname'], ['nco:Contacts']]], \
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--showupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "%s"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
-                [_('--tags'), ['?r AS ?id', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['nao:Tag->nao:prefLabel'], ['nao:Tag']]], \
-                [_('--topics'), ['?r AS ?id', [[0, 'pimo:tagLabel', True, True]], ['pimo:Topic->nao:identifier'], ['pimo:Topic']]], \
-                [_('--tvseries'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:TVSeries']]], \
-                [_('--tvshows'), ['?r AS ?id', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:title'], ['nmm:TVShow']]], \
-                [_('--videos'), ['?r AS ?id', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Video']]], \
-                [_('--writers'), ['?x1 AS ?id', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nmm:writer->nco:fullname']]] \
+                [_('--tags'), ['?r', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['nao:prefLabel'], ['nao:Tag']]], \
+                [_('--topics'), ['?r', [[0, 'pimo:tagLabel', True, True]], ['nao:identifier'], ['pimo:Topic']]], \
+                [_('--tvseries'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:TVSeries']]], \
+                [_('--tvshows'), ['?r', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:title'], ['nmm:TVShow']]], \
+                [_('--videos'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Video']]], \
+                [_('--writers'), ['?x1', [[0, 'nco:fullname', True, False]], ['nmm:writer->nco:fullname'], ['nco:Contact']]] \
             ]
 
     enableInference = False
@@ -112,6 +113,7 @@ class cSparqlBuilder2():
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
+    outputResultField = "?id"
     resultField = "?r"
     resultsetLimit = 0
     resultsetOffset = 0
@@ -253,10 +255,14 @@ class cSparqlBuilder2():
                 self.tempData = ['', [], [], []]
 
         if (self.tempData[0] == ''):
-            columns = self.columns
+            if (self.columns == ""):
+                columns = '%s AS %s' % (self.resultField, self.outputResultField)
+
+            else:
+                columns = self.columns
 
         else:
-            columns = self.tempData[0]
+            columns = '%s AS %s' % (self.tempData[0], self.outputResultField)
 
         footer = self._private_query_footer
         header = self._private_query_header % columns
@@ -771,7 +777,15 @@ class cSparqlBuilder2():
 
         for item in typeFilters:
             # Two spaces for indentation level.
-            subqueries += "  %s rdf:type %s .\n" % (self.resultField, item)
+            try:
+                resultField = self.tempData[0]
+                if (resultField == ""):
+                    resultField = self.resultField
+
+            except:
+                resultField = self.resultField
+
+            subqueries += "  %s rdf:type %s .\n" % (resultField, item)
 
         for item in self.tempData[2]:
             if (self.filters == []):
