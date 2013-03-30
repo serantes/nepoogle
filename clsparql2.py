@@ -117,6 +117,7 @@ class cSparqlBuilder2():
     resultField = "?r"
     resultsetLimit = 0
     resultsetOffset = 0
+    searchForUrlsTooInBasicSearch = True
     sortSuffix = '_sort'
     stdoutQuery = False
 
@@ -696,6 +697,10 @@ class cSparqlBuilder2():
                 strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
                 strTerm += indent + "} UNION {\n"
                 strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                if self.searchForUrlsTooInBasicSearch:
+                    strTerm += indent + "} UNION {\n"
+                    strTerm += indent2 + "%s nie:url ?v . FILTER(REGEX(?v, \"%s\"^^xsd:string, 'i')) .\n" % (self.subqueryResultField, value)
+
                 strTerm += indent + "}\n"
 
         else:
