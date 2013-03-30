@@ -163,6 +163,8 @@ class cSparqlBuilder2():
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
                     ['nao:numericRating', _('rating'), _('ra')], \
                     ['nmm:releaseDate', _('releasedate'), _('rd')], \
+                    ['nexif:saturation', _('saturation'), _('sa')], \
+                    ['nexif:sharpness', _('sharpness'), _('sh')], \
                     ['nmm:season', _('season'), _('se')], \
                     ['nmm:setNumber', _('setnumber'), _('sn')], \
                     ['nao:identifier', _('tag'), _('ta')], \
@@ -495,7 +497,6 @@ class cSparqlBuilder2():
             filterExpression = self.buildFloatFilter(value, operator)
 
         elif (valType == "meteringmode"):
-            value = value.lower()
             if (value.lower() in NEXIF_METERING_MODE_LOWER):
                 value = lindex(NEXIF_METERING_MODE_LOWER, value)
 
@@ -510,8 +511,25 @@ class cSparqlBuilder2():
 
             filterExpression = "FILTER(?v %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
+        elif (valType == "saturation"):
+            if (value.lower() in NEXIF_SATURATION_LOWER):
+                value = lindex(NEXIF_SATURATION_LOWER, value)
+
+            else:
+                value = "-1" # A value not defined in NEXIF_SATURATION
+
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
+
+        elif (valType == "sharpness"):
+            if (value.lower() in NEXIF_SHARPNESS_LOWER):
+                value = lindex(NEXIF_SHARPNESS_LOWER, value)
+
+            else:
+                value = "-1" # A value not defined in NEXIF_SHARPNESS
+
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
+
         elif (valType == "whitebalance"):
-            value = value.lower()
             if (value.lower() in NEXIF_WHITE_BALANCE_LOWER):
                 value = lindex(NEXIF_WHITE_BALANCE_LOWER, value)
 

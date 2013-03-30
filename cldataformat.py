@@ -1155,46 +1155,44 @@ class cDataFormat():
         valueType = valueType.lower()
         #if True:
         try:
-            if valueType == 'boolean':
+            if (valueType == 'boolean'):
                 result = value
 
-            elif valueType == 'datep':
+            elif (valueType == 'datep'):
                 result = formatDate(value[:19], True)
 
-            elif valueType == 'date':
+            elif (valueType == 'date'):
                 result = formatDate(value[:19])
 
-            elif valueType == 'datetimep':
+            elif (valueType == 'datetimep'):
                 result = formatDateTime(value[:19], True)
 
-            elif valueType == 'datetime':
+            elif (valueType == 'datetime'):
                 result = formatDateTime(value[:19])
 
-            elif valueType == 'unixfilemode':
+            elif (valueType == 'unixfilemode'):
                 result = "%o" % int(value)
                 result = "%s %s" % (result[:3], result[3:])
 
-            elif valueType in ('int', 'integer', 'number', 'nonnegativeinteger'):
+            elif (valueType in ('int', 'integer', 'number', 'nonnegativeinteger')):
                 result = "%d" % int(float(value))
 
-            elif valueType == 'float':
+            elif (valueType == 'float'):
                 result = "%.4f" % float(value)
 
-            elif valueType == 'duration':
-                print int(value)
+            elif (valueType == 'duration'):
                 result = "%s" % datetime.timedelta(0, int(value), 0)
-                print result
 
-            elif valueType == 'size':
+            elif (valueType == 'size'):
                 result = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
 
-            elif valueType == 'string':
+            elif (valueType == 'string'):
                 result = value
 
-            elif valueType == 'aperturevalue':
+            elif (valueType == 'aperturevalue'):
                 result = "F%.1f" % float(value)
 
-            elif valueType == 'exposurebiasvalue':
+            elif (valueType == 'exposurebiasvalue'):
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=3)
                     result = "%.2f EV" % (value.numerator/value.denominator)
@@ -1202,7 +1200,7 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'exposuretime':
+            elif (valueType == 'exposuretime'):
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=16000)
                     result = "%s/%s s" % (value.numerator, value.denominator)
@@ -1210,7 +1208,7 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'flash':
+            elif (valueType == 'flash'):
                 try:
                     if (value == "0"):
                         result = NEXIF_FLASH[0]
@@ -1221,7 +1219,7 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'focallength':
+            elif (valueType == 'focallength'):
                 try:
                     value = fractions.Fraction(value).limit_denominator()
                     result = "%.1f mm" % (value.numerator/value.denominator)
@@ -1229,7 +1227,7 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'meteringmode':
+            elif (valueType == 'meteringmode'):
                 try:
                     result = int(value)
                     if (result == 255):
@@ -1243,10 +1241,32 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
-            elif valueType == 'orientation':
+            elif (valueType == 'orientation'):
                 result = "%s" % value
 
-            elif valueType == 'whitebalance':
+            elif (valueType == 'saturation'):
+                try:
+                    result = int(value)
+                    if not (result in (1, 2)):
+                        result = 0
+
+                    result = NEXIF_SATURATION[result]
+
+                except:
+                    result = "%s" % value
+
+            elif (valueType == 'sharpness'):
+                try:
+                    result = int(value)
+                    if not (result in (1, 2)):
+                        result = 0
+
+                    result = NEXIF_SHARPNESS[result]
+
+                except:
+                    result = "%s" % value
+
+            elif (valueType == 'whitebalance'):
                 try:
                     result = int(value)
                     if not (result in (1, 2)):

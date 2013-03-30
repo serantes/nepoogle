@@ -102,6 +102,8 @@ ontologyTypes = [ \
                     ['nexif:focallength', 'focallength'], \
                     ['nexif:meteringmode', 'meteringmode'], \
                     ['nexif:orientation', 'orientation'], \
+                    ['nexif:saturation', 'saturation'], \
+                    ['nexif:sharpness', 'sharpness'], \
                     ['nexif:whitebalance', 'whitebalance'], \
                     ['nfo:averagebitrate', 'number'], \
                     ['nfo:duration', 'duration'], \
