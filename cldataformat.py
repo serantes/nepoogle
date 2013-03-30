@@ -1170,6 +1170,17 @@ class cDataFormat():
             elif (valueType == 'datetime'):
                 result = formatDateTime(value[:19])
 
+            elif (valueType == 'indexinglevel'):
+                try:
+                    result = int(value)
+                    if not (result in (0, 1, 2)):
+                        result = 0
+
+                    result = KEXT_INDEXING_LEVEL[result]
+
+                except:
+                    result = "%s" % value
+
             elif (valueType == 'unixfilemode'):
                 result = "%o" % int(value)
                 result = "%s %s" % (result[:3], result[3:])

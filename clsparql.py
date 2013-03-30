@@ -90,6 +90,7 @@ knownOntologies = [ \
                 ]
 
 ontologyTypes = [ \
+                    ['kext:indexinglevel', 'indexinglevel'], \
                     ['kext:unixfilemode', 'unixfilemode'], \
                     ['nao:created', 'datetime'], \
                     ['nao:lastmodified', 'datetime'], \
@@ -100,6 +101,7 @@ ontologyTypes = [ \
                     ['nexif:flash', 'flash'], \
                     ['nexif:fnumber', 'aperturevalue'], \
                     ['nexif:focallength', 'focallength'], \
+                    ['nexif:focallengthin35mmfilm', 'focallength'], \
                     ['nexif:meteringmode', 'meteringmode'], \
                     ['nexif:orientation', 'orientation'], \
                     ['nexif:saturation', 'saturation'], \
@@ -125,7 +127,7 @@ ontologiesInfo = []
 ontologiesRank = [["http://www.w3.org/2000/01/rdf-schema#Resource", 0]]
 resourcesCache = dict()
 
-def NOC(name = '', returnQUrl = False):
+def NOC(name = '', returnQUrl = True):
     ontology, property = name.strip().split(':')
     date = lvalue(knownOntologies, ontology, 0, 1)
     if date != None:

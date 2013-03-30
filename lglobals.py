@@ -110,6 +110,10 @@ else:
     SOPRANO_QUERY_LANGUAGE = Soprano.Query.QueryLanguageSparql
     USE_INTERNAL_RESOURCE_FOR_MAIN_TYPE = True
 
+KEXT_INDEXING_LEVEL = [_("Not indexed"), _("Basic"), _("File indexing"), _("Web extractor")]
+
+KEXT_INDEXING_LEVEL_LOWER = [x.lower() for x in KEXT_INDEXING_LEVEL]
+
 NEXIF_FLASH = [_("No"), _("Yes")]
 NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("CenterWeightedAverage"), _("Spot"), _("MultiSpot"), _("Pattern"), _("Partial"), _("Other")]
 NEXIF_SATURATION = [_("Normal"), _("Low"), _("High")]

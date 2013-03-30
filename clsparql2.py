@@ -148,6 +148,7 @@ class cSparqlBuilder2():
                     ['!nmm:genre', _('genre'), _('ge')], \
                     ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('he')], \
+                    ['kext:indexingLevel', _('indexinglevel'), _('il')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
                     ['nexif:meteringMode', _('meteringmode'), _('mm')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
@@ -497,6 +498,15 @@ class cSparqlBuilder2():
 
             filterExpression = self.buildFloatFilter(value, operator)
 
+        elif (valType == "indexinglevel"):
+            if (value.lower() in KEXT_INDEXING_LEVEL_LOWER):
+                value = lindex(KEXT_INDEXING_LEVEL_LOWER, value)
+
+            else:
+                value = "-1" # A value not defined in NEXIF_WHITE_BALANCE
+
+            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
+
         elif (valType == "meteringmode"):
             if (value.lower() in NEXIF_METERING_MODE_LOWER):
                 value = lindex(NEXIF_METERING_MODE_LOWER, value)
@@ -577,7 +587,8 @@ class cSparqlBuilder2():
                 ontology = self.shortcuts[idx][0]
 
             else:
-                raise Exception("Unknown ontology <b>%s</b>." % ontology)
+                if (ontology[0] != "?"): # A variable is set instead an ontology.
+                    raise Exception("Unknown ontology <b>%s</b>." % ontology)
 
         return ontology
 

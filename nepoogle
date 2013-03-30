@@ -1548,9 +1548,12 @@ class Nepoogle(QWidget):
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
                     "<br />\n" \
-                    "Some shorcutontologies have special values:<br />\n" \
+                    "Some <em>shorcutontologies</em> have special values:<br />\n" \
                     "-flash: [ %(flash)s ]<br />\n" \
+                    "-indexinglevel: [ %(indexinglevel)s ]<br />\n" \
                     "-meteringmode: [ %(meteringmode)s ]<br />\n" \
+                    "-saturation: [ %(saturation)s ]<br />\n" \
+                    "-sharpness: [ %(sharpness)s ]<br />\n" \
                     "-whitebalance: [ %(whitebalance)s ]<br />\n" \
                     "<br />\n" \
                     "<sup>1)</sup>e0 uses <a href=\"http://api.kde.org/4.10-api/kdelibs-apidocs/nepomuk/html/classNepomuk_1_1Query_1_1QueryParser.html\">Nepomuk::Query::QueryParser()</a> so query syntax it's different.<br />" \
@@ -1558,7 +1561,10 @@ class Nepoogle(QWidget):
                     "</p>\n" \
                     % {'shortcuts': shortcutsList, 'instructions': commandsList, \
                         'flash': " | ".join(NEXIF_FLASH), \
+                        'indexinglevel': " | ".join(KEXT_INDEXING_LEVEL), \
                         'meteringmode': " | ".join(NEXIF_METERING_MODE), \
+                        'saturation': " | ".join(NEXIF_SATURATION), \
+                        'sharpness': " | ".join(NEXIF_SHARPNESS), \
                         'whitebalance': " | ".join(NEXIF_WHITE_BALANCE) \
                         }
 
@@ -2088,6 +2094,42 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False, SPARQLBui
     return True
 
 
+def develFunction():
+    # Whithout this nepomuk don't works.
+    app = QCoreApplication(sys.argv)
+
+    uri = QUrl("nepomuk:/res/cbeff59c-3ecd-45a6-aef7-8f4e81f537d2")
+    ontology = NOC("nco:imNickname")
+
+    resource = Nepomuk2.Resource(uri)
+    print("resource(nco:fullname): " + toUnicode(resource.property(NOC("nco:fullname")).toString()))
+    value = toUnicode(resource.property(ontology).toString())
+
+    print("updateResorce = Nepomuk2.SimpleResource()")
+    updateResource = Nepomuk2.SimpleResource(resource.uri())
+    updateResource.remove(ontology, toVariant(value))
+    updateResource.addProperty(ontology, toVariant(value + "1"))
+
+    print("graph = Nepomuk2.SimpleResourceGraph()")
+    graph = Nepomuk2.SimpleResourceGraph()
+    graph.insert(updateResource)
+    print("Resources count: %d" % graph.count())
+
+    print("graph.save()")
+    job = graph.save()
+    print("job.exec(): %s " % job.exec_())
+
+    if (job.error() != 0):
+        print("ERROR(%s): %s" % (job.error(), job.errorString()))
+
+
+    # Cleaning up to avoid a crash.
+    job = graph = updateResource = resource = None
+
+
+    print "finished."
+
+
 def main(args):
     displayResults = None
     SPARQLBuilderV1 = False
@@ -2102,6 +2144,10 @@ def main(args):
 
         if parameter.lower() == '--help':
             buildHelp()
+            quit()
+
+        elif (parameter.lower() == '--devel'):
+            develFunction()
             quit()
 
         elif parameter.lower()[:5] == '--gui':
