@@ -902,7 +902,7 @@ class cDataFormat():
             i = 0
             for item in playList:
                 output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
-                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[0])}
+                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
                 iconRun = iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
                 iconDir = iconDir.replace('"', "'")
