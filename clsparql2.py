@@ -699,7 +699,7 @@ class cSparqlBuilder2():
                 strTerm += indent2 + "{\n"
                 strTerm += indent3 + "%s ?p1 ?v2 . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.subqueryResultField, value)
                 strTerm += indent2 + "} UNION {\n"
-                strTerm += indent3 + "%s ?p2 [ ?p3 ?v2 ] . FILTER(bif:contains(?v2, \"'%s\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent3 + "%s ?p2 [ ?p3 ?v2 ] . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.subqueryResultField, value)
                 strTerm += indent2 + "} .\n"
                 strTerm += indent + "} .\n"
 
