@@ -2138,16 +2138,23 @@ class cDataFormat():
 
         else:
             # Special headers for some resources.
-            if (defaultType in (ONTOLOGY_TYPE_CONTACT, ONTOLOGY_TYPE_MUSIC_ALBUM, ONTOLOGY_TYPE_TAG)):
+            if (defaultType in (ONTOLOGY_TYPE_CONTACT, ONTOLOGY_TYPE_MUSIC_ALBUM, ONTOLOGY_TYPE_TAG, ONTOLOGY_TYPE_TV_SERIES)):
                 # Adding the header.
 
-                if defaultType == ONTOLOGY_TYPE_CONTACT:
+                symbolPattern = None
+                if (defaultType == ONTOLOGY_TYPE_CONTACT):
                     ontologySymbol = NOC(ONTOLOGY_SYMBOL_CONTACT, True)
                     symbol = toUnicode(self.iconNoPhoto)
                     newResource = "&nbsp;<a title=\"%s\" href=\"addresource:/nco:Contact\"><img valign=\"middle\" src=\"file://%s\"></a>" % (_("Create an empty %s") % ONTOLOGY_TYPE_CONTACT, self.iconListAdd)
 
-                elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
+                elif (defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM):
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
+                    symbol = toUnicode(self.iconNoCover)
+                    newResource = ""
+
+                elif (defaultType == ONTOLOGY_TYPE_TV_SERIES):
+                    ontologySymbol = NOC(ONTOLOGY_TV_SERIES_COVER, True)
+                    symbolPattern = "(poster)"
                     symbol = toUnicode(self.iconNoCover)
                     newResource = ""
 
@@ -2158,11 +2165,14 @@ class cDataFormat():
 
                 if mainResource.hasProperty(ontologySymbol):
                     symbols = mainResource.property(ontologySymbol)
-                    if vartype(symbols) == "list":
+                    if (vartype(symbols) == "list"):
                         symbol = urlDecode(self.readProperty(symbols[0].toStringList()[0], "nie:url", "str"))
 
                     else:
-                        symbol = urlDecode(self.readProperty(symbols.toStringList()[0], "nie:url", "str"))
+                        for item in symbols.toStringList():
+                            symbol = urlDecode(self.readProperty(item, "nie:url", "str"))
+                            if ((symbolPattern == None) or (symbol.find(symbolPattern) >= 0)):
+                                break
 
                 #if True:
                 try:
@@ -2189,16 +2199,41 @@ class cDataFormat():
 
                         output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1], "newResource": newResource}
 
-                        if defaultType == ONTOLOGY_TYPE_CONTACT:
+                        if (defaultType == ONTOLOGY_TYPE_CONTACT):
                             fullname = toUnicode(mainResource.property(NOC("nco:fullname", True)).toString())
                             resourceIsA = self.resourceIsA(mainResource)
                             output += '<h2>%(title)s</h2><h4>%(resourceIsA)s%(rating)s</h4></td></tr>' \
                                         % {"title": fullname, "rating": self.getRatingHtml(mainResource, 22), "resourceIsA": resourceIsA}
 
-                        elif defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM:
+                        elif (defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM):
                             title = toUnicode(mainResource.property(noc_nieTitle).toString())
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
+                        elif (defaultType == ONTOLOGY_TYPE_TV_SERIES):
+                            title = toUnicode(mainResource.property(noc_nieTitle).toString())
+
+                            # Display actors.
+                            contactsList = []
+                            actors = ""
+                            query = \
+                                    "SELECT DISTINCT ?uri ?fullname\n" \
+                                    "WHERE {\n" \
+                                        "  ?tvshow nmm:series <%s> . ?tvshow nmm:actor ?uri . ?uri nco:fullname ?fullname .\n" \
+                                    "}" \
+                                    "ORDER BY ?fullname" % (mainResource.uri().toString())
+
+                            data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparqlNoInference)
+                            if data.isValid():
+                                while data.next():
+                                    contactsList += [self.htmlRenderLink('uri', toUnicode(data["uri"].toString()), toUnicode(data["fullname"].toString()))]
+
+                            if (contactsList != []):
+                                actors = "<b>All actors in the series</b>:<br />" + ", ".join(contactsList)
+
+                            output += '<h2>%(title)s</h2><h4>%(rating)s</h4>%(actors)s</td></tr>' \
+                                        % {"title": title, "rating": self.getRatingHtml(mainResource, 22), "actors": actors}
+
 
                         else:
                             title = toUnicode(mainResource.property(NOC("nao:prefLabel", True)).toString())
