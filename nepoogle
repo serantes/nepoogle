@@ -1780,7 +1780,7 @@ class Nepoogle(QWidget):
                 else:
                     output = cachedData
 
-                if self.queryMethod == "manual":
+                if (self.queryMethod == "manual"):
                     # Cache must be trunked in current position if query changed.
                     if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
                         if self.cache[self.queriesIndex].searchString != searchString:
@@ -1803,6 +1803,11 @@ class Nepoogle(QWidget):
 
                         else:
                             self.cache[self.queriesIndex] = oDataFormat
+
+                else:
+                    self.cache += [oDataFormat]
+                    self.queriesIndex += 1
+
 
                 if cachedData == None:
                     i = lindex(self.cacheViewer, searchString, 0)
