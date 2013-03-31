@@ -687,25 +687,32 @@ class Nepoogle(QWidget):
 
             idx = lindex(self.navigationData, self.leSearch.text(), 0)
             if idx != None:
-                navigateTo = url[10:].lower()
-                if navigateTo == "first":
+                navigateTo = url[10:].lower().split("/")
+                if navigateTo[0] == "first":
                     idx = 0
 
-                elif navigateTo == "previous":
+                elif navigateTo[0] == "previous":
                     if idx > 0:
                         idx -= 1
 
-                elif navigateTo == "next":
+                elif navigateTo[0] == "next":
                     if idx < len(self.navigationData) - 1:
                         idx += 1
 
-                elif navigateTo == "last":
+                elif navigateTo[0] == "last":
                     idx = len(self.navigationData) - 1
 
                 #else:
                     #pass
 
+                try:
+                    self.queryMethod = navigateTo[1]
+
+                except:
+                    pass
+
                 self.linkClicked(QUrl(self.navigationData[idx][0]), False)
+
 
         elif url[:9] == 'nepomuk:/':
             self.leSearch.setText(url)
@@ -1423,7 +1430,11 @@ class Nepoogle(QWidget):
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
             self.repaint()
-            self.navigationData = self.cache[self.queriesIndex].data
+            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
+                self.navigationData = self.cache[self.queriesIndex - 1].data
+
+            else:
+                self.navigationData = []
 
 
     def goForward(self):
@@ -1441,7 +1452,11 @@ class Nepoogle(QWidget):
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
             self.repaint()
-            self.navigationData = self.cache[self.queriesIndex].data
+            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
+                self.navigationData = self.cache[self.queriesIndex - 1].data
+
+            else:
+                self.navigationData = []
 
 
     def showHelp(self):
@@ -1748,6 +1763,7 @@ class Nepoogle(QWidget):
             else:
                 self.sparql = cSparqlBuilder2()
 
+            oDataFormat = None
             if searchString[:9] == 'nepomuk:/':
                 self.currUri = searchString
                 if self.queryMethod in ("manual", "refresh"):
@@ -1778,6 +1794,15 @@ class Nepoogle(QWidget):
                         self.cache[self.queriesIndex] = oDataFormat
 
                     self.navigationData = []
+
+                elif (self.queryMethod == "navbutton"):
+                    if (oDataFormat != None):
+                        if (self.cache[self.queriesIndex].searchString[:9] != "nepomuk:/"):
+                            self.cache += [oDataFormat]
+                            self.queriesIndex += 1
+
+                        else:
+                            self.cache[self.queriesIndex] = oDataFormat
 
                 if cachedData == None:
                     i = lindex(self.cacheViewer, searchString, 0)
@@ -2122,10 +2147,8 @@ def develFunction():
     if (job.error() != 0):
         print("ERROR(%s): %s" % (job.error(), job.errorString()))
 
-
     # Cleaning up to avoid a crash.
     job = graph = updateResource = resource = None
-
 
     print "finished."
 
