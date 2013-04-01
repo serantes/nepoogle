@@ -56,7 +56,7 @@ class cSparqlBuilder2():
     commands = [ \
                 [_('--actors'), ['?x1', [[0, 'nco:fullname', True, True]], ['nmm:actor->nco:fullname'], ['nco:Contact']]], \
                 [_('--albums'), ['?r', [[0, 'nie:title', True, True]], ['nie:title'], ['nmm:MusicAlbum']]], \
-                [_('--audios'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nfo:Audio']]], \
+                [_('--audios'), ['?r', [[0, 'nie:url', True, True]], ['nie:title'], ['nfo:Audio']]], \
                 #[_('--connect'), ['', [], [], []]], \
                 [_('--composers'), ['?x1', [[0, 'nco:fullname', True, True]], ['nmm:composer->nco:fullname'], ['nco:Contact']]], \
                 [_('--contacts'), ['?r', [[0, 'nco:fullname', True, True]], ['nco:fullname'], ['nco:Contact']]], \
