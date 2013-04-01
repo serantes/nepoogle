@@ -70,7 +70,7 @@ class cSparqlBuilder2():
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, False]], ['nmm:genre'], []]], \
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?r', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:url'], ['nfo:RasterImage']]], \
-                [_('--movies'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nie:title']]], \
+                [_('--movies'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:Movie']]], \
                 [_('--musicpieces'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:MusicPiece']]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode . FILTER(?season*1000+?episode = ?se)\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s*1000+?e) AS ?se ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
