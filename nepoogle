@@ -294,7 +294,7 @@ class cWebView(QWebView):
 #
 class Nepoogle(QWidget):
     cache = []
-    cacheViewer = []
+    cacheRendered = []
     currUri = None
     clearResourceManagerCache = True
     keyModifiers = Qt.NoModifier
@@ -1466,6 +1466,9 @@ class Nepoogle(QWidget):
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
                 self.navigationData = self.cache[self.queriesIndex - 1].data
 
+            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
+                self.navigationData = self.cache[self.queriesIndex].data
+
             else:
                 self.navigationData = []
 
@@ -1487,6 +1490,9 @@ class Nepoogle(QWidget):
             self.repaint()
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
                 self.navigationData = self.cache[self.queriesIndex - 1].data
+
+            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
+                self.navigationData = self.cache[self.queriesIndex].data
 
             else:
                 self.navigationData = []
@@ -1799,27 +1805,34 @@ class Nepoogle(QWidget):
             else:
                 self.sparql = cSparqlBuilder2()
 
-            oDataFormat = None
-            if searchString[:9] == 'nepomuk:/':
+            if (searchString[:9] == 'nepomuk:/'):
+                cachedData = None
+                oDataFormat = None
                 self.currUri = searchString
-                if self.queryMethod in ("manual", "refresh"):
-                    cachedData = None
+                if not self.queryMethod in ("manual", "refresh"):
+                    cachedData = lvalue(self.cacheRendered, searchString, 0, 1)
 
-                else:
-                    cachedData = lvalue(self.cacheViewer, searchString, 0, 1)
-
-                if cachedData == None:
+                if (cachedData == None):
                     oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
-                    #output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, self.sparql.ontologyTypes)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
                 else:
                     output = cachedData
 
-                if (self.queryMethod == "manual"):
+                if (self.queryMethod == "navbutton"):
+                    if (oDataFormat == None):
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output)
+
+                    self.cache[self.queriesIndex] = oDataFormat
+
+                elif (self.queryMethod == "refresh"):
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
+                    output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
+
+                elif (self.queryMethod == "manual"):
                     # Cache must be trunked in current position if query changed.
                     if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
-                        if self.cache[self.queriesIndex].searchString != searchString:
+                        if (self.cache[self.queriesIndex].searchString != searchString):
                             self.cache = self.cache[:self.queriesIndex + 1]
 
                     if (self.cache == []) or (self.cache[self.queriesIndex].searchString != searchString):
@@ -1831,29 +1844,27 @@ class Nepoogle(QWidget):
 
                     self.navigationData = []
 
-                elif (self.queryMethod == "navbutton"):
-                    if (oDataFormat != None):
-                        if (self.cache[self.queriesIndex].searchString[:9] != "nepomuk:/"):
-                            self.cache += [oDataFormat]
-                            self.queriesIndex += 1
-
-                        else:
-                            self.cache[self.queriesIndex] = oDataFormat
-
                 else:
-                    self.cache += [oDataFormat]
+                    # Cache must be trunked in current position if query changed.
                     self.queriesIndex += 1
+                    if ((self.queriesIndex >= 0) and (self.queriesIndex < len(self.cache))):
+                        if (self.cache[self.queriesIndex].searchString != searchString):
+                            self.cache = self.cache[:self.queriesIndex]
 
+                    if (oDataFormat == None):
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output)
 
-                if cachedData == None:
-                    i = lindex(self.cacheViewer, searchString, 0)
+                    self.cache += [oDataFormat]
+
+                if (cachedData == None):
+                    i = lindex(self.cacheRendered, searchString, 0)
                     if i == None:
-                        self.cacheViewer += [[searchString, output.replace("<cached />", " (cached)")]]
+                        self.cacheRendered += [[searchString, output.replace("<cached />", " (cached)")]]
 
                     else:
-                        self.cacheViewer[i][1] = output.replace("<cached />", " (cached)")
+                        self.cacheRendered[i][1] = output.replace("<cached />", " (cached)")
 
-            elif searchString != '':
+            elif (searchString != ''):
                 self.currUri = None
                 searchString = self.processMacros(searchString)
                 if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
@@ -1866,13 +1877,13 @@ class Nepoogle(QWidget):
                 externalParameters = []
 
                 # Very dirty hack to force commands to use searchEngine 1.
-                if searchEngine != 1:
+                if (searchEngine != 1):
                     tmpSearchString = searchString[3:].strip()
                     if ((len(tmpSearchString.split(" ")) == 1) and (tmpSearchString[:2] == "--")):
                         searchEngine = 1
                 # Very dirty hack to force commands to use searchEngine 1.
 
-                if searchEngine == 0:
+                if (searchEngine == 0):
                     processedSearchString = searchString[3:]
                     if processedSearchString.find("--help") >= 0:
                         self.execQuery("e1 " + processedSearchString)
@@ -1893,7 +1904,7 @@ class Nepoogle(QWidget):
                     query = hackQueryParser(query, 'e0')
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
 
-                elif searchEngine == 2:
+                elif (searchEngine == 2):
                     processedSearchString = searchString[3:]
                     if processedSearchString.find("--help") >= 0:
                         self.execQuery("e1 " + processedSearchString)

@@ -360,7 +360,7 @@ class cDataFormat():
                     ]
 
 
-    def __init__(self, searchString = "", model = None, screenWidth = 1024):
+    def __init__(self, searchString = "", model = None, screenWidth = 1024, renderedDataText = None):
         self.searchString = searchString
         if model == None:
             if DO_NOT_USE_NEPOMUK:
@@ -377,6 +377,9 @@ class cDataFormat():
         self.playlistWidth = self.viewerColumnsWidth
         self.videoWidth = self.viewerColumnsWidth
         self.videoHeight = int(0.5625*self.viewerColumnsWidth)
+
+        if (renderedDataText != None):
+            self.renderedDataText = renderedDataText
 
 
     def getCoverUrl(self, res = None, url = "", useHtmlEncoding = True):
@@ -1672,7 +1675,7 @@ class cDataFormat():
 
 
     def formatAsHtml(self, param1 = None, structure = [], queryTime = 0, stdout = False):
-        if self.searchString[:9] == "nepomuk:/":
+        if (self.searchString[:9] == "nepomuk:/"):
             self.navegable = False
             return self.formatResourceInfo()
 
