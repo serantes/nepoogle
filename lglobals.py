@@ -69,11 +69,13 @@ ONTOLOGY_SUBJECT = "nie:subject"
 ONTOLOGY_SYMBOL = "nao:hasSymbol"
 ONTOLOGY_SYMBOL_CONTACT = "nco:photo"
 ONTOLOGY_TITLE = "nie:title"
+ONTOLOGY_MOVIE_COVER = "nfo:depiction"
 ONTOLOGY_TV_SERIES_COVER = "nfo:depiction"
 ONTOLOGY_TYPE_CONTACT = "nco:Contact"
 ONTOLOGY_TYPE_IMAGE = "nfo:Image"
 ONTOLOGY_TYPE_MUSIC_ALBUM = "nmm:MusicAlbum"
 ONTOLOGY_TYPE_TAG = "nao:Tag"
+ONTOLOGY_TYPE_MOVIE = "nmm:Movie"
 ONTOLOGY_TYPE_TV_SERIES = "nmm:TVSeries"
 
 DO_NOT_USE_NEPOMUK = False

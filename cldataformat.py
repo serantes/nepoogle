@@ -247,6 +247,14 @@ class cDataFormat():
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]%[<br />url: {nie:url}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:Archive", \
+                            "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
+                        ["nfo:ArchiveItem", \
+                            "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nfo:FileDataObject", \
                             "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
@@ -1794,6 +1802,7 @@ class cDataFormat():
         output = toUnicode(output)
 
         # Build playlist here.
+        nfoArchiveItem = NOC('nfo:ArchiveItem', True)
         nfoVideo = NOC('nfo:Video', True)
         nieUrl = NOC('nie:url', True)
         nieTitle = NOC('nie:title', True)
@@ -1813,7 +1822,7 @@ class cDataFormat():
                 else:
                     resource = Nepomuk2.Resource(QUrl(item[0]))
 
-                if resource.hasProperty(nieUrl):
+                if ((resource.type() != nfoArchiveItem) and resource.hasProperty(nieUrl)):
                     url = fromPercentEncoding(toUnicode(resource.property(nieUrl).toString().toUtf8()))
                     ext = os.path.splitext(url)[1][1:].lower()
                     if ((ext != '') and fileExists(url)):
@@ -1918,6 +1927,7 @@ class cDataFormat():
         if defaultType != "":
             data = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
 
+        noc_nfoArchiveItem = NOC("nfo:ArchiveItem", True)
         noc_nieUrl = NOC("nie:url", True)
         noc_nieTitle = NOC("nie:title", True)
 
@@ -2020,40 +2030,46 @@ class cDataFormat():
 
                 elif currOnt == 'nie:url':
                     url = fromPercentEncoding(value)
-                    ext = os.path.splitext(url)[1][1:].lower()
-                    if ext in self.supportedImageFormats:
-                        if (lindex(images, url) == None):
-                            images += [[url, os.path.basename(url)]]
-
-                    elif ext in self.supportedAudioFormats:
-                        if lindex(audios, url) == None:
-                            audios += [[url, uri]]
-
-                    elif ext in self.supportedVideoFormats:
-                        if lindex(videos, url) == None:
-                            videos += [[url, uri]]
-
-                    value = ''
-                    if url[:7] == 'file://':
-                        value += "<a title=\"%(url)s\" href=\"%(url)s\">%(url)s</a>" % {"url": url}
-                        if (os.path.exists(url[7:]) or os.path.islink(url[7:])):
-                            value += ' ' + self.htmlLinkSystemRun % {"uri": url}
-                            value += ' ' + self.htmlLinkOpenLocation % {"uri": os.path.dirname(url)}
-
-                    elif url[:8] == 'filex://':
-                        value += self.htmlRenderLink('unplugged', \
-                                                        '', \
-                                                        url \
-                                                    )
+                    if (mainResource.type() == noc_nfoArchiveItem):
+                        value = "<a title=\"%(url)s\" href=\"%(url)s\">%(url)s</a>" % {"url": url}
+                        value += ' ' + self.htmlLinkSystemRun % {"uri": url}
+                        value += ' ' + self.htmlLinkOpenLocation % {"uri": os.path.dirname(url)}
 
                     else:
-                        value += self.htmlRenderLink('url', url, url)
+                        ext = os.path.splitext(url)[1][1:].lower()
+                        if ext in self.supportedImageFormats:
+                            if (lindex(images, url) == None):
+                                images += [[url, os.path.basename(url)]]
 
-                    # Adding reindex button to navigator bar.
-                    output = output.replace("<reindex />", \
-                                            "&nbsp;<a title=\"Reindex file\" href=\"reindex:/%(url)s\"><img %(style)s title=\"Reindex file\" src=\"file://%(icon)s\"></a>" \
-                                            % {"style": self.htmlStyleNavigate, "url": url, "icon": self.iconReindex}
-                                        )
+                        elif ext in self.supportedAudioFormats:
+                            if lindex(audios, url) == None:
+                                audios += [[url, uri]]
+
+                        elif ext in self.supportedVideoFormats:
+                            if lindex(videos, url) == None:
+                                videos += [[url, uri]]
+
+                        value = ''
+                        if url[:7] == 'file://':
+                            value += "<a title=\"%(url)s\" href=\"%(url)s\">%(url)s</a>" % {"url": url}
+                            if (os.path.exists(url[7:]) or os.path.islink(url[7:])):
+                                value += ' ' + self.htmlLinkSystemRun % {"uri": url}
+                                value += ' ' + self.htmlLinkOpenLocation % {"uri": os.path.dirname(url)}
+
+                        elif url[:8] == 'filex://':
+                            value += self.htmlRenderLink('unplugged', \
+                                                            '', \
+                                                            url \
+                                                        )
+
+                        else:
+                            value += self.htmlRenderLink('url', url, url)
+
+                        # Adding reindex button to navigator bar.
+                        output = output.replace("<reindex />", \
+                                                "&nbsp;<a title=\"Reindex file\" href=\"reindex:/%(url)s\"><img %(style)s title=\"Reindex file\" src=\"file://%(icon)s\"></a>" \
+                                                % {"style": self.htmlStyleNavigate, "url": url, "icon": self.iconReindex}
+                                            )
 
                 elif currOnt == 'nmm:genre':
                     value = value + ' ' + self.htmlRenderLink('ontology', 'genre', value)
@@ -2138,7 +2154,7 @@ class cDataFormat():
 
         else:
             # Special headers for some resources.
-            if (defaultType in (ONTOLOGY_TYPE_CONTACT, ONTOLOGY_TYPE_MUSIC_ALBUM, ONTOLOGY_TYPE_TAG, ONTOLOGY_TYPE_TV_SERIES)):
+            if (defaultType in (ONTOLOGY_TYPE_CONTACT, ONTOLOGY_TYPE_MUSIC_ALBUM, ONTOLOGY_TYPE_TAG, ONTOLOGY_TYPE_MOVIE, ONTOLOGY_TYPE_TV_SERIES)):
                 # Adding the header.
 
                 symbolPattern = None
@@ -2149,6 +2165,12 @@ class cDataFormat():
 
                 elif (defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM):
                     ontologySymbol = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
+                    symbol = toUnicode(self.iconNoCover)
+                    newResource = ""
+
+                elif (defaultType == ONTOLOGY_TYPE_MOVIE):
+                    ontologySymbol = NOC(ONTOLOGY_MOVIE_COVER, True)
+                    symbolPattern = "(poster)"
                     symbol = toUnicode(self.iconNoCover)
                     newResource = ""
 
@@ -2210,6 +2232,11 @@ class cDataFormat():
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
+                        elif (defaultType == ONTOLOGY_TYPE_MOVIE):
+                            title = toUnicode(mainResource.property(noc_nieTitle).toString())
+                            output += '<h2>%(title)s</h2><h4>%(rating)s</h4></td></tr>' \
+                                        % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
+
                         elif (defaultType == ONTOLOGY_TYPE_TV_SERIES):
                             title = toUnicode(mainResource.property(noc_nieTitle).toString())
 
@@ -2233,7 +2260,6 @@ class cDataFormat():
 
                             output += '<h2>%(title)s</h2><h4>%(rating)s</h4>%(actors)s</td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22), "actors": actors}
-
 
                         else:
                             title = toUnicode(mainResource.property(NOC("nao:prefLabel", True)).toString())
