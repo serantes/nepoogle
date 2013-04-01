@@ -93,11 +93,8 @@ except:
 #_TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
 
 #BUG: BUG001 -> negation without a shorcut is failing.
-#TODO: better history management.
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: añadir soporte a nepomuk:/ en consola
-#TODO: visor de álbum debería incluir los intérpretes/creadores del mismo y la carátula
-#TODO: mostrar estrellas en el rating por coherencia
 #TODO: count()
 #select count(?x0) as ?cuantos
 #where {
@@ -108,16 +105,12 @@ except:
 #TODO: configuración externa
 #TODO: multilenguage
 #TODO: paréntesis
-#TODO: editor: gestionar comentarios, rating y tags.
-#TODO: soporte para la modificación de comentarios
-#TODO: soporte para la modificación del rating
 #TODO: soporte para la gestión de tags. Idea:
 #       Más usados: los 10 tags más usados listados alfabéticamente.
 #       Usados: los últimos tags usados, debajo los últimos que has usado.
 #       Alfabética: la vista normal.
 #       Botón de eliminar todos.
 #TODO: añadir soporte a --connect, --disconnect, --daemonize y moverlos a Nepoogle
-#TODO: todo en html para que pueda ser un servidor.
 
 #IF BUILD
 #INCLUDE lglobals.py
