@@ -605,7 +605,7 @@ class Nepoogle(QWidget):
         url = toUnicode(url.toString())
         print(toUtf8(url))
 
-        if url[:13] == "addresource:/":
+        if (url[:13] == "addresource:/"):
             mustRefresh = SLEEP_NO_SLEEP
             ontology = url[13:].split("&")
             try:
@@ -616,22 +616,18 @@ class Nepoogle(QWidget):
 
             ontology = ontology[0]
             if ontology == ONTOLOGY_TYPE_CONTACT:
-                fullname = ""
-                if uri != "":
+                if (uri != ""):
                     if INTERNAL_RESOURCE:
                         resource = cResource(uri)
 
                     else:
                         resource = Nepomuk2.Resource(uri)
 
-                    fullname = toUnicode(resource.property(NOC("nao:prefLabel", True)).toString())
-
-                if fullname == "":
-                    fullname = _("New contact")
-
+                fullname = _("New contact")
                 newResource = Nepomuk2.Resource(QString(fullname), NOC(ontology, True))
                 newResource.addProperty(NOC(ONTOLOGY_FULLNAME, True), toVariant(fullname))
                 newResource.removeProperty(NOC(ONTOLOGY_IDENTIFIER, True))
+                newResource.removeProperty(NOC("nao:prefLabel", True))
 
                 mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1747,8 +1743,11 @@ class Nepoogle(QWidget):
         self.resultTime = None
 
         searchEngine = DEFAULT_ENGINE
-        if searchString == '':
+        if (searchString == ''):
             searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
+
+        elif (searchString == None):
+            searchString = ""
 
         output = ""
 
