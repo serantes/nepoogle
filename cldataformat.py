@@ -310,6 +310,7 @@ class cDataFormat():
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:Movie", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nfo:depiction->nie:url|1}\"'>%]" \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
                                 "%[<br /><b>Alternative titles</b>: {nao:altLabel}%]" \
                                 "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
