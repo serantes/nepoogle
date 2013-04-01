@@ -988,16 +988,15 @@ class cSparqlBuilder2():
                 results[-1] += string[i]
 
         for result in results:
-            if ((result != "") and (result[0] == "-") and (result[1] != "-")):
-                i = lindex(self.warningsList, "BUG001", 0)
+            #if ((result != "") and (result[0] == "-") and (result[1] != "-")):
+            #    i = lindex(self.warningsList, "BUG001", 0)
+            #    if i != None:
+            #        self.warningsList[i] += [result]
 
-                if i != None:
-                    self.warningsList[i] += [result]
+            #    else:
+            #        self.warningsList = [["BUG001", result]]
 
-                else:
-                    self.warningsList = [["BUG001", result]]
-
-            elif result == "(" or result == ")":
+            if result == "(" or result == ")":
                 raise Exception(_("Syntax error, parenthesis are not supported. Use quotes to search for parenthesis characters."))
 
         #print 'Results:', results
