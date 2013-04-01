@@ -25,15 +25,52 @@
 
 import datetime, gettext, locale, md5, os, re, signal, subprocess, sys, time, tempfile
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtWebKit import *
+try:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+    from PyQt4.QtWebKit import *
+except:
+    msgError = "PyQt is not istalled."
+    if sys.stdout.isatty():
+        print(msgError)
 
-import PyKDE4.kdecore as kdecore
-from PyKDE4.kdecore import i18n, KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, KUrl
-from PyKDE4.kdeui import KApplication, KIconLoader
-from PyKDE4.nepomuk2 import Nepomuk2
-from PyKDE4.soprano import Soprano
+    else:
+        parameters = ["kdialog", "--title", os.path.basename(sys.argv[0]), "--error", msgError]
+        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+
+    quit()
+
+try:
+    import PyKDE4.kdecore as kdecore
+    from PyKDE4.kdecore import i18n, KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, KUrl
+    from PyKDE4.kdeui import KApplication, KIconLoader
+    from PyKDE4.soprano import Soprano
+
+except:
+    msgError = "PyKDE is not istalled."
+    if sys.stdout.isatty():
+        print(msgError)
+
+    else:
+        parameters = ["kdialog", "--title", os.path.basename(sys.argv[0]), "--error", msgError]
+        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+
+    quit()
+
+try:
+    from PyKDE4.nepomuk2 import Nepomuk2
+
+except:
+    msgError = "Nepomuk2 Python Bindings are not installed." 
+    if sys.stdout.isatty():
+        print(msgError)
+
+    else:
+        parameters = ["kdialog", "--title", os.path.basename(sys.argv[0]), "--error", msgError]
+        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+
+    quit()
+
 
 
 #_BUG: carácter ' de Singin' in the Rain
