@@ -67,7 +67,7 @@ class cSparqlBuilder2():
                 #[_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 #[_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 #[_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
-                [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?x1 AS ?genre', [[0, 'nco:genre', True, True]], ['nmm:genre'], []]], \
+                [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?v', [[0, 'nmm:genre', True, True]], ['nmm:genre'], []]], \
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?r', [[0, 'nie:url', True, True], [1, 'nie:title', True, True]], ['nie:url'], ['nfo:RasterImage']]], \
                 [_('--movies'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:Movie']]], \
@@ -266,7 +266,11 @@ class cSparqlBuilder2():
                 columns = self.columns
 
         else:
-            columns = '%s AS %s' % (self.tempData[0], self.outputResultField)
+            if (self.tempData[0].lower().find(" as ") < 0):
+                columns = '%s AS %s' % (self.tempData[0], self.outputResultField)
+
+            else:
+                columns = self.tempData[0]
 
         footer = self._private_query_footer
         header = self._private_query_header % columns
@@ -604,10 +608,12 @@ class cSparqlBuilder2():
         else:
             fields = self.tempData[1]
             subqueryResultField = self.tempData[0]
+            if (self.tempData[0].lower().find(" as ") >= 0):
+                subqueryResultField = self.subqueryResultField
 
         text = ""
         for item in fields:
-            if not item[3]:
+            if not item[2]:
                 continue
 
             try:
@@ -617,7 +623,10 @@ class cSparqlBuilder2():
             except:
                 pass
 
-        return text + "\n"
+        if (text != None):
+            text += "\n"
+
+        return text
 
 
     def bsHaving(self):
@@ -647,7 +656,7 @@ class cSparqlBuilder2():
 
         sortText = ""
         for item in fields:
-            if item[2]:
+            if item[3]:
                 try:
                     columnName = "?" + item[1].split(":")[1]
                     if self.caseInsensitiveSort:
