@@ -110,7 +110,7 @@ class cSparqlBuilder2():
 
     getOptionalFields = True
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
-    #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
+    #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifierhttp://celebstar.org/wp-content/uploads/2011/06/Janina-Gavankar-pictures-3.jpg']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
     outputResultField = "?id"
@@ -157,8 +157,7 @@ class cSparqlBuilder2():
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
-                    # Renamed from aa albumartist.
-                    ['nmm:musicAlbum=?x0->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
+                    ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
                     ['nco:photo<-nco:fullname', _('photos'), _('ps')], \
                     ['nuao:usageCount', _('playcount'), _('pc')], \
