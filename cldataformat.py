@@ -1258,6 +1258,9 @@ class cDataFormat():
                 except:
                     result = "%s" % value
 
+            elif (valueType == 'isospeedratings'):
+                result = "%s ISO" % value
+
             elif (valueType == 'meteringmode'):
                 try:
                     result = int(value)
