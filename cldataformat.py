@@ -1219,7 +1219,14 @@ class cDataFormat():
             elif (valueType == 'exposurebiasvalue'):
                 try:
                     value = fractions.Fraction(value).limit_denominator(max_denominator=3)
-                    result = "%.2f EV" % (value.numerator/value.denominator)
+                    if (value.denominator == 1):
+                        result = "%.0f EV" % (value.numerator)
+
+                    else:
+                        result = "%s/%s EV" % (value.numerator, value.denominator)
+
+                    if (result[0] != "-"):
+                        result = "+" + result
 
                 except:
                     result = "%s" % value
