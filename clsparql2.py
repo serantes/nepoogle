@@ -122,12 +122,8 @@ class cSparqlBuilder2():
     stdoutQuery = False
 
     shortcuts = [ \
-                    #TODO: singulares y plurales para todo
-                    ['_nmm:actor->nco:fullname',_('actor'),  _('ac')], \
-                    #TODO: fix actors shortcut
-                    #['nmm:actor->nco:fullname', _('actors', _('acs'], \
-                    #  optional { ?x0 nmm:actor ?x00 . ?x00 nco:fullname ?fullname . }
-                    #  HAVING (REGEX(?fullname, '', 'i'))
+                    ['_nmm:actor->nco:fullname',_('actor'), _('ac')], \
+                    ['_nmm:actor?->nco:fullname', _('actors'), _('acs')], \
                     ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa')], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
@@ -137,9 +133,11 @@ class cSparqlBuilder2():
                     ['nao:created', _('created'), _('cd')], \
                     ['nie:contentCreated', _('contentcreated'), _('cc')], \
                     ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
+                    ['_nco:creator?->nco:fullname', _('creators'), _('crs')], \
                     ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds')], \
                     ['nao:description', _('description'), _('de')], \
                     ['_nmm:director->nco:fullname', _('director'), _('di')], \
+                    ['_nmm:director?->nco:fullname', _('directors'), _('dis')], \
                     ['nmm:setNumber', _('discnumber'), _('dn')], \
                     ['nfo:duration', _('duration'), _('du')], \
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
@@ -157,8 +155,10 @@ class cSparqlBuilder2():
                     ['nie:url', _('name'), _('na')], \
                     ['nao:numericRating', _('numericrating'), _('nr')], \
                     ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
+                    ['_nmm:performer?->nco:fullname', _('performers'), _('pes')], \
                     ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
+                    ['_nmm:producer?->nco:fullname', _('producers'), _('prs')], \
                     ['nco:photo<-nco:fullname', _('photos'), _('ps')], \
                     ['nuao:usageCount', _('playcount'), _('pc')], \
                     ['nao:prefLabel', _('preflabel'), _('pl')], \
@@ -181,7 +181,8 @@ class cSparqlBuilder2():
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
                     ['nfo:width', _('width'), _('wi')], \
                     ['nexif:whiteBalance', _('whitebalance'), _('wb')], \
-                    ['_nmm:writer->nco:fullname', _('writer'), _('wr')] \
+                    ['_nmm:writer->nco:fullname', _('writer'), _('wr')], \
+                    ['_nmm:writer?->nco:fullname', _('writers'), _('wrs')] \
                 ]
 
     subqueryResultField = resultField
@@ -734,6 +735,7 @@ class cSparqlBuilder2():
             optionalUsage = False
             subqueryUsage = False
             clause = ""
+            fieldUsedAsResult = "?x%d " % 0
             for ontology in ontologyElements:
                 ontology = self.ontologyConversion(ontology)
                 valType = ""
@@ -751,6 +753,10 @@ class cSparqlBuilder2():
 
                 elif ((value == "") and (operator == "!=")):
                     subqueryUsage = True
+
+                if (ontology[-1] == "?"): # Use this ontology as the result one.
+                    fieldUsedAsResult = "?x%d " % (i+1)
+                    ontology = ontology[:-1]
 
                 valType = self.ontologyVarType(ontology)
                 if (ontology.find('=') >= 0):
@@ -779,7 +785,7 @@ class cSparqlBuilder2():
                     clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
                     i += 1
 
-            clause = clause.replace("?x0 ", self.subqueryResultField + " ").replace("?x%d " % i, "?v ")
+            clause = clause.replace(fieldUsedAsResult, self.subqueryResultField + " ").replace("?x%d " % i, "?v ")
             if optionalUsage:
                 strTerm = indent + self.subqueryResultField + " a ?v1 . FILTER NOT EXISTS {\n" \
                             + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
