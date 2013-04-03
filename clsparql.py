@@ -102,6 +102,7 @@ ontologyTypes = [ \
                     ['nexif:fnumber', 'aperturevalue'], \
                     ['nexif:focallength', 'focallength'], \
                     ['nexif:focallengthin35mmfilm', 'focallength'], \
+                    ['nexif:isospeedratings', 'isospeedratings'], \
                     ['nexif:meteringmode', 'meteringmode'], \
                     ['nexif:orientation', 'orientation'], \
                     ['nexif:saturation', 'saturation'], \
