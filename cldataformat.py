@@ -1229,7 +1229,7 @@ class cDataFormat():
                         result = "+" + result
 
                 except:
-                    result = "%s" % value
+                    result = "%s EV" % value
 
             elif (valueType == 'exposuretime'):
                 try:
@@ -1253,10 +1253,10 @@ class cDataFormat():
             elif (valueType == 'focallength'):
                 try:
                     value = fractions.Fraction(value).limit_denominator()
-                    result = "%.1f mm" % (value.numerator/value.denominator)
+                    result = "%.1f mm" % (float(value.numerator)/float(value.denominator))
 
                 except:
-                    result = "%s" % value
+                    result = "%s mm" % value
 
             elif (valueType == 'isospeedratings'):
                 result = "%s ISO" % value
