@@ -110,8 +110,10 @@ ontologyTypes = [ \
                     ['nexif:whitebalance', 'whitebalance'], \
                     ['nfo:averagebitrate', 'number'], \
                     ['nfo:duration', 'duration'], \
+                    ['nfo:filesize', 'size'], \
                     ['nfo:height', 'number'], \
                     ['nfo:samplerate', 'int'], \
+                    ['nfo:uncompressedsize', 'size'], \
                     ['nfo:width', 'number'], \
                     ['nie:contentcreated', 'datetimep'], \
                     ['nie:contentsize', 'size'], \
