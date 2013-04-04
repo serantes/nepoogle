@@ -486,14 +486,14 @@ class cSparqlBuilder2():
             else:
                 value = 0
 
-            if (value == 1):
-                if (operator == "="):
-                    operator = ">="
+            if (value == 0):
+                operator = "="
 
-                if (operator == "!="):
-                    operator = "<"
+            else:
+                value = 0
+                operator = ">"
 
-            filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
+            filterExpression = "FILTER(bif:bit_and(xsd:integer(?v), 1) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "focallength"):
             valTerms = value.split("/")
