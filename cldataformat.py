@@ -22,6 +22,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
+import __builtin__
 import datetime, fractions, os, re
 
 from PyKDE4.kdeui import KIconLoader
@@ -1241,11 +1242,55 @@ class cDataFormat():
 
             elif (valueType == 'flash'):
                 try:
-                    if (value == "0"):
-                        result = NEXIF_FLASH[0]
+                    # bit value
+                    # 0   -- flash fired: did not fire, fired
+                    # 1,2 -- flash return: No strobe return detection function, reserved, Strobe return light not detected, Strobe return light detected
+                    # 3,4 -- flash mode: Unknown, Compulsore flash firing, Compulsory flash suppression, Auto mode
+                    # 5   -- flash function: Present, No flash function
+                    # 6   -- red-eye: no or unknown, yes
+                    # 7   -- unused
+                    flashValues = []
+                    if (__builtin__.bin(int(value)&1) == __builtin__.bin(0)):
+                        flashValues += [NEXIF_FLASH[0]]
 
                     else:
-                        result = NEXIF_FLASH[1]
+                        flashValues += [NEXIF_FLASH[1]]
+
+                    # Flash return:
+                    if (__builtin__.bin(int(value)&6) == __builtin__.bin(2)):
+                        flashValues += [_("reserved")]
+
+                    elif (__builtin__.bin(int(value)&6) == __builtin__.bin(4)):
+                        flashValues += [_("return light not detected")]
+
+                    elif (__builtin__.bin(int(value)&6) == __builtin__.bin(6)):
+                        flashValues += [_("return light detected")]
+
+                    #else:
+                    #    pass
+
+                    # Flash mode:
+                    if (__builtin__.bin(int(value)&24) == __builtin__.bin(8)):
+                        flashValues += [_("compulsory firing")]
+
+                    elif (__builtin__.bin(int(value)&24) == __builtin__.bin(16)):
+                        flashValues += [_("compulsory suppression")]
+
+                    elif (__builtin__.bin(int(value)&24) == __builtin__.bin(24)):
+                        flashValues += [_("auto")]
+
+                    #else:
+                    #    pass
+
+                    #Flash function:
+                    if (__builtin__.bin(int(value)&32) == __builtin__.bin(32)):
+                        flashValues += [_("no flash function")]
+
+                    #Flash function:
+                    if (__builtin__.bin(int(value)&64) == __builtin__.bin(64)):
+                        flashValues += [_("red-eye reduction")]
+
+                    result = ", ".join(flashValues)
 
                 except:
                     result = "%s" % value
