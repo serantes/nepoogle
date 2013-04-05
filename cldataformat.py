@@ -1218,7 +1218,18 @@ class cDataFormat():
                 result = "%s" % datetime.timedelta(0, int(value), 0)
 
             elif (valueType == 'size'):
-                result = "%s" % "%0.2f MiB" % (int(value)/1024.00/1024.00)
+                result = "%0.2f" % (int(value)/1024.00/1024.00)
+                if (result == "0.00"):
+                    result = "%0.2f" % (int(value)/1024.00)
+                    if (result == "0.00"):
+                        result = "%0.2f Bytes" % (int(value))
+
+                    else:
+                        result += " KiB"
+
+                else:
+                    result += " MiB"
+
 
             elif (valueType == 'string'):
                 result = value
