@@ -61,7 +61,7 @@ try:
     from PyKDE4.nepomuk2 import Nepomuk2
 
 except:
-    msgError = "Nepomuk2 Python Bindings are not installed." 
+    msgError = "Nepomuk2 Python Bindings are not installed."
     if sys.stdout.isatty():
         print(msgError)
 
@@ -578,16 +578,16 @@ class Nepoogle(QWidget):
 
         elif event.modifiers() == Qt.ControlModifier:
             if event.key() == Qt.Key_PageUp:
-                self.linkClicked(QUrl("navigate:/first"))
+                self.linkClicked(QUrl("navigate:/first/navbutton"))
 
             elif event.key() == Qt.Key_PageDown:
-                self.linkClicked(QUrl("navigate:/last"))
+                self.linkClicked(QUrl("navigate:/last/navbutton"))
 
             elif event.key() == Qt.Key_Left:
-                self.linkClicked(QUrl("navigate:/previous"))
+                self.linkClicked(QUrl("navigate:/previous/navbutton"))
 
             elif event.key() == Qt.Key_Right:
-                self.linkClicked(QUrl("navigate:/next"))
+                self.linkClicked(QUrl("navigate:/next/navbutton"))
 
             elif event.key() == Qt.Key_Delete:
                 uri = toUnicode(self.leSearch.text()).strip()
