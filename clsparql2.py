@@ -514,6 +514,8 @@ class cSparqlBuilder2():
         elif (valType == "meteringmode"):
             if (value.lower() in NEXIF_METERING_MODE_LOWER):
                 value = lindex(NEXIF_METERING_MODE_LOWER, value)
+                if (value == 7):
+                    value = 255
 
             else:
                 value = "-1" # A value not defined in NEXIF_METERING_MODE
