@@ -1,4 +1,18 @@
-v1.0.0 -- 2013/04/01
+v1.0.1 -- 2013/04/05
+-BUG: command --genres not worked.
+-BUG: negation don't works in general search, the one without prefixes.
+-BUG: open uri instead url clicking open file icon in playlist.
+-BUG: shorcut performeralbum not worked.
+-CHANGE: --finduplicates, --findduplicatemusic and --findduplicatephotos command removed.
+-CHANGE: better navigability with prev/nex navigation buttons.
+-CHANGE: exif infomation has better display and improved query methods.
+-NEW: added special view for nmm:TVSeries and nmm:Movie in resource viewer
+-NEW: added support to indexed compressed files.
+-NEW: added initial support to Telepathy personal contacts and IM accounts.
+-NEW: general search search in nie:url ontology too.
+-NEW: shorcuts actors, directors, performers, producers, writers, sharpness and saturation.
+
+v1.0.0 -- 2013/03/29
 -BUG: several bugs fixed. More info are available in git repository.
 -CHANGE: from Nepomuk to Nepomuk2. Nepoogle only works since this version with Nepomuk2.
 -CHANGE: nepoogle now tries to detect system encoding instead of using UTF-8.
@@ -7,7 +21,7 @@ v1.0.0 -- 2013/04/01
 -NEW: basic ontologies edition using drag&drop.
 -NEW: command --newcontact to create nco:Contact from.
 -NEW: command --notindexed available only in console mode.
--NEW: command --v1 to force Nepoogle to use old SPARQL query engine.
+-NEW: command --v1 to force Nepoogle to use old internal SPARQL query engine.
 -NEW: find text window invocable using CTRL+F.
 -NEW: inverse relations in ontologies using "<-".
 -NEW: link to detect album cover and add it as nmm:artwork.
