@@ -178,15 +178,31 @@ def ontologyToHuman(ontology = '', reverse = False):
     #    return result
 
     result = ontologyInfo(ontology)[1]
-    if result != "":
-        tmpResult = result
-        result = tmpResult[0].upper()
-        for i in range(1, len(tmpResult)):
-            if tmpResult[i] == tmpResult[i].upper():
-                result += ' ' + tmpResult[i].lower().strip()
+    if (result != ""):
+        if (result == "imAccountType"):
+            result = _("IM account type")
 
-            else:
-                result += tmpResult[i]
+        elif (result == "imID"):
+            result = _("IM ID")
+
+        elif (result == "imNickname"):
+            result = _("IM nickname")
+
+        elif (result == "IMAccount"):
+            result = _("IM account")
+
+        elif (result == "hasIMAccount"):
+            result = _("Has IM account")
+
+        else:
+            tmpResult = result
+            result = tmpResult[0].upper()
+            for i in range(1, len(tmpResult)):
+                if tmpResult[i] == tmpResult[i].upper():
+                    result += ' ' + tmpResult[i].lower().strip()
+
+                else:
+                    result += tmpResult[i]
 
         if reverse:
             if result == 'Actor':

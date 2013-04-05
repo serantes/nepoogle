@@ -235,11 +235,17 @@ class cDataFormat():
                                 "{nco:fullname|l|s:contact}%[<br />Preferred label: {nao:prefLabel}%]%[<br />Alternative labels: {nao:altLabel}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nco:IMAccount", \
+                            "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
+                                "{nco:imNickname|l}%[ ({nco:imID})%]%[<br />Type: {nco:imAccountType}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nco:PersonContact", \
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nco:photo->nie:url|1}\"'>%]" \
-                                "{nco:fullname|l|s:contact}%[<br />Preferred label: {nao:prefLabel}%]%[<br />Alternative labels: {nao:altLabel}%]", \
+                                #"{nco:fullname|l|s:contact}%[<br />Preferred label: {nao:prefLabel}%]%[<br />Alternative labels: {nao:altLabel}%]" \
+                                "{nco:hasIMAccount->nco:imNickname|l}%[ ({nco:hasIMAccount->nco:imID})%]%[<br />Account type: {nco:hasIMAccount->nco:imAccountType}%]", \
                             "{type}", \
-                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["nexif:Photo", \
                             "{nfo:fileName|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
