@@ -122,7 +122,7 @@ NEXIF_FLASH = [_("No"), _("Yes")]
 NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("CenterWeightedAverage"), _("Spot"), _("MultiSpot"), _("Pattern"), _("Partial"), _("Other")]
 NEXIF_SATURATION = [_("Normal"), _("Low"), _("High")]
 NEXIF_SHARPNESS = [_("Normal"), _("Soft"), _("Hard")]
-NEXIF_WHITE_BALANCE = [_("Unknown"), _("Automatic"), _("Manual")]
+NEXIF_WHITE_BALANCE = [_("Auto"), _("Manual")]
 
 NEXIF_FLASH_LOWER = [x.lower() for x in NEXIF_FLASH]
 NEXIF_METERING_MODE_LOWER = [x.lower() for x in NEXIF_METERING_MODE]
