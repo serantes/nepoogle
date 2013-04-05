@@ -800,17 +800,31 @@ class Nepoogle(QWidget):
             subprocess.Popen(["nepomukindexer", url[9:].replace("?", "%3F")])
 
         elif url[:8] == 'remove:/':
-            reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if reply == QMessageBox.Yes:
-                resource = Nepomuk2.Resource(QUrl(url[8:]))
-                resource.remove()
-                self.pendingQuery = True
-                self.queryMethod = "refresh"
-                self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
-                                        % self.iconProcessIdle)
-                if forceExec:
-                    self.execQuery()
-                    self.pendingQuery = False
+            mode = url[8:].lower()
+            if (mode == "all"):
+                reply = QMessageBox.question(self, '%s - remove all listed resources' % PROGRAM_NAME, "Really delete all listed resources?\n\nCaution!!! This option can't be undone!!!", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    #TODO: delete all listed resources.
+                    self.pendingQuery = True
+                    self.queryMethod = "refresh"
+                    self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                                            % self.iconProcessIdle)
+                    if forceExec:
+                        self.execQuery()
+                        self.pendingQuery = False
+
+            else:
+                reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    resource = Nepomuk2.Resource(QUrl(url[8:]))
+                    resource.remove()
+                    self.pendingQuery = True
+                    self.queryMethod = "refresh"
+                    self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                                            % self.iconProcessIdle)
+                    if forceExec:
+                        self.execQuery()
+                        self.pendingQuery = False
 
         #elif url[:8] == 'render:/':
             #if url[8:] == 'more':
@@ -892,11 +906,12 @@ class Nepoogle(QWidget):
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
                 return False
 
-        if vartype(uri) == "Resource":
+        # Getting the resource.
+        if (vartype(uri) == "Resource"):
             resource = uri
 
         else:
-            if self.model == None:
+            if (self.model == None):
                 return False
 
             if INTERNAL_RESOURCE:
@@ -905,23 +920,25 @@ class Nepoogle(QWidget):
             else:
                 resource = Nepomuk2.Resource(uri)
 
-        if vartype(rating) == "int":
+        # Numeric rating conversion.
+        if (vartype(rating) == "int"):
             pass
 
-        elif vartype(rating) in ("str", "unicode"):
+        elif (vartype(rating) in ("str", "unicode")):
             try:
                 rating = int(rating)
 
             except:
                 rating = 0
 
-        elif vartype(rating) == "QString":
+        elif (vartype(rating) == "QString"):
             try:
                 rating = int(toUnicode(rating))
 
             except:
                 rating = 0
 
+        # Setting the new rating.
         if ((rating == None) or (rating < 0)):
             resource.removeProperty(toVariant(QUrl(resource.ratingUri())))
             rating = None
@@ -944,13 +961,13 @@ class Nepoogle(QWidget):
         if (uri == None):
             uri = toUnicode(self.leSearch.text()).strip()
 
-        if not uri[:13] == "nepomuk:/res/":
+        if (not uri[:13] == "nepomuk:/res/"):
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
             return False
 
         mustRefresh = SLEEP_NO_SLEEP
 
-        if self.model == None:
+        if (self.model == None):
             return False
 
         if INTERNAL_RESOURCE:
@@ -960,7 +977,7 @@ class Nepoogle(QWidget):
             resource = Nepomuk2.Resource(uri)
 
         resourceMainType = NOCR(resource.type())
-        if ontology == "":
+        if (ontology == ""):
             query = 'SELECT DISTINCT ?r\n' \
                     'WHERE {\n' \
                         '\t{\n' \
@@ -989,7 +1006,7 @@ class Nepoogle(QWidget):
                     ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
                     values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
 
-            if values != []:
+            if (values != []):
                 parameters = []
                 values = sorted(values, key=lambda item: item[1].lower())
                 for item in values:
@@ -1010,10 +1027,10 @@ class Nepoogle(QWidget):
             labelResource = ontology
 
         if not ((ontologyResource == None) or (ontologyResource == "")):
-            if value == "":
+            if (value == ""):
                 value = dialogInputBox(_("Value to store in \"%s\":") % ontologyInfo(ontologyResource)[1])
 
-            if value != "":
+            if (value != ""):
                 #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (value, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 #if resourceReply == QMessageBox.Yes:
                 if True:
@@ -1035,7 +1052,7 @@ class Nepoogle(QWidget):
         else:
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
 
-        if mustRefresh > SLEEP_NO_SLEEP:
+        if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
@@ -1047,13 +1064,13 @@ class Nepoogle(QWidget):
         if (uri == None):
             uri = toUnicode(self.leSearch.text()).strip()
 
-        if not uri[:13] == "nepomuk:/res/":
+        if (not uri[:13] == "nepomuk:/res/"):
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only add properties in the Resource Viewer."))
             return False
 
         mustRefresh = SLEEP_NO_SLEEP
 
-        if self.model == None:
+        if (self.model == None):
             return False
 
         if INTERNAL_RESOURCE:
@@ -1086,25 +1103,25 @@ class Nepoogle(QWidget):
             else:
                 text = toUnicode(resource.property(NOC(ontology, True)).toString())
 
-            if text[:13] == "nepomuk:/res/":
+            if (text[:13] == "nepomuk:/res/"):
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't edit resources here, click in the resource and edit directly."))
                 return False
 
         except:
             text = None
 
-        if text != None:
+        if (text != None):
             newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo(ontology)[1], text)
-            if newText != text:
+            if (newText != text):
                 resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontologyInfo(ontology)[1]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if resourceReply == QMessageBox.Yes:
+                if (resourceReply == QMessageBox.Yes):
                     print("%s: property %s edited" % (uri, ontology))
-                    if ontology == ONTOLOGY_NUMERIC_RATING:
+                    if (ontology == ONTOLOGY_NUMERIC_RATING):
                         self.setRating(resource, newText)
 
                     else:
                         ontologyFull = NOC(ontology, True)
-                        if ontology in ("nie:url"):
+                        if (ontology in ("nie:url")):
                             # Caution!, strip() is mandatory here because only one line is supported.
                             newText = QUrl(newText.strip())
                             if (newText.isValid()):
@@ -1120,7 +1137,7 @@ class Nepoogle(QWidget):
 
                     mustRefresh = SLEEP_AFTER_UPDATE
 
-        if mustRefresh > SLEEP_NO_SLEEP:
+        if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
@@ -1148,10 +1165,10 @@ class Nepoogle(QWidget):
             while queryResultSet.next():
                 values += [NOCR(toUnicode(queryResultSet["v"].toString()))]
 
-        if values != []:
+        if (values != []):
             resourcesList = []
             for value in values:
-                if value[:13] == "nepomuk:/res/":
+                if (value[:13] == "nepomuk:/res/"):
                     if INTERNAL_RESOURCE:
                         label = cResource(value).genericLabel()
 
@@ -1181,7 +1198,7 @@ class Nepoogle(QWidget):
 
             if ((value != None) and (value != "")):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (ontologyInfo(ontology)[1], label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if reply == QMessageBox.Yes:
+                if (reply == QMessageBox.Yes):
                     print("%s: property %s removed" % (uri, ontology))
                     #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
                     if (len(values) == 1):
@@ -1194,7 +1211,7 @@ class Nepoogle(QWidget):
                         resource.removeProperty(NOC(ontology, True), toVariant(value))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
-        if mustRefresh > SLEEP_NO_SLEEP:
+        if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
@@ -1216,10 +1233,19 @@ class Nepoogle(QWidget):
         # Query para obtener qué puede ser un resource.
         #SELECT * WHERE { ?r rdfs:range %s . }
 
+        uris = []
         uri = toUnicode(self.leSearch.text()).strip()
-        if not uri[:13] == "nepomuk:/res/":
-            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can only drop data in the Resource Viewer."))
-            return False
+        if (not uri[:13] == "nepomuk:/res/"):
+            if self.cache[self.queriesIndex].navegable:
+                for uri in self.cache[self.queriesIndex].data:
+                    uris += [uri[0]]
+
+            else:
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't drop data here."))
+                return False
+
+        else:
+            uris += [uri]
 
         if event.mimeData().hasUrls():
             imageReply = resourceReply = None
@@ -1228,25 +1254,24 @@ class Nepoogle(QWidget):
                 print("url: %s" % toUtf8(url))
 
                 dropType = None
-                if dropType == None:
+                if (dropType == None):
                     ext = os.path.splitext(url)[1][1:].lower()
-                    if (ext != ''):
-                        if ext in supportedImageFormats:
-                            if ((url[:7] == "http://") or (url[:8] == "https://")):
-                                dropType = "url_image"
+                    if (ext in supportedImageFormats):
+                        if ((url[:7] == "http://") or (url[:8] == "https://")):
+                            dropType = "url_image"
 
-                            elif fileExists(url):
-                                dropType = "image"
+                        elif fileExists(url):
+                            dropType = "image"
 
-                if dropType == None:
-                    if url[:13] == "nepomuk:/res/":
+                if (dropType == None):
+                    if (url[:13] == "nepomuk:/res/"):
                         dropType = "resource"
 
-                if dropType == None:
+                if (dropType == None):
                     if ((url[:7] == "http://") or (url[:8] == "https://")):
                         dropType = "url"
 
-                if dropType == None:
+                if (dropType == None):
                     if (url[:10] == "propedit:/"):
                         try:
                             ontValue = url[10:].split("&")[1]
@@ -1254,15 +1279,19 @@ class Nepoogle(QWidget):
                         except:
                             ontValue = ""
 
-                        self.addProperty(uri, ontValue)
+                        for uri in uris:
+                            self.addProperty(uri, ontValue)
+
                         continue
 
-                if dropType == None:
+                if (dropType == None):
                     if (url[:9] == "propadd:/"):
-                        self.addProperty(uri)
+                        for uri in uris:
+                            self.addProperty(uri)
+
                         continue
 
-                if dropType == "image":
+                if (dropType == "image"):
                     if (i == 0):
                         parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
                                         ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
@@ -1283,69 +1312,75 @@ class Nepoogle(QWidget):
                         #imageReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyImages, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         imageReply = QMessageBox.Yes
 
-                    if imageReply == QMessageBox.Yes:
-                        uriResource = Nepomuk2.Resource(uri)
-                        uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
+                    if (imageReply == QMessageBox.Yes):
+                        for uri in uris:
+                            uriResource = Nepomuk2.Resource(uri)
+                            uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
+
                         mustRefresh = SLEEP_AFTER_UPDATE
 
-                elif dropType in ("url", "url_image"):
-                    if dropType == "url_image":
-                        parameters = [ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK), "on", \
-                                        ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
-                                        ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
-                                        ONTOLOGY_SYMBOL, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
-                                        ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
-                        ontologyUrl, labelUrl = dialogList(parameters, _("Select an ontology:"))
-                        if ((ontologyUrl == None) or (ontologyUrl == "")):
-                            continue
+                elif (dropType in ("url", "url_image")):
+                    #TODO: handle better this.
+                    if (len(uris) == 1):
+                        uri = uris[0]
+                        if (dropType == "url_image"):
+                            parameters = [ONTOLOGY_LINK, "%s (%s)" % (ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK), "on", \
+                                            ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
+                                            ONTOLOGY_DEPICTION, "%s (%s)" % (ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
+                                            ONTOLOGY_SYMBOL, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
+                                            ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
+                            ontologyUrl, labelUrl = dialogList(parameters, _("Select an ontology:"))
+                            if ((ontologyUrl == None) or (ontologyUrl == "")):
+                                continue
 
-                        #if (len(event.mimeData().urls()) > 1):
-                            #msgImagePronoun = "all images"
+                            #if (len(event.mimeData().urls()) > 1):
+                                #msgImagePronoun = "all images"
 
-                        #else:
-                            #msgImagePronoun = "next image"
+                            #else:
+                                #msgImagePronoun = "next image"
 
-                        #msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
-                        #urlReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyUrl, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            #msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
+                            #urlReply = QMessageBox.question(self, _("%s - add data") % PROGRAM_NAME, _("add %s as %s?%s") % (msgImagePronoun, ontologyUrl, msgImageUrl), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-                        #if urlReply == QMessageBox.Yes:
-                        downloadTo = "%s%s/" % (NEPOOGLE_DOWNLOADS_PATH, uri.replace("nepomuk:/res/", ""))
-                        if not os.path.exists(downloadTo):
-                            os.makedirs(downloadTo)
+                            #if urlReply == QMessageBox.Yes:
+                            downloadTo = "%s%s/" % (NEPOOGLE_DOWNLOADS_PATH, uri.replace("nepomuk:/res/", ""))
+                            if not os.path.exists(downloadTo):
+                                os.makedirs(downloadTo)
 
-                        #downloadTo = downloadTo + urlDecode(os.path.basename(url))
-                        downloadTo = downloadTo + md5.new(url).hexdigest() + os.path.splitext(url)[1].lower()
-                        if downloadFile(url, downloadTo):
-                            # Remote resource creation to store the original url.
-                            urlRemoteResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
-                            urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
+                            #downloadTo = downloadTo + urlDecode(os.path.basename(url))
+                            downloadTo = downloadTo + md5.new(url).hexdigest() + os.path.splitext(url)[1].lower()
+                            if downloadFile(url, downloadTo):
+                                # Remote resource creation to store the original url.
+                                urlRemoteResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:WebDataObject", True))
+                                urlRemoteResource.addType(NOC("nfo:RemoteDataObject", True))
 
-                            # Local resource creation to store where file is copied.
-                            urlLocalResource = Nepomuk2.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
-                            urlLocalResource.addProperty(NOC(ONTOLOGY_TITLE, True), toVariant(os.path.basename(url)))
-                            urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
+                                # Local resource creation to store where file is copied.
+                                urlLocalResource = Nepomuk2.Resource(QUrl("file://" + downloadTo), NOC(ONTOLOGY_TYPE_IMAGE, True))
+                                urlLocalResource.addProperty(NOC(ONTOLOGY_TITLE, True), toVariant(os.path.basename(url)))
+                                urlLocalResource.addProperty(NOC(ONTOLOGY_COPIED_FROM, True), toVariant(urlRemoteResource))
 
-                            # Assigning local resource to the resource.
-                            uriResource = Nepomuk2.Resource(uri)
-                            uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
-                            mustRefresh = SLEEP_AFTER_UPDATE
+                                # Assigning local resource to the resource.
+                                uriResource = Nepomuk2.Resource(uri)
+                                uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
+                                mustRefresh = SLEEP_AFTER_UPDATE
 
-                    else:
-                        urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                        if urlReply == QMessageBox.Yes:
-                            # This code has really low performance so don't use it.
-                            #urlResource = Nepomuk.Resource()
-                            #urlResource.addType(NOC("nfo:Website", True))
-                            #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
-                            #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
-                            urlResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
-                            urlResource.addType(NOC("nfo:Website", True))
-                            uriResource = Nepomuk2.Resource(uri)
-                            uriResource.addProperty(NOC(ONTOLOGY_LINK, True), toVariant(urlResource))
-                            mustRefresh = SLEEP_AFTER_UPDATE
+                        else:
+                            urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            if (urlReply == QMessageBox.Yes):
+                                # This code has really low performance so don't use it.
+                                #urlResource = Nepomuk.Resource()
+                                #urlResource.addType(NOC("nfo:Website", True))
+                                #urlResource.setProperty(NOC("nie:url", True), toVariant(QUrl(url)))
+                                #uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlResource.uri()))
+                                urlResource = Nepomuk2.Resource(QUrl(url), NOC("nfo:RemoteDataObject", True))
+                                urlResource.addType(NOC("nfo:Website", True))
+                                uriResource = Nepomuk2.Resource(uri)
+                                uriResource.addProperty(NOC(ONTOLOGY_LINK, True), toVariant(urlResource))
+                                mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
-                    if self.model == None:
+                    # Not images and not images to download.
+                    if (self.model == None):
                         return False
 
                     if INTERNAL_RESOURCE:
@@ -1357,7 +1392,7 @@ class Nepoogle(QWidget):
                     resourceMainType = NOCR(resource.type())
                     resourceGenericLabel = resource.genericLabel()
 
-                    if dropType == "resource":
+                    if (dropType == "resource"):
                         query = 'SELECT DISTINCT ?r\n' \
                                 'WHERE {\n' \
                                     '\t?r rdfs:range %s . FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
@@ -1377,14 +1412,10 @@ class Nepoogle(QWidget):
                     if queryResultSet.isValid():
                         while queryResultSet.next():
                             ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                            if not ontology in (ONTOLOGY_LINK, ONTOLOGY_SUBJECT):
+                            if (not ontology in (ONTOLOGY_LINK, ONTOLOGY_SUBJECT)):
                                 values += [[ontology, "%s (%s)" % (ontologyInfo(ontology)[1], ontology)]]
 
-                    if values == []:
-                        # At least add as a "nao:isRelated".
-                        values = []
-
-                    if values != []:
+                    if (values != []):
                         values = sorted(values, key=lambda item: item[1].lower())
                         parameters = []
                         for value in values:
@@ -1402,31 +1433,41 @@ class Nepoogle(QWidget):
 
                         #resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         resourceReply = QMessageBox.Yes
-                        if resourceReply == QMessageBox.Yes:
-                            print("%s: property %s added" % (uri, ontologyResource))
-                            #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
-                            resourceResource = Nepomuk2.Resource(uri)
-                            resourceResource.addProperty(NOC(ontologyResource, True), toVariant(url))
-                            mustRefresh = SLEEP_AFTER_UPDATE
+                        if (resourceReply == QMessageBox.Yes):
+                            for uri in uris:
+                                print("%s: property %s added" % (uri, ontologyResource))
+                                #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
+                                updateResource = Nepomuk2.Resource(uri)
+                                updateResource.addProperty(NOC(ontologyResource, True), toVariant(url))
+
+                            if (len(uris) == 1):
+                                mustRefresh = SLEEP_AFTER_UPDATE
+
+                            else:
+                                mustRefresh = SLEEP_MESSAGE_BOX
 
                             self.lastOntologySelected = ontologyResource
 
                     else:
                         QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
 
-        elif event.mimeData().hasText():
+        elif (event.mimeData().hasText()):
             text = toUnicode(event.mimeData().text())
-            if text == "":
+            if (text == ""):
                 return False
 
             self.addProperty(uri, "", text)
 
-        if mustRefresh > SLEEP_NO_SLEEP:
+        if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
+
+        elif (mustRefresh == SLEEP_MESSAGE_BOX):
+            QMessageBox.information(self, "%s - %s" % (PROGRAM_NAME, _("Information")), _("Process finished."))
+
 
 
     def goBackward(self):

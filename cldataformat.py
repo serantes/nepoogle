@@ -195,6 +195,9 @@ class cDataFormat():
     htmlLinkRemove = "<a title=\"Remove resource%(hotkey)s\" href=\"remove:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
                             + "</a>"
+    htmlLinkRemoveAll = "<a title=\"Remove all listed resources\" href=\"remove:/all\">" \
+                            + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
+                            + "</a>"
     htmlLinkSearch = "<a title=\"%(uri)s\" href=\"query:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemSearch) \
                         + "</a>"
@@ -1826,9 +1829,11 @@ class cDataFormat():
         rowNavigation = ""
         if self.renderedDataRows < len(self.data):
             rowNavigation = '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
-                    '<td>%s of %s records</td><td></td><tr>' \
-                        % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data))
+                    '<td>%s of %s records</td><td>%s</td><tr>' \
+                        % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data), self.htmlLinkRemoveAll)
 
+        else:
+            rowNavigation = '<tr><td></td><td>%s records</td><td>%s</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
 
         text += rowNavigation +  self.renderedDataText + rowNavigation
 
