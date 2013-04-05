@@ -1,5 +1,4 @@
-nepoogle is a gui to query the Nepomuk's database with a syntax inspired in
-Google's
+nepoogle is a gui to query the Nepomuk's database with a syntax inspired in Google's
 
 
 Requirements
@@ -17,9 +16,17 @@ mode.
 
 User installation
 -----------------
+
 For convenience there are an install.sh and uninstall.sh scripts to install nepoogle in current user.
 
 install.sh copy nepoogle to ~/bin so this directory must be in the path.
+
+
+Git
+---
+To create only one file with all the development files you must use build.py. Syntax is the next:
+
+./build.py nepoogle nepooglev1
 
 
 Contact
