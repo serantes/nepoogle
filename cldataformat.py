@@ -1225,7 +1225,7 @@ class cDataFormat():
 
             elif (valueType == 'exposurebiasvalue'):
                 try:
-                    value = fractions.Fraction(value).limit_denominator(max_denominator=3)
+                    value = fractions.Fraction(value).limit_denominator(max_denominator=30)
                     if (value.denominator == 1):
                         result = "%.0f EV" % (value.numerator)
 
@@ -1240,11 +1240,15 @@ class cDataFormat():
 
             elif (valueType == 'exposuretime'):
                 try:
-                    value = fractions.Fraction(value).limit_denominator(max_denominator=16000)
-                    result = "%s/%s s" % (value.numerator, value.denominator)
+                    fracValue = fractions.Fraction(value).limit_denominator(max_denominator=16000)
+                    result = "%s/%s s" % (fracValue.numerator, fracValue.denominator)
+                    if (fracValue.numerator > 1):
+                        print fracValue.numerator
+                        fracValue = fractions.Fraction(value).limit_denominator(max_denominator=(fracValue.denominator/fracValue.numerator)+1)
+                        result += " (%s/%s s)" % (fracValue.numerator, fracValue.denominator)
 
                 except:
-                    result = "%s" % value
+                    result = "%s s" % value
 
             elif (valueType == 'flash'):
                 try:
