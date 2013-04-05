@@ -4,7 +4,7 @@
 #***************************************************************************
 #*   nepoogle - build script.                                              *
 #*                                                                         *
-#*   Copyright (C) 2011 Ignacio Serantes <kde@aynoa.net>                   *
+#*   Copyright (C) 2011-13 Ignacio Serantes <kde@aynoa.net>                *
 #*                                                                         *
 #*   This program is free software; you can redistribute it and/or modify  *
 #*   it under the terms of the GNU General Public License as published by  *
@@ -59,26 +59,26 @@ def build(inFileName = '', outFileName = ''):
     try:
         lines = inFile.readlines()
         for line in lines:
-            if line.strip() == "#IF BUILD":
+            if (line.strip() == "#IF BUILD"):
                 currExp = "IF"
                 continue
 
-            elif line.strip() == "#ELSE":
+            elif (line.strip() == "#ELSE"):
                 currExp = "ELSE"
                 continue
 
-            elif line.strip() == "#ENDIF":
+            elif (line.strip() == "#ENDIF"):
                 currExp = ""
                 continue
 
-            if currExp == "ELSE":
+            if (currExp == "ELSE"):
                 pass
 
             else:
-                if line.strip()[:9] == "#INCLUDE ":
+                if (line.strip()[:9] == "#INCLUDE "):
                     addFileName = line.strip()[9:].strip()
                     addFile(outFile, addFileName)
-                    print " +++ \"%s\" file added." % addFileName
+                    print(" +++ \"%s\" file added." % addFileName)
 
                 else:
                     outFile.write(line)
@@ -104,20 +104,32 @@ def build(inFileName = '', outFileName = ''):
         raise
 
 
+inFileName = outFileName = None
+try:
+    inFileName = sys.argv[1]
+    outFileName = sys.argv[2]
 
+except:
+    pass
 
-inFileName = sys.argv[1]
-outFileName = sys.argv[2]
+print "Script builder v0.2\n"
 
-print "Script builder v0.1"
-
-if not os.path.exists(inFileName):
-    print "ERROR: \"%s\" file don\'t exists." % (inFileName)
+if (outFileName == None):
+    print("usage: build.py nepoogle nepoogle.py")
 
 else:
-    if os.path.exists(outFileName):
-        print "ERROR: \"%s\" file exists, delete before proceeding." % (outFileName)
+    if not os.path.exists(inFileName):
+        print("ERROR: \"%s\" file don\'t exists." % (inFileName))
 
     else:
-        build(inFileName, outFileName)
-        print " >>> \"%s\" file has been built." % outFileName
+        if (inFileName == outFileName):
+            print("ERROR: input and output file can't be the same.")
+
+        elif os.path.exists(outFileName):
+            print("ERROR: \"%s\" file exists, delete before proceeding." % (outFileName))
+
+        else:
+            build(inFileName, outFileName)
+            print(" >>> \"%s\" file has been built." % outFileName)
+
+print("")
