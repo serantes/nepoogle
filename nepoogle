@@ -477,6 +477,13 @@ class Nepoogle(QWidget):
             self.execQuery('--help')
 
 
+    def setAppCursor(self, cursor = None):
+        if (cursor == None):
+            cursor = Qt.ArrowCursor
+
+        KApplication.setOverrideCursor(QCursor(cursor))
+
+
     def closeEvent(self, event):
         sys.exit()
 
@@ -803,8 +810,24 @@ class Nepoogle(QWidget):
             mode = url[8:].lower()
             if (mode == "all"):
                 reply = QMessageBox.question(self, '%s - remove all listed resources' % PROGRAM_NAME, "Really delete all listed resources?\n\nCaution!!! This option can't be undone!!!", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    #TODO: delete all listed resources.
+                if (reply == QMessageBox.Yes):
+                    uris = []
+                    uri = toUnicode(self.leSearch.text()).strip()
+                    if (not uri[:13] == "nepomuk:/res/"):
+                        if self.cache[self.queriesIndex].navegable:
+                            for uri in self.cache[self.queriesIndex].data:
+                                uris += [uri[0]]
+
+                    else:
+                        uris += [uri]
+
+                    self.setAppCursor(Qt.WaitCursor)
+                    for uri in uris:
+                        resource = Nepomuk2.Resource(uri)
+                        resource.remove()
+
+                    self.setAppCursor()
+
                     self.pendingQuery = True
                     self.queryMethod = "refresh"
                     self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -815,7 +838,7 @@ class Nepoogle(QWidget):
 
             else:
                 reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if reply == QMessageBox.Yes:
+                if (reply == QMessageBox.Yes):
                     resource = Nepomuk2.Resource(QUrl(url[8:]))
                     resource.remove()
                     self.pendingQuery = True
@@ -1279,16 +1302,20 @@ class Nepoogle(QWidget):
                         except:
                             ontValue = ""
 
+                        self.setAppCursor(Qt.WaitCursor)
                         for uri in uris:
                             self.addProperty(uri, ontValue)
 
+                        self.setAppCursor()
                         continue
 
                 if (dropType == None):
                     if (url[:9] == "propadd:/"):
+                        self.setAppCursor(Qt.WaitCursor)
                         for uri in uris:
                             self.addProperty(uri)
 
+                        self.setAppCursor()
                         continue
 
                 if (dropType == "image"):
@@ -1313,10 +1340,12 @@ class Nepoogle(QWidget):
                         imageReply = QMessageBox.Yes
 
                     if (imageReply == QMessageBox.Yes):
+                        self.setAppCursor(Qt.WaitCursor)
                         for uri in uris:
                             uriResource = Nepomuk2.Resource(uri)
                             uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
 
+                        self.setAppCursor()
                         mustRefresh = SLEEP_AFTER_UPDATE
 
                 elif (dropType in ("url", "url_image")):
@@ -1434,12 +1463,14 @@ class Nepoogle(QWidget):
                         #resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         resourceReply = QMessageBox.Yes
                         if (resourceReply == QMessageBox.Yes):
+                            self.setAppCursor(Qt.WaitCursor)
                             for uri in uris:
                                 print("%s: property %s added" % (uri, ontologyResource))
                                 #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
                                 updateResource = Nepomuk2.Resource(uri)
                                 updateResource.addProperty(NOC(ontologyResource, True), toVariant(url))
 
+                            self.setAppCursor()
                             if (len(uris) == 1):
                                 mustRefresh = SLEEP_AFTER_UPDATE
 
@@ -1936,7 +1967,9 @@ class Nepoogle(QWidget):
                         print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
                     query = hackQueryParser(query, 'e0')
+                    self.setAppCursor(Qt.WaitCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    self.setAppCursor()
 
                 elif (searchEngine == 2):
                     processedSearchString = searchString[3:]
@@ -1957,7 +1990,9 @@ class Nepoogle(QWidget):
                         # Improve a little bit readability.
                         print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
+                    self.setAppCursor(Qt.WaitCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    self.setAppCursor()
 
                 else:
                     searchString = searchString[3:]
@@ -1965,7 +2000,9 @@ class Nepoogle(QWidget):
                     if self.sparqlBuilderV1:
                         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
+                    self.setAppCursor(Qt.WaitCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                    self.setAppCursor()
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
 
@@ -2030,6 +2067,8 @@ class Nepoogle(QWidget):
                                 'powered': PROGRAM_HTML_POWERED \
                                 }
 
+
+        self.setAppCursor()
         self.pendingQuery = False
         self.queryMethod = None
         if (output != ""):
