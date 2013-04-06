@@ -1256,6 +1256,12 @@ class Nepoogle(QWidget):
         # Query para obtener qué puede ser un resource.
         #SELECT * WHERE { ?r rdfs:range %s . }
 
+        #TODO: rethink all this method because there are convinations that works and others not
+        # and user will need feedback.
+        dbOperation = "add"
+        if (event.keyboardModifiers() == Qt.ControlModifier):
+            dbOperation = "remove"
+
         uris = []
         uri = toUnicode(self.leSearch.text()).strip()
         if (not uri[:13] == "nepomuk:/res/"):
@@ -1302,18 +1308,26 @@ class Nepoogle(QWidget):
                         except:
                             ontValue = ""
 
-                        self.setAppCursor(Qt.WaitCursor)
-                        for uri in uris:
-                            self.addProperty(uri, ontValue)
+                        #TODO: handle better this.
+                        if (len(uris) == 1):
+                            self.setAppCursor(Qt.WaitCursor)
+                            for uri in uris:
+                                #TODO: test this.
+                                self.editProperty(uri, ontValue)
 
-                        self.setAppCursor()
+                            self.setAppCursor()
+
                         continue
 
                 if (dropType == None):
                     if (url[:9] == "propadd:/"):
                         self.setAppCursor(Qt.WaitCursor)
                         for uri in uris:
-                            self.addProperty(uri)
+                            if (dbOperation == "add"):
+                                self.addProperty(uri)
+
+                            elif (dbOperation == "remove"):
+                                pass
 
                         self.setAppCursor()
                         continue
@@ -1343,7 +1357,11 @@ class Nepoogle(QWidget):
                         self.setAppCursor(Qt.WaitCursor)
                         for uri in uris:
                             uriResource = Nepomuk2.Resource(uri)
-                            uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
+                            if (dbOperation == "add"):
+                                uriResource.addProperty(NOC(ontologyImages, True), toVariant(url))
+
+                            elif (dbOperation == "remove"):
+                                pass
 
                         self.setAppCursor()
                         mustRefresh = SLEEP_AFTER_UPDATE
@@ -1365,7 +1383,8 @@ class Nepoogle(QWidget):
                             #if (len(event.mimeData().urls()) > 1):
                                 #msgImagePronoun = "all images"
 
-                            #else:
+                            #else:            QMessageBox.information(self, "%s - %s" % (PROGRAM_NAME, _("information")), _("control"))
+
                                 #msgImagePronoun = "next image"
 
                             #msgImageUrl = "\n\n" + "\n".join([toUnicode(urlItem.toString()) for urlItem in event.mimeData().urls()])
@@ -1468,7 +1487,11 @@ class Nepoogle(QWidget):
                                 print("%s: property %s added" % (uri, ontologyResource))
                                 #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
                                 updateResource = Nepomuk2.Resource(uri)
-                                updateResource.addProperty(NOC(ontologyResource, True), toVariant(url))
+                                if (dbOperation == "add"):
+                                    updateResource.addProperty(NOC(ontologyResource, True), toVariant(url))
+
+                                elif (dbOperation == "remove"):
+                                    updateResource.removeProperty(NOC(ontologyResource, True), toVariant(url))
 
                             self.setAppCursor()
                             if (len(uris) == 1):
