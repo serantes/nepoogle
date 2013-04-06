@@ -1844,7 +1844,8 @@ class cDataFormat():
                         % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data), self.htmlLinkRemoveAll)
 
         else:
-            rowNavigation = '<tr><td></td><td>%s records</td><td>%s</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
+            if (len(self.data) > 0):
+                rowNavigation = '<tr><td></td><td>%s records</td><td>%s</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
 
         text += rowNavigation +  self.renderedDataText + rowNavigation
 
