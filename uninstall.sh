@@ -21,14 +21,17 @@ rm "$DESKTOPDIR"/$PROGRAMNAME.desktop
 for icon in $ICONS32; do
     rm "$ICONSDIR"/32x32/status/"$icon"
 done
+rmdir --ignore-fail-on-non-empty -p "$ICONSDIR"/32x32/status/
 
 for icon in $ICONS48; do
     rm "$ICONSDIR"/48x48/status/"$icon"
 done
+rmdir --ignore-fail-on-non-empty -p "$ICONSDIR"/48x48/status/
 
 for icon in $ICONS128; do
     rm "$ICONSDIR"/128x128/status/"$icon"
 done
+rmdir --ignore-fail-on-non-empty -p "$ICONSDIR"/128x128/status/
 
 kbuildsycoca4 2> /dev/null
 
