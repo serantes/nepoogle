@@ -735,7 +735,6 @@ class cSparqlBuilder2():
             ontologyRelations = re.findall('->|<-', ontologies)
 
             optionalUsage = False
-            subqueryUsage = False
             clause = ""
             fieldUsedAsResult = "?x%d " % 0
             for ontology in ontologyElements:
@@ -751,10 +750,10 @@ class cSparqlBuilder2():
 
                 elif (ontology[0] == "!"):
                     ontology = ontology[1:]
-                    subqueryUsage = subqueryUsage or (operator == "!=")
+                    optionalUsage = optionalUsage or (operator == "!=")
 
                 elif ((value == "") and (operator == "!=")):
-                    subqueryUsage = True
+                    optionalUsage = True
 
                 if (ontology[-1] == "?"): # Use this ontology as the result one.
                     fieldUsedAsResult = "?x%d " % (i+1)
