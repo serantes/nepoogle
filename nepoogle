@@ -1443,7 +1443,7 @@ class Nepoogle(QWidget):
                     if (dropType == "resource"):
                         query = 'SELECT DISTINCT ?r\n' \
                                 'WHERE {\n' \
-                                    '\t?r rdfs:range %s . FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
+                                    '\t?r rdfs:range %s . FILTER(REGEX(?r, "nao#", "i") || REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
                                 '}\n' \
                                 % (resourceMainType)
 
