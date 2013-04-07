@@ -2396,13 +2396,13 @@ def main(args):
 
             continue
 
-        elif parameter.find(' ') >= 0:
-            j = parameter.rfind(':')
-            if j >= 0:
-                parameter = parameter[:j+1] + '"' + parameter[j+1:] + '"'
+        #elif parameter.find(' ') >= 0:
+            #j = parameter.rfind(':')
+            #if j >= 0:
+                #parameter = parameter[:j+1] + '"' + parameter[j+1:] + '"'
 
-            else:
-                parameter = '"' + parameter + '"'
+            #else:
+                #parameter = '"' + parameter + '"'
 
         parameters += parameter + ' '
 
