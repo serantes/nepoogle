@@ -920,8 +920,6 @@ class cSparqlBuilder2():
 
                 results[-1] += string[i]
 
-        print results
-
         #for result in results:
             #if ((result != "") and (result[0] == "-") and (result[1] != "-")):
             #    i = lindex(self.warningsList, "BUG001", 0)
@@ -934,7 +932,7 @@ class cSparqlBuilder2():
         #    if result == "(" or result == ")":
         #        raise Exception(_("Syntax error, parenthesis are not supported. Use quotes to search for parenthesis characters."))
 
-        print 'Results:', results
+        #print 'Results:', results
         return results
 
 
