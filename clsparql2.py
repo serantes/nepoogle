@@ -112,7 +112,7 @@ class cSparqlBuilder2():
     indentationLevel = 1
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifierhttp://celebstar.org/wp-content/uploads/2011/06/Janina-Gavankar-pictures-3.jpg']
-    ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
+    ontologyFilters = ['nao:description', 'nao:identifier', '%nie:url', 'nao:hasTag->nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
     outputResultField = "?id"
     resultField = "?r"
@@ -145,7 +145,7 @@ class cSparqlBuilder2():
                     ['nexif:flash', _('flash'), _('fl')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['!nmm:genre', _('genre'), _('ge')], \
-                    ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
+                    ['_nao:hasTag->nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('he')], \
                     ['kext:indexingLevel', _('indexinglevel'), _('il')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
@@ -708,6 +708,7 @@ class cSparqlBuilder2():
 
         if (ontologies == ""):
             # There aren't ontologies, generic text search.
+            value = value.replace("'", "''")
             if (operator == "!="):
                 strTerm += indent + "%s a ?v1 . FILTER NOT EXISTS {\n" % (self.subqueryResultField)
                 strTerm += indent2 + "{\n"

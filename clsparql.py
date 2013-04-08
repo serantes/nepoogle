@@ -660,7 +660,7 @@ class cSparqlBuilder():
     getAllFields = True
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
-    ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
+    ontologyFilters = ['nao:description', 'nao:identifier', '%nie:url', 'nao:hasTag->nao:identifier', 'nco:fullname', 'nie:title']
     #ontologyFilters = ['?p0', '%nie:url']
     resultsetLimit = 0
     resultsetOffset = 0
@@ -691,7 +691,7 @@ class cSparqlBuilder():
                     ['nmm:episodeNumber', _('episode'), _('ep')], \
                     ['nco:fullname', _('fullname'), _('fn')], \
                     ['!nmm:genre', _('genre'), _('ge')], \
-                    ['_nao:hasTag->%nao:identifier', _('hastag'), _('ht')], \
+                    ['_nao:hasTag->nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('he')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
