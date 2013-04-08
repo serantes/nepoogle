@@ -109,6 +109,7 @@ class cSparqlBuilder2():
     filters = []
 
     getOptionalFields = True
+    indentationLevel = 1
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifierhttp://celebstar.org/wp-content/uploads/2011/06/Janina-Gavankar-pictures-3.jpg']
     ontologyFilters = ['nao:description', '%nao:identifier', '%nie:url', 'nao:hasTag->%nao:identifier', 'nco:fullname', 'nie:title']
@@ -670,7 +671,7 @@ class cSparqlBuilder2():
                 except:
                     pass
 
-        if sortText != "":
+        if (sortText != ""):
             sortText = "ORDER BY " + sortText + "\n"
 
         return sortText
@@ -798,25 +799,35 @@ class cSparqlBuilder2():
         return strTerm
 
 
-    def bsSubquery(self, term, indentationLevel = 1):
+    def bsSubquery(self, term, isUnion = False):
         if (term[0] == "("):
-            subquery = "\n{\n"
+            indent = "%%%ds" % (self.indentationLevel*2)
+            subquery = (indent + "{\n") % ""
+            self.indentationLevel += 1
 
         elif (term[0] == ")"):
-            subquery = "\n}\n"
+            self.indentationLevel -= 1
+            indent = "%%%ds" % (self.indentationLevel*2)
+            subquery = ("\n" + indent + "}") % ""
 
         else:
-            strTerm = self.bsSubqueryTerm(term, indentationLevel + 2)
+            strTerm = self.bsSubqueryTerm(term, self.indentationLevel + 2)
             subquery = ""
 
             if (strTerm != ""):
-                indent = "%%%ds" % (indentationLevel*2)
-                subquery += (indent + "{\n") % ("")
+                indent = "%%%ds" % (self.indentationLevel*2)
+                indent2 = "%%%ds" % ((self.indentationLevel+1)*2)
+                if isUnion:
+                    subquery += "{\n"
+
+                else:
+                    subquery += (indent + "{\n") % ("")
+
                 subquery += "\n"
-                subquery += (indent + indent + "SELECT DISTINCT %s\n") % ("", "", self.subqueryResultField)
-                subquery += (indent + indent + "WHERE {\n\n") % ("", "")
+                subquery += (indent2 + "SELECT DISTINCT %s\n") % ("", self.subqueryResultField)
+                subquery += (indent2 + "WHERE {\n\n") % ("")
                 subquery += strTerm + '\n'
-                subquery += (indent + indent + "}\n") % ("", "")
+                subquery += (indent2 + "}\n") % ("")
                 subquery += "\n"
                 subquery += (indent + "}") % ("")
 
@@ -825,8 +836,8 @@ class cSparqlBuilder2():
 
     def bsSubqueries(self):
         subqueries = ""
-        # Por el momento los ignoro esto tiene que valer para añadir
-        # como primer término: ?r rdf:type nmm:Movie
+        # First filter term for rdf:type ontology,
+        # for example: ?r rdf:type nmm:Movie
         if (self.tempData[3] == []):
             typeFilters = self.typeFilters
 
@@ -853,7 +864,7 @@ class cSparqlBuilder2():
                 filterValue = self.filters[0][0]
                 self.filters = []
 
-            subqueries += self.bsSubqueryTerm([filterValue, "=", item], 1)
+            subqueries += self.bsSubqueryTerm([filterValue, "=", item], self.indentationLevel)
 
         #[termino [<and | or> termino]...
         #[[u'iu', '=', u'performer'], ['and', '', ''], [u'iu', '=', u'_nco:creator->nco:fullname']]
@@ -863,12 +874,12 @@ class cSparqlBuilder2():
                 unionClause = ""
 
             elif (term[0] == "or"):
-                unionClause = "UNION"
+                unionClause = " UNION "
 
             else:
-                subquery = self.bsSubquery(term)
+                subquery = self.bsSubquery(term, unionClause == " UNION ")
                 if (subquery != ""):
-                    subqueries += unionClause + subquery + " "
+                    subqueries += unionClause + subquery
 
         return subqueries + "\n\n"
 
