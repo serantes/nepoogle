@@ -48,9 +48,9 @@ class cSparqlBuilder2():
                             "WHERE {\n\n"
     _private_query_footer = "}\n"
 
-    caseInsensitiveSort = True
     columns = ""
     command = ""
+
     # [id, ['resultColumn', [fields], [ontologyFilter], [ontologyTypeFilter]]]
     # fields: [id, 'ontology', useAsOptional, useToSort]...
     commands = [ \
@@ -92,34 +92,36 @@ class cSparqlBuilder2():
 
     enableInference = False
 
-    engine = 0 # 0- Nepomuk.QueryParse(), 1- internal
+    engine = 1 # 0- Nepomuk.QueryParse(), 1- internal
 
     externalParameters = []
 
-    #fields = [[0, 'rdf:type', True], [1, 'nao:identifier', True], [2, 'nie:url', True], [3, 'nie:title', False], [4, 'nao:prefLabel', False],
-    #            [5, 'nao:description', False], [6, 'nao:numericRating', False]]
-    # 'nmm:genre', 'nmm:releaseDate', ''
+    # [id, ontology, optional, sort]
     fields = [ \
                 [0, 'nie:url', True, True], \
                 [1, 'nie:title', True, True], \
                 [2, 'nco:fullname', True, True], \
-                [3, 'nao:prefLabel', True, True], \
-                [4, 'nao:altLabel', True, True] \
+                [3, 'nao:prefLabel', True, True] \
             ]
+
     filters = []
 
     getOptionalFields = True
+
     indentationLevel = 1
-    #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
-    #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifierhttp://celebstar.org/wp-content/uploads/2011/06/Janina-Gavankar-pictures-3.jpg']
-    ontologyFilters = ['nao:description', 'nao:identifier', '%nie:url', 'nao:hasTag->nao:identifier', 'nco:fullname', 'nie:title']
-    #ontologyFilters = ['?p0', '%nie:url']
-    outputResultField = "?id"
+
     resultField = "?r"
+    resultFieldSubqueries = resultField
+    resultFieldOutput = "?id"
+
     resultsetLimit = 0
     resultsetOffset = 0
+
     searchForUrlsTooInBasicSearch = True
+
+    sortCaseInsensitive = True
     sortSuffix = '_sort'
+
     stdoutQuery = False
 
     shortcuts = [ \
@@ -186,14 +188,11 @@ class cSparqlBuilder2():
                     ['_nmm:writer?->nco:fullname', _('writers'), _('wrs')] \
                 ]
 
-    subqueryResultField = resultField
+    tempData = ['', [], [], []] # Storage for temporal data.
 
-    tempData = ['', [], [], []]
+    typeFilters = [] # To limit the results to only selected resource types.
 
-    #typeFilters = ['nao#Tag', 'nfo#FileDataObject']
-    typeFilters = []
-
-    visibilityFilter = ""
+    visibilityFilter = "" # Was removed since KDE 4.9.
 
     warningsList = []
 
@@ -261,14 +260,14 @@ class cSparqlBuilder2():
 
         if (self.tempData[0] == ''):
             if (self.columns == ""):
-                columns = '%s AS %s' % (self.resultField, self.outputResultField)
+                columns = '%s AS %s' % (self.resultField, self.resultFieldOutput)
 
             else:
                 columns = self.columns
 
         else:
             if (self.tempData[0].lower().find(" as ") < 0):
-                columns = '%s AS %s' % (self.tempData[0], self.outputResultField)
+                columns = '%s AS %s' % (self.tempData[0], self.resultFieldOutput)
 
             else:
                 columns = self.tempData[0]
@@ -616,13 +615,13 @@ class cSparqlBuilder2():
 
         if (self.tempData[1] == []):
             fields = self.fields
-            subqueryResultField = self.subqueryResultField
+            resultFieldSubqueries = self.resultFieldSubqueries
 
         else:
             fields = self.tempData[1]
-            subqueryResultField = self.tempData[0]
+            resultFieldSubqueries = self.tempData[0]
             if (self.tempData[0].lower().find(" as ") >= 0):
-                subqueryResultField = self.subqueryResultField
+                resultFieldSubqueries = self.resultFieldSubqueries
 
         text = ""
         for item in fields:
@@ -631,7 +630,7 @@ class cSparqlBuilder2():
 
             try:
                 text += "  optional { %(resultField)s %(ontology)s ?%(field)s . }\n" \
-                            % {'resultField': subqueryResultField, 'ontology': item[1], 'field': item[1].split(":")[1]}
+                            % {'resultField': resultFieldSubqueries, 'ontology': item[1], 'field': item[1].split(":")[1]}
 
             except:
                 pass
@@ -672,7 +671,7 @@ class cSparqlBuilder2():
             if item[3]:
                 try:
                     columnName = "?" + item[1].split(":")[1]
-                    if self.caseInsensitiveSort:
+                    if self.sortCaseInsensitive:
                         sortText += "bif:lower(%s) " % columnName
 
                     else:
@@ -720,22 +719,22 @@ class cSparqlBuilder2():
             # There aren't ontologies, generic text search.
             value = value.replace("'", "''")
             if (operator == "!="):
-                strTerm += indent + "%s a ?v1 . FILTER NOT EXISTS {\n" % (self.subqueryResultField)
+                strTerm += indent + "%s a ?v1 . FILTER NOT EXISTS {\n" % (self.resultFieldSubqueries)
                 strTerm += indent2 + "{\n"
-                strTerm += indent3 + "%s ?p1 ?v2 . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent3 + "%s ?p1 ?v2 . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 strTerm += indent2 + "} UNION {\n"
-                strTerm += indent3 + "%s ?p2 [ ?p3 ?v2 ] . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent3 + "%s ?p2 [ ?p3 ?v2 ] . FILTER(bif:contains(?v2, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 strTerm += indent2 + "} .\n"
                 strTerm += indent + "} .\n"
 
             else:
                 strTerm += indent + "{\n"
-                strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 strTerm += indent + "} UNION {\n"
-                strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.subqueryResultField, value)
+                strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 if self.searchForUrlsTooInBasicSearch:
                     strTerm += indent + "} UNION {\n"
-                    strTerm += indent2 + "%s nie:url ?v . FILTER(REGEX(?v, \"%s\"^^xsd:string, 'i')) .\n" % (self.subqueryResultField, value)
+                    strTerm += indent2 + "%s nie:url ?v . FILTER(REGEX(?v, \"%s\"^^xsd:string, 'i')) .\n" % (self.resultFieldSubqueries, value)
 
                 strTerm += indent + "}\n"
 
@@ -746,9 +745,10 @@ class cSparqlBuilder2():
             ontologyElements = re.split('->|<-', ontologies)
             ontologyRelations = re.findall('->|<-', ontologies)
 
-            optionalUsage = False
+            negationWithNotExists = False
             clause = ""
             fieldUsedAsResult = "?x%d " % 0
+            firstOntology = None
             for ontology in ontologyElements:
                 ontology = self.ontologyConversion(ontology)
                 valType = ""
@@ -758,14 +758,14 @@ class cSparqlBuilder2():
 
                 elif (ontology[0] == "_"):
                     ontology = ontology[1:]
-                    optionalUsage = optionalUsage or (operator == "!=")
+                    negationWithNotExists = negationWithNotExists or (operator == "!=")
 
                 elif (ontology[0] == "!"):
                     ontology = ontology[1:]
-                    optionalUsage = optionalUsage or (operator == "!=")
+                    negationWithNotExists = negationWithNotExists or (operator == "!=")
 
                 elif ((value == "") and (operator == "!=")):
-                    optionalUsage = True
+                    negationWithNotExists = True
 
                 if (ontology[-1] == "?"): # Use this ontology as the result one.
                     fieldUsedAsResult = "?x%d " % (i+1)
@@ -797,10 +797,12 @@ class cSparqlBuilder2():
 
                     clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
                     i += 1
+                    if (firstOntology == None):
+                        firstOntology = ontology
 
-            clause = clause.replace(fieldUsedAsResult, self.subqueryResultField + " ").replace("?x%d " % i, "?v ")
-            if optionalUsage:
-                strTerm = indent + self.subqueryResultField + " a ?v1 . FILTER NOT EXISTS {\n" \
+            clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
+            if negationWithNotExists:
+                strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
                             + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
                             + indent + "}\n"
 
@@ -835,7 +837,7 @@ class cSparqlBuilder2():
                     subquery += (indent + "{\n") % ("")
 
                 subquery += "\n"
-                subquery += (indent2 + "SELECT DISTINCT %s\n") % ("", self.subqueryResultField)
+                subquery += (indent2 + "SELECT DISTINCT %s\n") % ("", self.resultFieldSubqueries)
                 subquery += (indent2 + "WHERE {\n\n") % ("")
                 subquery += strTerm + '\n'
                 subquery += (indent2 + "}\n") % ("")
