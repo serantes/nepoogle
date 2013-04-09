@@ -354,20 +354,30 @@ class cSparqlBuilder2():
 
 
     def buildFloatFilter(self, val, op, precision = 4):
-        if (op in ("=", "==")):
-            # Workaround for the precision problem.
-            if vartype(val) in ("str", "unicode"):
-                val = round(float(val), precision)
+        # Workaround for the precision problem.
+        if (vartype(val) in ("str", "unicode")):
+            val = round(float(val), precision)
 
-            val = round(val, precision)
-            adjustmentNumber = "0.%0" + "%sd1" % (precision - 1)
-            adjustmentNumber = float(adjustmentNumber % 0)
-            val2 = val + adjustmentNumber
-            val -= adjustmentNumber
-            return "FILTER((?v >= %(val)s) and (?v < %(val2)s)) ." % {'op': op, 'val': val, 'val2': val2}
+        val = round(val, precision)
+        adjustmentNumber = "0.%0" + "%sd1" % (precision - 1)
+        adjustmentNumber = float(adjustmentNumber % 0)
+        valMax = val + adjustmentNumber*9
+        valMin = val - adjustmentNumber
+
+        if (op in ("=", "==")):
+            return "FILTER((?v >= %(valMin)s) and (?v < %(valMax)s)) ." % {'op': op, 'valMin': valMin, 'valMax': valMax}
+
+        elif (op in (">", ">=")):
+            return "FILTER(?v %(op)s %(val)s) ." % {'op': op, 'val': valMax}
+
+        elif (op in ("<", "<=")):
+            return "FILTER(?v %(op)s %(val)s) ." % {'op': op, 'val': valMin}
+
+        elif (op == "!="):
+            return "FILTER((?v < %(valMin)s) or (?v >= %(valMax)s)) ." % {'op': op, 'valMin': valMin, 'valMax': valMax}
 
         else:
-            return "FILTER(?v %(op)s %(val)s) ." % {'op': op, 'val': val}
+            return ""
 
 
     def buildTimeFilter(self, val, op):
@@ -501,7 +511,7 @@ class cSparqlBuilder2():
             if (len(valTerms) > 1):
                 value = float(valTerms[0])/float(valTerms[1])
 
-            filterExpression = self.buildFloatFilter(value, operator)
+            filterExpression = self.buildFloatFilter(value, operator, 1)
 
         elif (valType == "indexinglevel"):
             if (value.lower() in KEXT_INDEXING_LEVEL_LOWER):
