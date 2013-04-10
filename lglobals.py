@@ -119,8 +119,11 @@ KEXT_INDEXING_LEVEL = [_("Not indexed"), _("Basic"), _("File indexing"), _("Web 
 
 KEXT_INDEXING_LEVEL_LOWER = [x.lower() for x in KEXT_INDEXING_LEVEL]
 
-NEXIF_FLASH = [_("No"), _("Yes")]
-NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("CenterWeightedAverage"), _("Spot"), _("MultiSpot"), _("Pattern"), _("Partial"), _("Other")]
+#NEXIF_EXPOSURE_PROGRAM = [_("Not defined"), _("Manual"), _("Auto"), _("Aperture priority"), _("Shutter priority"), _("Creative program"), _("Action program"), _("Portrait mode"), _("Landscape mode")]
+#NEXIF_EXPOSURE_TYPE = [_("Auto"), _("Manual"), _("Auto bracket")]
+NEXIF_FLASH = [_("No"), _("Yes")] # "Flash has been fired", "Flash with eye-reduction mode"
+NEXIF_METERING_MODE = [_("Unknown"), _("Average"), _("Center weighted average"), _("Spot"), _("Multi-spot"), _("Multi-segment"), _("Partial"), _("Other")]
+#NEXIF_ORIENTATION = [_("Unspecified"), _("Normal"), _("Flipped Horizontally"), _("Rotated by 180 Degress"), _("Flipped Vertically"), _("Flipped Horizontally and Rotated Left"), _("Rotated Left"), _("Flipped Vertically and Rotated Left"), _("Rotate Right")]
 NEXIF_SATURATION = [_("Normal"), _("Low"), _("High")]
 NEXIF_SHARPNESS = [_("Normal"), _("Soft"), _("Hard")]
 NEXIF_WHITE_BALANCE = [_("Auto"), _("Manual")]
