@@ -1129,7 +1129,10 @@ class cDataFormat():
             result = ""
             if (dataIndex != None):
                 dataLength = par2
-                if (dataIndex <= 0):
+                if (dataLength == 1):
+                    result = ""
+
+                elif (dataIndex <= 0):
                     result = "%s%s" % (self.htmlLinkNavigateNext, \
                                             self.htmlLinkNavigateLast)
 
