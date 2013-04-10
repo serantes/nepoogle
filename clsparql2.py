@@ -128,6 +128,7 @@ class cSparqlBuilder2():
                     ['_nmm:actor->nco:fullname',_('actor'), _('ac')], \
                     ['_nmm:actor?->nco:fullname', _('actors'), _('acs')], \
                     ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa')], \
+                    ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay')], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
@@ -740,74 +741,76 @@ class cSparqlBuilder2():
 
         else:
             # There are ontologies.
-            i = numInverseRelations = relationAdjustmentResource = relationAdjustmentValue = 0
             ontologies = self.ontologyConversion(ontologies)
-            ontologyElements = re.split('->|<-', ontologies)
-            ontologyRelations = re.findall('->|<-', ontologies)
+            ontologies = ontologies.split(" ")
+            for ontologiesItem in ontologies:
+                i = numInverseRelations = relationAdjustmentResource = relationAdjustmentValue = 0
+                ontologyElements = re.split('->|<-', ontologiesItem)
+                ontologyRelations = re.findall('->|<-', ontologiesItem)
 
-            negationWithNotExists = False
-            clause = ""
-            fieldUsedAsResult = "?x%d " % 0
-            firstOntology = None
-            for ontology in ontologyElements:
-                ontology = self.ontologyConversion(ontology)
-                valType = ""
-                if (ontology[0] == "%"):
-                    ontology = ontology[1:]
-                    value = toN3(value)
+                negationWithNotExists = False
+                clause = ""
+                fieldUsedAsResult = "?x%d " % 0
+                firstOntology = None
+                for ontology in ontologyElements:
+                    ontology = self.ontologyConversion(ontology)
+                    valType = ""
+                    if (ontology[0] == "%"):
+                        ontology = ontology[1:]
+                        value = toN3(value)
 
-                elif (ontology[0] == "_"):
-                    ontology = ontology[1:]
-                    negationWithNotExists = negationWithNotExists or (operator == "!=")
+                    elif (ontology[0] == "_"):
+                        ontology = ontology[1:]
+                        negationWithNotExists = negationWithNotExists or (operator == "!=")
 
-                elif (ontology[0] == "!"):
-                    ontology = ontology[1:]
-                    negationWithNotExists = negationWithNotExists or (operator == "!=")
+                    elif (ontology[0] == "!"):
+                        ontology = ontology[1:]
+                        negationWithNotExists = negationWithNotExists or (operator == "!=")
 
-                elif ((value == "") and (operator == "!=")):
-                    negationWithNotExists = True
+                    elif ((value == "") and (operator == "!=")):
+                        negationWithNotExists = True
 
-                if (ontology[-1] == "?"): # Use this ontology as the result one.
-                    fieldUsedAsResult = "?x%d " % (i+1)
-                    ontology = ontology[:-1]
+                    if (ontology[-1] == "?"): # Use this ontology as the result one.
+                        fieldUsedAsResult = "?x%d " % (i+1)
+                        ontology = ontology[:-1]
 
-                valType = self.ontologyVarType(ontology)
-                if (ontology.find('=') >= 0):
-                    rName = "?x%d" % (i)
-                    clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology.split('=')[0], 'r': rName, 'v': ontology.split('=')[1]}
-
-                else:
-                    # Here is where relations are stablished:
-                    # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
-                    # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
-
-                    try:
-                        doSwap = (ontologyRelations[i] == "<-")
-
-                    except:
-                        doSwap = False
-
-                    if doSwap:
-                        vName = "?x%d" % i
-                        rName = "?x%d" % (i + 1)
+                    valType = self.ontologyVarType(ontology)
+                    if (ontology.find('=') >= 0):
+                        rName = "?x%d" % (i)
+                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology.split('=')[0], 'r': rName, 'v': ontology.split('=')[1]}
 
                     else:
-                        rName = "?x%d" % i
-                        vName = "?x%d" % (i + 1)
+                        # Here is where relations are stablished:
+                        # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
+                        # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
 
-                    clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
-                    i += 1
-                    if (firstOntology == None):
-                        firstOntology = ontology
+                        try:
+                            doSwap = (ontologyRelations[i] == "<-")
 
-            clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
-            if negationWithNotExists:
-                strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
-                            + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
-                            + indent + "}\n"
+                        except:
+                            doSwap = False
 
-            else:
-                strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+                        if doSwap:
+                            vName = "?x%d" % i
+                            rName = "?x%d" % (i + 1)
+
+                        else:
+                            rName = "?x%d" % i
+                            vName = "?x%d" % (i + 1)
+
+                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                        i += 1
+                        if (firstOntology == None):
+                            firstOntology = ontology
+
+                clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
+                if negationWithNotExists:
+                    strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
+                                + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
+                                + indent + "}\n"
+
+                else:
+                    strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
 
         return strTerm
 
