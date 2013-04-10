@@ -681,7 +681,7 @@ class cSparqlBuilder2():
 
                     columnName = "?" + item[1].split(":")[1]
                     if self.sortCaseInsensitive:
-                        if (ontologyInfo(item[1])[2] == "string"):
+                        if (ontologyInfo(item[1])[2].lower() in ("string", "resource", "literal")):
                             sortText += "%s(bif:lower(%s)) " % (sortType, columnName)
 
                         else:
