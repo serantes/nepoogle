@@ -82,6 +82,7 @@ class cSparqlBuilder2():
                 #[_('--quit'), ['quit', [], [], []]], \
                 [_('--showupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "%s"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
                 [_('--shownepoogleupdates'), ['SELECT DISTINCT ?r\nWHERE {\n  ?g nao:maintainedBy ?v . ?v nao:identifier "nepoogle"^^xsd:string .\n  GRAPH ?g {\n    ?r nao:lastModified ?lastModified .\n  } .\n}\nORDER BY DESC(?lastModified)\n', [], [], []]], \
+                [_('--sort'), ['sort', [], [], []]], \
                 [_('--tags'), ['?r', [[0, 'nao:prefLabel', True, True], [2, 'nao:altLabel', True, True]], ['nao:prefLabel'], ['nao:Tag']]], \
                 [_('--topics'), ['?r', [[0, 'pimo:tagLabel', True, True]], ['nao:identifier'], ['pimo:Topic']]], \
                 [_('--tvseries'), ['?r', [[0, 'nie:title', True, True], [1, 'nie:url', True, True]], ['nie:title'], ['nmm:TVSeries']]], \
@@ -96,12 +97,12 @@ class cSparqlBuilder2():
 
     externalParameters = []
 
-    # [id, ontology, optional, sort]
+    # [id, ontology, optional, sort, ascending]
     fields = [ \
-                [0, 'nie:url', True, True], \
-                [1, 'nie:title', True, True], \
-                [2, 'nco:fullname', True, True], \
-                [3, 'nao:prefLabel', True, True] \
+                [0, 'nie:url', True, True, True], \
+                [1, 'nie:title', True, True, True], \
+                [2, 'nco:fullname', True, True, True], \
+                [3, 'nao:prefLabel', True, True, True] \
             ]
 
     filters = []
@@ -671,12 +672,23 @@ class cSparqlBuilder2():
         for item in fields:
             if item[3]:
                 try:
-                    columnName = "?" + item[1].split(":")[1]
-                    if self.sortCaseInsensitive:
-                        sortText += "bif:lower(%s) " % columnName
+                    if item[4]:
+                        sortType = "ASC"
 
                     else:
-                        sortText += columnName + " "
+                        sortType = "DESC"
+
+
+                    columnName = "?" + item[1].split(":")[1]
+                    if self.sortCaseInsensitive:
+                        if (ontologyInfo(item[1])[2] == "string"):
+                            sortText += "%s(bif:lower(%s)) " % (sortType, columnName)
+
+                        else:
+                            sortText += "%s(%s) " % (sortType, columnName)
+
+                    else:
+                        sortText += "%s(%s) " % (sortType, columnName)
 
                 except:
                     pass
@@ -1120,7 +1132,7 @@ class cSparqlBuilder2():
             raise Exception(_("Syntax error, please check your search text."))
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
-            if command.lower() not in ('--playlist', '--playmixed'):
+            if command.lower() not in ('--playlist', '--playmixed', '--sort'):
                 allFilters = []
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
@@ -1130,12 +1142,36 @@ class cSparqlBuilder2():
 
         elif commandsFound == 1:
             dummy = command.split(':')
-            command = dummy[0].lower()
+            commandLower = dummy[0].lower()
 
             # Commands that don't support filters.
-            if command in ("--playlist", "--playmixed"):
+            if commandLower in ("--playlist", "--playmixed"):
                 if (len(dummy) > 1):
-                    raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % command)
+                    raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % commandLower)
+
+            # Sort command.
+            elif (commandLower == "--sort"):
+                if ((len(dummy) <= 1) or (dummy[1] == "")):
+                    raise Exception(_("Syntax error, command <b>%s</b> needs at least an ontology as a parameter.") % commandLower)
+
+                dummy = command[7:].split(',')
+
+                self.fields = []
+                i = 0
+                for item in dummy:
+                    item = item.strip()
+                    if (item[0] in ("+", "-")):
+                        ascending = (item[0] == "+")
+                        item = item[1:]
+
+                    else:
+                        ascending = True
+
+                    self.fields += [[i, item, True, True, ascending]]
+
+                print self.fields
+
+                commandLower = ""
 
             # Commands that support filters.
             elif ((len(dummy) > 1) and (dummy[1] != "")):
@@ -1151,8 +1187,10 @@ class cSparqlBuilder2():
             else:
                 allFilters = []
 
+            command = commandLower
+
         # Commands associated to queries.
-        if ((len(allFilters) == 0) and (command in ("--playlist", "--playmixed"))):
+        if ((len(allFilters) == 0) and (command in ("--playlist", "--playmixed", "--sort"))):
             raise Exception(_("Syntax error, command <b>%s</b> require an associated query.") % command)
 
         self.command = command

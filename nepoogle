@@ -1554,6 +1554,9 @@ class Nepoogle(QWidget):
             if (command[1][0].find("%s") >= 0):
                 commands += '<li>%(command)s:"text"</a></li>\n' % {"command": command[0]}
 
+            elif (command[0] == "--sort"):
+                commands += '<li>%(command)s:"shortontology[,shortontology]..."</a></li>\n' % {"command": command[0]}
+
             else:
                 commands += '<li><a href="command:/%(command)s">%(command)s</a></li>\n' % {"command": command[0]}
 
@@ -1806,11 +1809,11 @@ class Nepoogle(QWidget):
 
 
     def processMacros(self, searchString = ""):
-        if searchString.find("--m0:") >= 0:
-            searchString = searchString.replace("--m0:", "--playlist genre:-instrumental performer:")
+        if (searchString.find("--mnit:") >= 0):
+            searchString = searchString.replace("--mnit:", "--playlist genre:-instrumental performer:")
 
-        elif searchString.find("--m1:") >= 0:
-            searchString = searchString.replace("--m1:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+        elif (searchString.find("--mnia:") >= 0):
+            searchString = searchString.replace("--mnia:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
 
         return searchString
 
@@ -1932,7 +1935,7 @@ class Nepoogle(QWidget):
                         return True
 
                     oNQP = Nepomuk2.Query.QueryParser()
-                    for command in ["--playlist", "--playmixed"]:
+                    for command in ["--playlist", "--playmixed", "--sort"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
                             processedSearchString = processedSearchString.replace(command, "")
@@ -1955,7 +1958,7 @@ class Nepoogle(QWidget):
                         return True
 
                     oNQP = Nepomuk2.Query.QueryParser()
-                    for command in ["--playlist", "--playmixed"]:
+                    for command in ["--playlist", "--playmixed", "--sort"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
                             processedSearchString = processedSearchString.replace(command, "")
