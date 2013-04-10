@@ -1858,7 +1858,7 @@ class Nepoogle(QWidget):
                     cachedData = lvalue(self.cacheRendered, searchString, 0, 1)
 
                 if (cachedData == None):
-                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
                 else:
@@ -1866,12 +1866,12 @@ class Nepoogle(QWidget):
 
                 if (self.queryMethod == "navbutton"):
                     if (oDataFormat == None):
-                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output)
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self)
 
                     self.cache[self.queriesIndex] = oDataFormat
 
                 elif (self.queryMethod == "refresh"):
-                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
                 elif (self.queryMethod == "manual"):
@@ -1897,7 +1897,7 @@ class Nepoogle(QWidget):
                             self.cache = self.cache[:self.queriesIndex]
 
                     if (oDataFormat == None):
-                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output)
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self)
 
                     self.cache += [oDataFormat]
 
@@ -1986,7 +1986,7 @@ class Nepoogle(QWidget):
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
 
-                oDataFormat = cDataFormat(searchString, self.model, self.screenWidth)
+                oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
                 if ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
 

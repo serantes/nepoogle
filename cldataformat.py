@@ -71,6 +71,8 @@ class cDataFormat():
     uri = None
     videojsEnabled = False
 
+    parent = None
+
     # Sizes
     screenWidth = 800
     viewerColumnsWidth = (screenWidth - 100) / 2
@@ -92,7 +94,7 @@ class cDataFormat():
     iconKIO = toUnicode(KIconLoader().iconPath('kde', KIconLoader.Small))
     iconKonqueror = toUnicode(KIconLoader().iconPath('konqueror', KIconLoader.Small))
     iconListAdd = toUnicode(KIconLoader().iconPath('list-add', KIconLoader.Small))
-    #iconListRemove = toUnicode(KIconLoader().iconPath('list-remove', KIconLoader.Small))
+    iconListRemove = toUnicode(KIconLoader().iconPath('list-remove', KIconLoader.Small))
     iconNavigateFirst = toUnicode(KIconLoader().iconPath('go-first', KIconLoader.Small))
     iconNavigateLast = toUnicode(KIconLoader().iconPath('go-last', KIconLoader.Small))
     iconNavigateNext = toUnicode(KIconLoader().iconPath('go-next', KIconLoader.Small))
@@ -196,7 +198,7 @@ class cDataFormat():
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
                             + "</a>"
     htmlLinkRemoveAll = "<a title=\"Remove all listed resources\" href=\"remove:/all\">" \
-                            + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconDelete) \
+                            + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconListRemove) \
                             + "</a>"
     htmlLinkSearch = "<a title=\"%(uri)s\" href=\"query:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemSearch) \
@@ -371,7 +373,7 @@ class cDataFormat():
                     ]
 
 
-    def __init__(self, searchString = "", model = None, screenWidth = 1024, renderedDataText = None):
+    def __init__(self, searchString = "", model = None, screenWidth = 1024, renderedDataText = None, parent = None):
         self.searchString = searchString
         if model == None:
             if DO_NOT_USE_NEPOMUK:
@@ -391,6 +393,8 @@ class cDataFormat():
 
         if (renderedDataText != None):
             self.renderedDataText = renderedDataText
+
+        self.parent = parent
 
 
     def getCoverUrl(self, res = None, url = "", useHtmlEncoding = True):
@@ -1121,10 +1125,28 @@ class cDataFormat():
             value = self.htmlLinkSearchWebRender
 
         elif id == 'navigator':
-            return "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
-                                    self.htmlLinkNavigatePrevious, \
-                                    self.htmlLinkNavigateNext, \
-                                    self.htmlLinkNavigateLast)
+            dataIndex = par1
+            result = ""
+            if (dataIndex != None):
+                dataLength = par2
+                if (dataIndex <= 0):
+                    result = "%s%s" % (self.htmlLinkNavigateNext, \
+                                            self.htmlLinkNavigateLast)
+
+                elif (dataIndex >= dataLength-1):
+                    result = "%s%s" % (self.htmlLinkNavigateFirst, \
+                                            self.htmlLinkNavigatePrevious)
+
+                else:
+                    result = "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
+                                            self.htmlLinkNavigatePrevious, \
+                                            self.htmlLinkNavigateNext, \
+                                            self.htmlLinkNavigateLast)
+
+
+                result += "(%s/%s)" % (dataIndex+1, dataLength)
+
+            return result
 
         elif id == 'ontology':
             title = "title=\"%s:+\'%s\'\"" % (par1, par2)
@@ -1840,12 +1862,12 @@ class cDataFormat():
         rowNavigation = ""
         if self.renderedDataRows < len(self.data):
             rowNavigation = '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
-                    '<td>%s of %s records</td><td>%s</td><tr>' \
+                    '<td>%s of %s records</td><td>%s All resources</td><tr>' \
                         % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data), self.htmlLinkRemoveAll)
 
         else:
             if (len(self.data) > 0):
-                rowNavigation = '<tr><td></td><td>%s records</td><td>%s</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
+                rowNavigation = '<tr><td></td><td>%s records</td><td>%s All resources</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
 
         text += rowNavigation +  self.renderedDataText + rowNavigation
 
@@ -1969,6 +1991,13 @@ class cDataFormat():
         if uri == "":
             return self.renderedDataText
 
+        dataIndex = None
+        dataLength =None
+        if (self.parent.queriesIndex >= 0):
+            if ((self.parent.cache[self.parent.queriesIndex-1].navegable) or (self.parent.cache[self.parent.queriesIndex].navegable)):
+                dataIndex = lindex(self.parent.navigationData, uri)
+                dataLength = len(self.parent.navigationData)
+
         #query = "SELECT DISTINCT ?ont ?val\n" \
         #        "WHERE {\n" \
         #            "\t<" + uri + "> ?ont ?val ; nao:userVisible 1 .\n"\
@@ -1993,7 +2022,7 @@ class cDataFormat():
         output = self.htmlHeader % (_('Resource viewer'), script)
         output += "<div class=\"top\" style=\"static: top;\">\n"
         output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">%(title)s</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
-                        % {"title": _('Resource viewer'), 'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator")}
+                        % {"title": _('Resource viewer'), 'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator", dataIndex, dataLength)}
         output += "</div>\n"
         output += "<div class=\"data\" style=\"float: left; width: %s;\">\n<hr>" % self.viewerColumnsWidth
         output += self.htmlViewerTableHeader
