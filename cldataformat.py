@@ -148,7 +148,7 @@ class cDataFormat():
     # To add a column self.columnsCount must be changed and this properties too.
     # Search for columnsformat for more changes.
     htmlTableColumn1 = "<td>%s</td>"
-    htmlTableColumn2 = "<td>%s</td>"
+    htmlTableColumn2 = "<td width=\"50px\">%s</td>"
     htmlTableColumn3 = "<td width=\"65px\">%s</td>"
     htmlTableRow = "<tr>" + htmlTableColumn1 + htmlTableColumn2 + htmlTableColumn3 + "</tr>"
 
