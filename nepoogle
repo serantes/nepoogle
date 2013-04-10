@@ -324,56 +324,6 @@ class Nepoogle(QWidget):
     iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
     iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.NoGroup)
 
-    #htmlFooter = "%s</body>\n</html>\n" % PROGRAM_HTML_POWERED
-    #htmlHeader = "<html>\n" \
-                    #"<head>\n" \
-                    #"<style type=\"text/css\">" \
-                    #"    body {%(body_style)s}\n" \
-                    #"    tr {%(tr_style)s}\n" \
-                    #"    p {%(p_style)s}\n" \
-                    #"</style>\n" \
-                    #% {'body_style': "font-size:small;", \
-                        #'p_style': "font-size:small;", \
-                        #'tr_style': "font-size:small;" \
-                        #} \
-                    #+ "<title>%(title)s</title>\n" \
-                        #"    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n" \
-                        #"%(script)s\n" \
-                        #"</head>\n<body>\n"
-    #htmlImgStyle = "align=\"bottom\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
-    #htmlNavigateStyle  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
-    htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
-                        "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
-                        "<tbody>\n"
-    htmlTableFooter = "</tbody></table>\n"
-    #htmlTime = "<br />\n%(records)s records found in %(seconds).4f seconds. \
-                #HTML visualization builded in %(sechtml).4f seconds."
-
-
-    #htmlLinkDolphin = "<a href=\"dolp:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                        #% ('%s', htmlImgStyle, 'open with Dolphin', iconFileManager)
-    #htmlLinkInfo = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconDocumentInfo)
-    #htmlLinkKonqueror = "<a href=\"konq:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                        #% ('%s', htmlImgStyle, 'open with Konqueror', iconKonqueror)
-    #htmlLinkNavigateFirst = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            #% {"to": "first", "style": htmlNavigateStyle, "icon": iconNavigateFirst}
-    #htmlLinkNavigateLast = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            #% {"to": "last", "style": htmlNavigateStyle, "icon": iconNavigateLast}
-    #htmlLinkNavigatePrevious = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            #% {"to": "previous", "style": htmlNavigateStyle, "icon": iconNavigatePrevious}
-    #htmlLinkNavigateNext = "<a \"Go %(to)s\" href=\"navigate:/%(to)s\"><img %(style)s title=\"Go %(to)s\" src=\"file://%(icon)s\"></a>" \
-                            #% {"to": "next", "style": htmlNavigateStyle, "icon": iconNavigateNext}
-    #htmlLinkOpenLocation = "<a href=\"%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                            #% ('%s', htmlImgStyle, 'open location', iconFileManager)
-    #htmlLinkProperties = "<a href=\"prop:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                            #% ('%s', htmlImgStyle, 'properties', iconDocumentInfo)
-    #htmlLinkRemove = "<a href=\"remove:/%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                            #% ('%s', htmlImgStyle, 'remove resource', iconDelete)
-    #htmlLinks = "<td width=\"65px\">%s</td>"
-    #htmlLinkSearch = "<img %s src=\"file://%s\">" % (htmlImgStyle, iconSystemSearch)
-    #htmlLinkSystemRun = "<a href=\"%s\"><img %s title=\"%s\" src=\"file://%s\"></a>" \
-                            #% ('%s', htmlImgStyle, 'system run', iconSystemRun)
-
 
     def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None, SPARQLBuilderV1 = False):
         super(Nepoogle, self).__init__(parent)
@@ -1594,6 +1544,11 @@ class Nepoogle(QWidget):
 
 
     def buildHelp(self, oSparqlBuilder):
+        htmlTableHeader = "<table style=\"text-align:left; width: 100%%;\" " \
+                            "border=\"%(border)s\" cellpadding=\"%(cellpadding)s\" cellspacing=\"0\">" \
+                            "<tbody>\n"
+        htmlTableFooter = "</tbody></table>\n"
+
         commands = '<p><b>Commands</b>:\n<ul>\n'
         for command in oSparqlBuilder.commands:
             if (command[1][0].find("%s") >= 0):
@@ -1604,7 +1559,7 @@ class Nepoogle(QWidget):
 
         commands += '</ul></p>\n'
 
-        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + self.htmlTableHeader \
+        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + htmlTableHeader \
                         % {'border': 0, 'cellpadding': 0}
         for shortcut in oSparqlBuilder.shortcuts:
             info = ''
@@ -1624,7 +1579,7 @@ class Nepoogle(QWidget):
             shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
                                 % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': fmtOntology, 'info': info}
 
-        shortcuts += self.htmlTableFooter + '</ul></p>\n'
+        shortcuts += htmlTableFooter + '</ul></p>\n'
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
@@ -1710,7 +1665,7 @@ class Nepoogle(QWidget):
                         }
 
         examples = "<p><b>Examples</b>:\n" \
-                    + self.htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
+                    + htmlTableHeader % {'border': 1, 'cellpadding': 2} + \
                     "<tr><td><b>query</b></td>\n" \
                         "<td><b>result</b></td></tr>\n" \
                     "<tr><td><em>movie</em></td>\n" \
@@ -1739,7 +1694,7 @@ class Nepoogle(QWidget):
                         "<td>all albums released on 2012</td></tr>\n" \
                     "<tr><td><em>flash:yes whitebalance:auto nexif:exposureTime:1/60 nexif:fNumber:2.8 nexif:focalLength:>5.4</em></td>\n" \
                         "<td>photos with flash, automatic white balance, a exposure time of 1/60 s, a relative aperture of 2.8 mm and a focal length greather than 5.4 mm</td></tr>\n" \
-                    + self.htmlTableFooter + \
+                    + htmlTableFooter + \
                     "</p>\n"
 
         output = "<html>\n  <head>\n"\
