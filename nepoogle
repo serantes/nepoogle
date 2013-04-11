@@ -1478,9 +1478,6 @@ class Nepoogle(QWidget):
         #print("Go backward")
         refresh = False
         searchText = self.leSearch.text()
-        #if not searchText[:3] in ("e0 ", "e2 "):
-        #    searchText = "e1 " + searchText
-
         if self.queriesIndex >= 0 and searchText != self.cache[self.queriesIndex].searchString:
             refresh = True
 
@@ -1912,7 +1909,7 @@ class Nepoogle(QWidget):
             elif (searchString != ''):
                 self.currUri = None
                 searchString = self.processMacros(searchString)
-                if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+                if searchString[:3].lower() in ('e0 ', 'e1 '):
                     searchEngine = int(searchString[1:2])
 
                 else:
@@ -1951,28 +1948,28 @@ class Nepoogle(QWidget):
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     self.setAppCursor()
 
-                elif (searchEngine == 2):
-                    processedSearchString = searchString[3:]
-                    if processedSearchString.find("--help") >= 0:
-                        self.execQuery("e1 " + processedSearchString)
-                        return True
+                #elif (searchEngine == 2):
+                    #processedSearchString = searchString[3:]
+                    #if processedSearchString.find("--help") >= 0:
+                        #self.execQuery("e1 " + processedSearchString)
+                        #return True
 
-                    oNQP = Nepomuk2.Query.QueryParser()
-                    for command in ["--playlist", "--playmixed", "--sort"]:
-                        if processedSearchString.find(command) >= 0:
-                            externalParameters += [command]
-                            processedSearchString = processedSearchString.replace(command, "")
+                    #oNQP = Nepomuk2.Query.QueryParser()
+                    #for command in ["--playlist", "--playmixed", "--sort"]:
+                        #if processedSearchString.find(command) >= 0:
+                            #externalParameters += [command]
+                            #processedSearchString = processedSearchString.replace(command, "")
 
-                    query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
-                    oNQP = None
-                    query = hackQueryParser(query, 'e2')
-                    if (self.verboseMode and sys.stdout.isatty()):
-                        # Improve a little bit readability.
-                        print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
+                    #query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
+                    #oNQP = None
+                    #query = hackQueryParser(query, 'e2')
+                    #if (self.verboseMode and sys.stdout.isatty()):
+                        ## Improve a little bit readability.
+                        #print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
-                    self.setAppCursor(Qt.WaitCursor)
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
-                    self.setAppCursor()
+                    #self.setAppCursor(Qt.WaitCursor)
+                    #self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    #self.setAppCursor()
 
                 else:
                     searchString = searchString[3:]
@@ -2411,7 +2408,7 @@ def main(args):
             verboseMode == False
 
         searchEngine = DEFAULT_ENGINE
-        if searchString[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+        if searchString[:3].lower() in ('e0 ', 'e1 '):
             searchEngine = int(searchString[1:2])
 
         if not pipeMode:
@@ -2447,16 +2444,16 @@ def main(args):
                     query = hackQueryParser(query, 'e0')
                     data, structure, time = oSparql.executeQuery(query)
 
-                elif searchEngine == 2:
-                    oNQP = Nepomuk2.Query.QueryParser()
-                    query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
-                    oNQP = None
-                    query = hackQueryParser(query, 'e2')
-                    if verboseMode:
-                        # Improve a little bit readability.
-                        print(toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
+                #elif searchEngine == 2:
+                    #oNQP = Nepomuk2.Query.QueryParser()
+                    #query = toUnicode(oNQP.parse(searchString[3:]).toSparqlQuery())
+                    #oNQP = None
+                    #query = hackQueryParser(query, 'e2')
+                    #if verboseMode:
+                        ## Improve a little bit readability.
+                        #print(toUtf8(query.replace(" where ", "\nwhere ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
-                    data, structure, time = oSparql.executeQuery(query)
+                    #data, structure, time = oSparql.executeQuery(query)
 
                 else:
                     oSparql.stdoutQuery = verboseMode
