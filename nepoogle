@@ -292,6 +292,7 @@ class Nepoogle(QWidget):
     clearResourceManagerCache = True
     keyModifiers = Qt.NoModifier
     lastOntologySelected = ONTOLOGY_TITLE
+    lastSPARQLQuery = ""
     model = None
     navigationData = []
     pendingQuery = False
@@ -862,6 +863,14 @@ class Nepoogle(QWidget):
                 rating = 0
 
             self.setRating(None, rating)
+
+        elif (url[:17] == "sprql2clipboard:/"):
+            try:
+                if (self.lastSPARQLQuery != ""):
+                    subprocess.Popen(["qdbus", "org.kde.klipper", "/klipper", "setClipboardContents", self.lastSPARQLQuery])
+
+            except:
+                pass
 
         else:
             # In KDE we trust.nepomuk:/res/eee8837d-27ab-43ac-a34a-43d339102c1c
@@ -1939,13 +1948,15 @@ class Nepoogle(QWidget):
 
                     query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
                     oNQP = None
+                    readableQuery = toUtf8(query.replace("select distinct ", "SELECT DISTINCT ").replace(" where ", "\nWHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?"))
                     if (self.verboseMode and sys.stdout.isatty()):
                         # Improve a little bit readability.
-                        print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
+                        print(readableQuery)
 
-                    query = hackQueryParser(query, 'e0')
+                    #query = hackQueryParser(query, 'e0')
                     self.setAppCursor(Qt.WaitCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    self.lastSPARQLQuery = readableQuery
                     self.setAppCursor()
 
                 #elif (searchEngine == 2):
@@ -1979,6 +1990,7 @@ class Nepoogle(QWidget):
 
                     self.setAppCursor(Qt.WaitCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                    self.lastSPARQLQuery = self.sparql.lastSPARQLQuery
                     self.setAppCursor()
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []

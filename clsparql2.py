@@ -111,6 +111,8 @@ class cSparqlBuilder2():
 
     indentationLevel = 1
 
+    lastSPARQLQuery = ""
+
     resultField = "?r"
     resultFieldSubqueries = resultField
     resultFieldOutput = "?id"
@@ -189,6 +191,7 @@ class cSparqlBuilder2():
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')], \
                     ['_nmm:writer?->nco:fullname', _('writers'), _('wrs')] \
                 ]
+    #(movies: and actor:"takeuchi") or nmm:series<-nmm:actor->nco:fullname:"takeuchi"
 
     tempData = ['', [], [], []] # Storage for temporal data.
 
@@ -292,20 +295,20 @@ class cSparqlBuilder2():
         #}
         #ORDER BY bif:lower(?v)...
 
-        query = header \
-                + subqueries \
-                + optionalFields \
-                + footer \
-                + having \
-                + sort \
-                + limits
+        self.lastSPARQLQuery = header \
+                                + subqueries \
+                                + optionalFields \
+                                + footer \
+                                + having \
+                                + sort \
+                                + limits
 
         if self.stdoutQuery:
-            print toUtf8(query)
+            print toUtf8(self.lastSPARQLQuery)
 
         self.tempData = ['', [], [], []]
 
-        return query
+        return self.lastSPARQLQuery
 
 
     def buildDateFilter(self, val, op):

@@ -1879,7 +1879,7 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-
+        text += " Copy last executed <a href=\"sprql2clipboard:/\">SPARQL query</a> to clipboard."
         text += "<div class=\"bottom\" style=\"clear: both;\">\n" \
                     + self.htmlProgramInfo \
                     + "</div>\n" \

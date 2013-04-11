@@ -658,6 +658,9 @@ class cSparqlBuilder():
     filters = []
 
     getAllFields = True
+
+    lastSPARQLQuery = ""
+
     #ontologyFilters = ['_nao:description', '_nao:identifier', '/nie:url', 'nao:hasTag->$nao:identifier', '%nie:plainTextContent']
     #ontologyFilters = ['_nao:description', '_nao:identifier', '_nie:url', 'nao:hasTag->$nao:identifier']
     ontologyFilters = ['nao:description', 'nao:identifier', '%nie:url', 'nao:hasTag->nao:identifier', 'nco:fullname', 'nie:title']
@@ -825,21 +828,21 @@ class cSparqlBuilder():
 
         searchFilter = self.bsFilter() + '\n'
 
-        query = header \
-                + mainFilter \
-                + fields \
-                + searchFilter \
-                + footer \
-                + having \
-                + sort \
-                + limits
+        self.lastSPARQLQuery = header \
+                                + mainFilter \
+                                + fields \
+                                + searchFilter \
+                                + footer \
+                                + having \
+                                + sort \
+                                + limits
 
         if self.stdoutQuery:
-            print toUtf8(query)
+            print toUtf8(self.lastSPARQLQuery)
 
         self.tempData = ['', [], [], []]
 
-        return query
+        return self.lastSPARQLQuery
 
 
     def bsFields(self):
