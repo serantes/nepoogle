@@ -2050,11 +2050,11 @@ class cDataFormat():
         noc_nieTitle = NOC("nie:title", True)
 
         isAnEmptyResource = True
+        processedData = []
+        images = []
+        audios = []
+        videos = []
         if ((defaultType != "") and data.isValid()):
-            processedData = []
-            images = []
-            audios = []
-            videos = []
             while data.next():
                 isAnEmptyResource = False
                 currOnt = NOCR(data["ont"].toString())
