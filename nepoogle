@@ -835,7 +835,16 @@ class Nepoogle(QWidget):
             self.wvOutput.repaint()
             self.setCursor(Qt.BusyCursor)
             self.repaint()
-            self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml(url[8:]))
+
+            html = self.cache[self.queriesIndex].formatAsHtml(url[8:])
+            if (self.queriesIndex >= 0):
+                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                    dataIndex = lindex(self.navigationData, self.leSearch.text())
+                    if (dataIndex != None):
+                        dataLength = len(self.navigationData)
+                        html = html.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+
+            self.wvOutput.setHtml(html)
 
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
@@ -1503,7 +1512,17 @@ class Nepoogle(QWidget):
 
             self.leSearch.setText(searchString)
             self.pendingQuery = False
-            self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
+
+            html = self.cache[self.queriesIndex].formatAsHtml()
+            if (self.queriesIndex >= 0):
+                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                    dataIndex = lindex(self.navigationData, searchString)
+                    if (dataIndex != None):
+                        dataLength = len(self.navigationData)
+                        html = html.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+
+            self.wvOutput.setHtml(html)
+
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
             self.repaint()
@@ -1528,7 +1547,17 @@ class Nepoogle(QWidget):
 
             self.leSearch.setText(searchString)
             self.pendingQuery = False
-            self.wvOutput.setHtml(self.cache[self.queriesIndex].formatAsHtml())
+
+            html = self.cache[self.queriesIndex].formatAsHtml()
+            if (self.queriesIndex >= 0):
+                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                    dataIndex = lindex(self.navigationData, searchString)
+                    if (dataIndex != None):
+                        dataLength = len(self.navigationData)
+                        html = html.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+
+            self.wvOutput.setHtml(html)
+
             self.setCursor(Qt.ArrowCursor)
             self.leSearch.readOnly = False
             self.repaint()
@@ -1743,75 +1772,6 @@ class Nepoogle(QWidget):
                         }
 
         return output
-
-
-    def htmlRenderLink(self, id = 'uri', par1 = '', par2 = ''):
-        if id == 'uri':
-            title = "title=\"%s\"" % par1
-            href = "href=\"%s\"" % par1
-            value = par2
-
-        elif id == 'album':
-            title = "title=\"album:+\'%s\'\"" % par1
-            href = "href=\"query:/album:+\'%s\'\"" % par1
-            value = self.htmlLinkSearch
-
-        elif id == 'contact':
-            title = "title=\"contact:+\'%s\'\"" % par1
-            href = "href=\"query:/contact:+\'%s\'\"" % par1
-            value = self.htmlLinkSearch
-
-        elif id == 'navigator':
-            return "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
-                                    self.htmlLinkNavigatePrevious, \
-                                    self.htmlLinkNavigateNext, \
-                                    self.htmlLinkNavigateLast)
-
-        elif id == 'ontology':
-            title = "title=\"%s:+\'%s\'\"" % (par1, par2)
-            href = "href=\"query:/%s:+\'%s\'\"" % (par1, par2)
-            value = self.htmlLinkSearch
-
-        elif id == 'performer':
-            title = "title=\"performer:+\'%s\'\"" % par1
-            href = "href=\"query:/performer:+\'%s\'\"" % par1
-            value = self.htmlLinkSearch
-
-        elif id == 'tag':
-            title = "title=\"hasTag:+\'%s\'\"" % par1
-            href = "href=\"query:/hasTag:+\'%s\'\"" % par1
-            value = self.htmlLinkSearch
-
-        # This is an exception.
-        elif id == 'unplugged':
-            if par1 == '':
-                return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><em>%s</em>" \
-                        % (par2[8:].split('/')[0], \
-                            par2[8:].split('/')[0], \
-                            self.htmlLinkInfo, \
-                            '/' + '/'.join(par2[8:].split('/')[1:]) \
-                            )
-
-            else:
-                return "<b>[Unplugged<a title=\"uuid:%s\" href=\"prop:/%s\">%s</a>]</b><a title=\"%s\" href=\"%s\"><em>%s</em></a>" \
-                        % (par2[8:].split('/')[0], \
-                            par2[8:].split('/')[0], \
-                            self.htmlLinkInfo, \
-                            par1, \
-                            par1, \
-                            '/' + '/'.join(par2[8:].split('/')[1:]) \
-                            )
-
-        elif id == 'url':
-            title = "title=\"%s\"" % par1
-            href = "href=\"%s\"" % par1
-            value = par2
-            #TODO: añadir un icono que indique que es un enlace externo.
-
-        else:
-            return ''
-
-        return "<a %s %s>%s</a>" % (title, href, value)
 
 
     def processMacros(self, searchString = ""):
@@ -2061,6 +2021,13 @@ class Nepoogle(QWidget):
         self.pendingQuery = False
         self.queryMethod = None
         if (output != ""):
+            if (self.queriesIndex >= 0):
+                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                    dataIndex = lindex(self.navigationData, searchString)
+                    if (dataIndex != None):
+                        dataLength = len(self.navigationData)
+                        output = output.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+
             self.wvOutput.setHtml(output)
 
         self.setCursor(Qt.ArrowCursor)

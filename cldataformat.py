@@ -95,10 +95,10 @@ class cDataFormat():
     iconKonqueror = toUnicode(KIconLoader().iconPath('konqueror', KIconLoader.Small))
     iconListAdd = toUnicode(KIconLoader().iconPath('list-add', KIconLoader.Small))
     iconListRemove = toUnicode(KIconLoader().iconPath('list-remove', KIconLoader.Small))
-    iconNavigateFirst = toUnicode(KIconLoader().iconPath('go-first', KIconLoader.Small))
-    iconNavigateLast = toUnicode(KIconLoader().iconPath('go-last', KIconLoader.Small))
-    iconNavigateNext = toUnicode(KIconLoader().iconPath('go-next', KIconLoader.Small))
-    iconNavigatePrevious = toUnicode(KIconLoader().iconPath('go-previous', KIconLoader.Small))
+    iconNavigateFirst = toUnicode(KIconLoader().iconPath('go-first', KIconLoader.Toolbar))
+    iconNavigateLast = toUnicode(KIconLoader().iconPath('go-last', KIconLoader.Toolbar))
+    iconNavigateNext = toUnicode(KIconLoader().iconPath('go-next', KIconLoader.Toolbar))
+    iconNavigatePrevious = toUnicode(KIconLoader().iconPath('go-previous', KIconLoader.Toolbar))
     iconNoCover = toUnicode(KIconLoader().iconPath('no_cover', KIconLoader.Desktop))
     iconNoPhoto = toUnicode(KIconLoader().iconPath('no_photo', KIconLoader.Desktop))
     iconNoSymbol = toUnicode(KIconLoader().iconPath('no_symbol', KIconLoader.Desktop))
@@ -160,7 +160,9 @@ class cDataFormat():
     htmlViewerTableFooter = "</tbody></table>\n"
 
     htmlStyleIcon = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 14px; height: 14px;\""
-    htmlStyleNavigate  = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
+    #htmlStyleNavigate = "align=\"center\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 20px; height: 20px;\""
+    htmlStyleNavigate = "align=\"center\" border=0 hspace=0 vspace=0"
+    htmlStyleNavigateDisabled = "align=\"center\" border=0 hspace=0 vspace=0 style=\"-webkit-filter: grayscale(100%);\""
 
     htmlStadistics = "%(records)s records found in %(seconds).4f seconds." \
                         "&nbsp;HTML visualization built in %(sechtml).2f seconds." \
@@ -177,14 +179,23 @@ class cDataFormat():
     htmlLinkKonqueror = "<a title=\"Open with Konqueror\" href=\"konq:/%(uri)s\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconKonqueror) \
                             + "</a>"
+
     htmlLinkNavigateFirst = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s/navbutton\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "first", "hotkey": "Ctrl+PgUp", "style": htmlStyleNavigate, "icon": iconNavigateFirst}
+    htmlLinkNavigateFirstDisabled = "<img %(style)s src=\"file://%(icon)s\">" % {"style": htmlStyleNavigateDisabled, "icon": iconNavigateFirst}
+
     htmlLinkNavigateLast = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s/navbutton\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "last", "hotkey": "Ctrl+PgDown", "style": htmlStyleNavigate, "icon": iconNavigateLast}
+    htmlLinkNavigateLastDisabled = "<img %(style)s src=\"file://%(icon)s\">" % {"style": htmlStyleNavigateDisabled, "icon": iconNavigateLast}
+
     htmlLinkNavigatePrevious = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s/navbutton\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "previous", "hotkey": "Ctrl+Left", "style": htmlStyleNavigate, "icon": iconNavigatePrevious}
+    htmlLinkNavigatePreviousDisabled = "<img %(style)s src=\"file://%(icon)s\">" % {"style": htmlStyleNavigateDisabled, "icon": iconNavigatePrevious}
+
     htmlLinkNavigateNext = "<a title=\"Go %(to)s (%(hotkey)s)\" href=\"navigate:/%(to)s/navbutton\"><img %(style)s title=\"Go %(to)s (%(hotkey)s)\" src=\"file://%(icon)s\"></a>" \
                             % {"to": "next", "hotkey": "Ctrl+Right", "style": htmlStyleNavigate, "icon": iconNavigateNext}
+    htmlLinkNavigateNextDisabled = "<img %(style)s src=\"file://%(icon)s\">" % {"style": htmlStyleNavigateDisabled, "icon": iconNavigateNext}
+
     htmlLinkOpenKIO = "<a title=\"Open location %(uri)s\" href=\"%(uri)s\">" \
                                 + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconKIO) \
                                 + "</a>"
@@ -1125,29 +1136,37 @@ class cDataFormat():
             value = self.htmlLinkSearchWebRender
 
         elif id == 'navigator':
-            dataIndex = par1
-            result = ""
-            if (dataIndex != None):
-                dataLength = par2
-                if (dataLength == 1):
-                    result = ""
+            if (par1 == None):
+                result = "<navigator />"
 
-                elif (dataIndex <= 0):
-                    result = "%s%s" % (self.htmlLinkNavigateNext, \
-                                            self.htmlLinkNavigateLast)
+            else:
+                dataIndex = par1
+                result = ""
+                if (dataIndex != None):
+                    dataLength = par2
+                    if (dataLength == 1):
+                        result = ""
 
-                elif (dataIndex >= dataLength-1):
-                    result = "%s%s" % (self.htmlLinkNavigateFirst, \
-                                            self.htmlLinkNavigatePrevious)
+                    elif (dataIndex <= 0):
+                        result = "%s%s%s%s" % (self.htmlLinkNavigateFirstDisabled, \
+                                                self.htmlLinkNavigatePreviousDisabled, \
+                                                self.htmlLinkNavigateNext, \
+                                                self.htmlLinkNavigateLast)
 
-                else:
-                    result = "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
-                                            self.htmlLinkNavigatePrevious, \
-                                            self.htmlLinkNavigateNext, \
-                                            self.htmlLinkNavigateLast)
+                    elif (dataIndex >= dataLength-1):
+                        result = "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
+                                                self.htmlLinkNavigatePrevious, \
+                                                self.htmlLinkNavigateNextDisabled, \
+                                                self.htmlLinkNavigateLastDisabled)
+
+                    else:
+                        result = "%s%s%s%s" % (self.htmlLinkNavigateFirst, \
+                                                self.htmlLinkNavigatePrevious, \
+                                                self.htmlLinkNavigateNext, \
+                                                self.htmlLinkNavigateLast)
 
 
-                result += "(%s/%s)" % (dataIndex+1, dataLength)
+                    result += " (%s/%s)" % (dataIndex+1, dataLength)
 
             return result
 
@@ -2025,7 +2044,7 @@ class cDataFormat():
         output = self.htmlHeader % (_('Resource viewer'), script)
         output += "<div class=\"top\" style=\"static: top;\">\n"
         output += '<b title=\"%(uri)s\"><h2><a title)=\"%(uri)s\" href=\"%(uri)s\">%(title)s</a></b>&nbsp;%(remove)s<reindex />&nbsp;&nbsp;%(navigator)s<cached /></h2>\n' \
-                        % {"title": _('Resource viewer'), 'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator", dataIndex, dataLength)}
+                        % {"title": _('Resource viewer'), 'uri': uri, "remove": self.htmlLinkRemove % {"uri": uri, "hotkey": " (Ctrl+Del)"}, "navigator": self.htmlRenderLink("navigator", None, None)}
         output += "</div>\n"
         output += "<div class=\"data\" style=\"float: left; width: %s;\">\n<hr>" % self.viewerColumnsWidth
         output += self.htmlViewerTableHeader
@@ -2371,7 +2390,10 @@ class cDataFormat():
                             data = self.model.executeQuery(query, Soprano.Query.QueryLanguageSparqlNoInference)
                             if data.isValid():
                                 while data.next():
-                                    contactsList += [self.htmlRenderLink('uri', toUnicode(data["uri"].toString()), toUnicode(data["fullname"].toString()))]
+                                    contactsList += ["%s %s" % ( \
+                                                        self.htmlRenderLink('uri', toUnicode(data["uri"].toString()), toUnicode(data["fullname"].toString())), \
+                                                        self.htmlRenderLink('ontology', "actor", toUnicode(data["fullname"].toString())) \
+                                                    )]
 
                             if (contactsList != []):
                                 actors = "<b>All actors in the series</b>:<br />" + ", ".join(contactsList)
