@@ -1364,6 +1364,7 @@ class Nepoogle(QWidget):
                                 os.makedirs(downloadTo)
 
                             #downloadTo = downloadTo + urlDecode(os.path.basename(url))
+                            url = toUtf8(url)
                             downloadTo = downloadTo + md5.new(url).hexdigest() + os.path.splitext(url)[1].lower()
                             if downloadFile(url, downloadTo):
                                 # Remote resource creation to store the original url.
