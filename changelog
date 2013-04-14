@@ -1,3 +1,17 @@
+v1.0.2 -- 2013/04/14
+-FIX: cache not updated on refresh.
+-FIX: can't add a nao:Tag resouces as a nao:hasTag.
+-FIX: queries using nao:identifier ontology and unicode values failed.
+-FIX: queries with float numbers was not enought accurate.
+-FIX: queries with including value ontologies was failed using negation if there are more than one value.
+-CHANGE: navigation toolbar detects when must be enabled or active and informs about position.
+-CHANGE: nexif values are the same used by digikam.
+-NEW: added --sort command.
+-NEW: added delele all link in list view to delete all listed resources.
+-NEW: drag&drop resouces with CTRL key pressed delete resouces instead adding it.
+-NEW: finally parenthesis :).
+-NEW: link to copy to clipboard last executed SPARQL query.
+
 v1.0.1 -- 2013/04/05
 -BUG: command --genres not worked.
 -BUG: negation don't works in general search, the one without prefixes.
