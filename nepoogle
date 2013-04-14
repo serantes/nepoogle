@@ -1839,6 +1839,7 @@ class Nepoogle(QWidget):
                 elif (self.queryMethod == "refresh"):
                     oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
+                    self.cache[self.queriesIndex] = oDataFormat
 
                 elif (self.queryMethod == "manual"):
                     # Cache must be trunked in current position if query changed.
