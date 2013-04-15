@@ -1,14 +1,14 @@
 v1.0.2 -- 2013/04/14
 -FIX: cache not updated on refresh.
--FIX: can't add a nao:Tag resouces as a nao:hasTag.
+-FIX: can't add a nao:Tag resources as a nao:hasTag.
 -FIX: queries using nao:identifier ontology and unicode values failed.
--FIX: queries with float numbers was not enought accurate.
+-FIX: queries with float numbers was not enough accurate.
 -FIX: queries with including value ontologies was failed using negation if there are more than one value.
 -CHANGE: navigation toolbar detects when must be enabled or active and informs about position.
 -CHANGE: nexif values are the same used by digikam.
 -NEW: added --sort command.
--NEW: added delele all link in list view to delete all listed resources.
--NEW: drag&drop resouces with CTRL key pressed delete resouces instead adding it.
+-NEW: added delete all link in list view to delete all listed resources.
+-NEW: drag&drop resources with CTRL key pressed delete resources instead adding it.
 -NEW: finally parenthesis :).
 -NEW: link to copy to clipboard last executed SPARQL query.
 
@@ -24,7 +24,7 @@ v1.0.1 -- 2013/04/05
 -NEW: added support to indexed compressed files.
 -NEW: added initial support to Telepathy personal contacts and IM accounts.
 -NEW: general search search in nie:url ontology too.
--NEW: shorcuts actors, directors, performers, producers, writers, sharpness and saturation.
+-NEW: shortcuts actors, directors, performers, producers, writers, sharpness and saturation.
 
 v1.0.0 -- 2013/03/29
 -BUG: several bugs fixed. More info are available in git repository.
