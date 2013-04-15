@@ -211,6 +211,9 @@ class cDataFormat():
     htmlLinkRemoveAll = "<a title=\"Remove all listed resources\" href=\"remove:/all\">" \
                             + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconListRemove) \
                             + "</a>"
+    htmlLinkRemoveOntology = "<a title=\"Remove ontology\" href=\"%s\">" \
+                            + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconListRemove) \
+                            + "</a>"
     htmlLinkSearch = "<a title=\"%(uri)s\" href=\"query:/%(uri)s\">" \
                         + "<img %s src=\"file://%s\">" % (htmlStyleIcon, iconSystemSearch) \
                         + "</a>"
@@ -2277,10 +2280,12 @@ class cDataFormat():
                     if text != '':
                         text += '</td></tr>\n'
 
+                    delIcon = self.htmlLinkRemoveOntology % ("propedit:/%s&%s&remove" % (uri, row[0]))
                     text += '<tr><td valign=\"top\" width=\"120px\">' \
+                            '%(delicon)s' \
                             '<a title=\"%(ont)s (Click, Shift+Click, Ctrl+Click to add, edit or remove)\" ' \
                             'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
-                                % {"uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
+                                % {"delicon": delIcon, "uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
                     oldOnt = row[1]
 
                 else:

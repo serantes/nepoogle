@@ -721,18 +721,29 @@ class Nepoogle(QWidget):
 
         elif url[:10] == "propedit:/":
             uri = url[10:].split("&")
-            if (len(uri) == 2):
-                if self.keyModifiers == Qt.NoModifier:
+            if (len(uri) >= 2):
+                operation = "add"
+                if (self.keyModifiers == Qt.NoModifier):
+                    try:
+                        operation = uri[2]
+
+                    except:
+                        pass
+
+                elif (self.keyModifiers == Qt.ShiftModifier):
+                    operation = "edit"
+
+                elif (self.keyModifiers == Qt.ControlModifier):
+                    operation = "remove"
+
+                if (operation == "add"):
                     self.addProperty(uri[0], uri[1])
 
-                #elif self.keyModifiers and Qt.ShiftModifier and Qt.ControlModifier:
-                #    self.removeProperty(uri[0], uri[1])
-
-                elif self.keyModifiers == Qt.ShiftModifier:
-                    self.editProperty(uri[0], uri[1])
-
-                elif self.keyModifiers == Qt.ControlModifier:
+                elif (operation == "remove"):
                     self.removeProperty(uri[0], uri[1])
+
+                else:
+                    self.editProperty(uri[0], uri[1])
 
         elif url[:7] == 'query:/':
             urlElements = url[7:].split("'")
