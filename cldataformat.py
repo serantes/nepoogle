@@ -2121,10 +2121,10 @@ class cDataFormat():
                                 if ext != '' and ext in self.supportedImageFormats:
                                     if (lindex(images, url) == None):
                                         if resource.hasProperty(noc_nieTitle):
-                                            images += [[url, toUnicode(resource.property(noc_nieTitle).toString())]]
+                                            images += [[url, toUnicode(resource.property(noc_nieTitle).toString()), resource.uri().toString()]]
 
                                         else:
-                                            images += [[url, os.path.basename(url)]]
+                                            images += [[url, os.path.basename(url), resource.uri().toString()]]
 
                     #else:
                     #    value = toUnicode(resource.type())
@@ -2176,7 +2176,7 @@ class cDataFormat():
                         ext = os.path.splitext(url)[1][1:].lower()
                         if ext in self.supportedImageFormats:
                             if (lindex(images, url) == None):
-                                images += [[url, os.path.basename(url)]]
+                                images += [[url, os.path.basename(url), uri]]
 
                         elif ext in self.supportedAudioFormats:
                             if lindex(audios, url) == None:
@@ -2236,7 +2236,7 @@ class cDataFormat():
                             ext = os.path.splitext(value)[1][1:].lower()
                             if ext != '' and ext in self.supportedImageFormats:
                                 if (lindex(images, value) == None):
-                                    images += [[value, os.path.basename(value)]]
+                                    images += [[value, os.path.basename(value), uri]]
 
                             if value[:7] != 'file://':
                                 value = 'file://' + value
@@ -2479,7 +2479,7 @@ class cDataFormat():
                         ext = os.path.splitext(url)[1][1:].lower()
                         if ext in self.supportedImageFormats:
                             if (lindex(images, url) == None):
-                                images += [[url, os.path.basename(url)]]
+                                images += [[url, os.path.basename(url), item[0]]]
 
                         elif ext in self.supportedAudioFormats:
                             if lindex(audios, url) == None:
@@ -2530,10 +2530,16 @@ class cDataFormat():
                     output += imageViewer % {"title": item[1], 'url': url}
 
                 else:
-                    output += '<img title=\"%(title)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\"><br />\n' \
+                    output += '<img title=\"%(title)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\">\n' \
                                 % {"title": item[1], 'url': url, "width": self.viewerColumnsWidth}
 
-                output += "<b>File name</b>:<em><a title=\"%(title)s\" href=\"%(url)s\">%(title)s</a></em><br />" % {"url": url, "title": item[1]}
+                output += "<b>File name</b>:<em><a title=\"%(title)s\" href=\"%(uri)s\">%(title)s</a></em>" % {"url": url, "title": item[1], "uri": item[2]}
+                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(url)}
+                output += iconRun.replace('"', "'")
+                iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(url))}
+                output += iconDir.replace('"', "'")
+                output += "<br />"
+
 
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
