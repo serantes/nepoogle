@@ -173,7 +173,9 @@ class cSparqlBuilder2():
                     ['nuao:usageCount', _('playcount'), _('pc'), _("media file play count")], \
                     ['nao:prefLabel', _('preflabel'), _('pl'), _("preferred label")], \
                     ['nao:numericRating', _('rating'), _('ra'), _("rating")], \
-                    ['nmm:releaseDate', _('releasedate'), _('rd'), _("resource release datae")], \
+                    ['nie:contentCreated|nmm:releaseDate', _('released'), _('re'), _("released")], \
+                    ['nie:contentCreated', _('contentcreated'), _('cc'), _("content created")], \
+                    ['nmm:releaseDate', _('releasedate'), _('rd'), _("resource release data")], \
                     ['nexif:saturation', _('saturation'), _('sa'), _("photograph saturation")], \
                     ['nexif:sharpness', _('sharpness'), _('sh'), _("photograph sharpness")], \
                     ['nmm:season', _('season'), _('se'), _("tvshow season")], \
@@ -773,6 +775,7 @@ class cSparqlBuilder2():
                 clause = ""
                 fieldUsedAsResult = "?x%d " % 0
                 firstOntology = None
+                filterToUse = None
                 for ontology in ontologyElements:
                     ontology = self.ontologyConversion(ontology)
                     valType = ""
@@ -819,19 +822,64 @@ class cSparqlBuilder2():
                             rName = "?x%d" % i
                             vName = "?x%d" % (i + 1)
 
-                        clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                        # ont1&ont2&ont3 must conveted in several clauses without UNION.
+                        # ont1|ont2|ont3 must conveted in several clauses with UNION.
+                        addUnion = ""
+                        ontologyGroup = ontology.split("&")
+                        if (len(ontologyGroup) <= 1):
+                            ontologyGroup = ontology.split("|")
+                            if (len(ontologyGroup) > 1):
+                                addUnion = "UNION"
+
+                        else:
+                            if (len(ontology.split("|")) > 1):
+                                raise Exception("Bad shortcut definition, shortcuts can't use \"|\" and \"&\" at the same time in \"%s\"." % ontology)
+
+                        if (len(ontologyGroup) > 1):
+                            valType = self.ontologyVarType(ontologyGroup[0])
+                            filterToUse = self.buildExpressionFilter(valType, operator, value)
+                            clause += "{\n"
+                            clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[0], 'r': rName, 'v': vName, 'f': filterToUse}
+                            clause += indent + "} %s " % addUnion
+
+                            for j in range(1, len(ontologyGroup)-1):
+                                valType = self.ontologyVarType(ontologyGroup[j])
+                                filterToUse = self.buildExpressionFilter(valType, operator, value)
+                                clause += "{\n"
+                                clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[j], 'r': rName, 'v': vName, 'f': filterToUse}
+                                clause += indent + "} %s " % addUnion
+
+                            valType = self.ontologyVarType(ontologyGroup[-1])
+                            filterToUse = self.buildExpressionFilter(valType, operator, value)
+                            clause += "{\n"
+                            clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[-1], 'r': rName, 'v': vName, 'f': filterToUse}
+                            clause += indent + "}"
+
+                        else:
+                            clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+
                         i += 1
                         if (firstOntology == None):
                             firstOntology = ontology
 
                 clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
                 if negationWithNotExists:
-                    strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
+                    if (filterToUse == None):
+                        strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
                                 + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
                                 + indent + "}\n"
 
+                    else:
+                        strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
+                                    + indent2 + clause + "\n" \
+                                    + indent + "}\n"
+
                 else:
-                    strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+                    if (filterToUse == None):
+                        strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+
+                    else:
+                        strTerm = indent + clause + "\n"
 
         return strTerm
 
@@ -991,7 +1039,7 @@ class cSparqlBuilder2():
         allFilters = []
         oneFilter = []
 
-        if string[:3].lower() in ('e0 ', 'e1 ', 'e2 '):
+        if string[:3].lower() in ('e0 ', 'e1 '):
             string = string[3:]
 
         items = self.split(string)
