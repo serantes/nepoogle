@@ -520,12 +520,14 @@ class Nepoogle(QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "manual"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
 
         elif event.key() == Qt.Key_F5:
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -637,6 +639,7 @@ class Nepoogle(QWidget):
         elif url[:9] == "command:/":
             url = url[9:]
             self.leSearch.setText(url)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
@@ -648,6 +651,7 @@ class Nepoogle(QWidget):
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 subprocess.Popen(['kioclient', 'move', url[8:], 'trash:/'])
+                self.setAppCursor(Qt.BusyCursor)
                 self.pendingQuery = True
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                         % self.iconProcessIdle)
@@ -700,6 +704,7 @@ class Nepoogle(QWidget):
 
         elif url[:9] == 'nepomuk:/':
             self.leSearch.setText(url)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
@@ -747,6 +752,7 @@ class Nepoogle(QWidget):
                 pass
 
             self.leSearch.setText(tmpUrl)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
@@ -772,13 +778,14 @@ class Nepoogle(QWidget):
                     else:
                         uris += [uri]
 
-                    self.setAppCursor(Qt.WaitCursor)
+                    self.setAppCursor(Qt.BusyCursor)
                     for uri in uris:
                         resource = Nepomuk2.Resource(uri)
                         resource.remove()
 
                     self.setAppCursor()
 
+                    self.setAppCursor(Qt.BusyCursor)
                     self.pendingQuery = True
                     self.queryMethod = "refresh"
                     self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -792,6 +799,7 @@ class Nepoogle(QWidget):
                 if (reply == QMessageBox.Yes):
                     resource = Nepomuk2.Resource(QUrl(url[8:]))
                     resource.remove()
+                    self.setAppCursor(Qt.BusyCursor)
                     self.pendingQuery = True
                     self.queryMethod = "refresh"
                     self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -800,40 +808,12 @@ class Nepoogle(QWidget):
                         self.execQuery()
                         self.pendingQuery = False
 
-        #elif url[:8] == 'render:/':
-            #if url[8:] == 'more':
-                #renderSize = 0
-
-            #elif url[8:] == 'all':
-                #if len(self.resultData) - self.renderedRows > self.renderSize * 3:
-                    #reply = QMessageBox.question(self, '%s - render all' % PROGRAM_NAME, "This could be very slow. Continue?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    #if reply != QMessageBox.Yes:
-                        #return
-
-                #renderSize = len(self.resultData)
-
-            #else:
-                #renderSize = -1
-
-            #self.leSearch.readOnly = True
-            #self.wvOutput.setHtml('<html><body><h3>Rendering... <img src="file://%s"></h3></body></html>' \
-                                    #% self.iconProcessIdle)
-            #self.wvOutput.repaint()
-            #self.setCursor(Qt.BusyCursor)
-            #self.repaint()
-            #if renderSize >= 0:
-                #self.wvOutput.setHtml(self.formatResultData([], [], [], 0, renderSize))
-
-            #self.setCursor(Qt.ArrowCursor)
-            #self.leSearch.readOnly = False
-            #self.repaint()
-
         elif url[:8] == 'render:/':
             self.leSearch.readOnly = True
+            self.setAppCursor(Qt.BusyCursor)
             self.wvOutput.setHtml('<html><body><h3>Rendering... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             self.wvOutput.repaint()
-            self.setCursor(Qt.BusyCursor)
             self.repaint()
 
             html = self.cache[self.queriesIndex].formatAsHtml(url[8:])
@@ -859,6 +839,7 @@ class Nepoogle(QWidget):
 
         #elif url[:6] == 'view:/':
             #self.leSearch.setText(url[6:])
+            #self.setAppCursor(Qt.BusyCursor)
             #self.pendingQuery = True
             #self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     #% self.iconProcessIdle)
@@ -940,6 +921,7 @@ class Nepoogle(QWidget):
 
         if (vartype(uri) != "Resource"):
             time.sleep(SLEEP_AFTER_UPDATE)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1045,6 +1027,7 @@ class Nepoogle(QWidget):
 
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1130,6 +1113,7 @@ class Nepoogle(QWidget):
 
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1204,6 +1188,7 @@ class Nepoogle(QWidget):
 
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1278,7 +1263,7 @@ class Nepoogle(QWidget):
 
                         #TODO: handle better this.
                         if (len(uris) == 1):
-                            self.setAppCursor(Qt.WaitCursor)
+                            self.setAppCursor(Qt.BusyCursor)
                             for uri in uris:
                                 #TODO: test this.
                                 self.editProperty(uri, ontValue)
@@ -1289,7 +1274,7 @@ class Nepoogle(QWidget):
 
                 if (dropType == None):
                     if (url[:9] == "propadd:/"):
-                        self.setAppCursor(Qt.WaitCursor)
+                        self.setAppCursor(Qt.BusyCursor)
                         for uri in uris:
                             if (dbOperation == "add"):
                                 self.addProperty(uri)
@@ -1322,7 +1307,7 @@ class Nepoogle(QWidget):
                         imageReply = QMessageBox.Yes
 
                     if (imageReply == QMessageBox.Yes):
-                        self.setAppCursor(Qt.WaitCursor)
+                        self.setAppCursor(Qt.BusyCursor)
                         for uri in uris:
                             uriResource = Nepomuk2.Resource(uri)
                             if (dbOperation == "add"):
@@ -1396,7 +1381,7 @@ class Nepoogle(QWidget):
                                 mustRefresh = SLEEP_AFTER_UPDATE
 
                 else:
-                    # Not images and not images to download.
+                    # Not image, url or image_url.
                     if (self.model == None):
                         return False
 
@@ -1451,7 +1436,7 @@ class Nepoogle(QWidget):
                         #resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                         resourceReply = QMessageBox.Yes
                         if (resourceReply == QMessageBox.Yes):
-                            self.setAppCursor(Qt.WaitCursor)
+                            self.setAppCursor(Qt.BusyCursor)
                             for uri in uris:
                                 print("%s: property %s added" % (uri, ontologyResource))
                                 #print("Adding property: %s, %s, %s" % (uri, ontologyResource, url))
@@ -1483,6 +1468,7 @@ class Nepoogle(QWidget):
 
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
+            self.setAppCursor(Qt.BusyCursor)
             self.pendingQuery = True
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
@@ -1490,7 +1476,6 @@ class Nepoogle(QWidget):
 
         elif (mustRefresh == SLEEP_MESSAGE_BOX):
             QMessageBox.information(self, "%s - %s" % (PROGRAM_NAME, _("Information")), _("Process finished."))
-
 
 
     def goBackward(self):
@@ -1916,7 +1901,7 @@ class Nepoogle(QWidget):
                         print(readableQuery)
 
                     #query = hackQueryParser(query, 'e0')
-                    self.setAppCursor(Qt.WaitCursor)
+                    self.setAppCursor(Qt.BusyCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     self.lastSPARQLQuery = readableQuery
                     self.setAppCursor()
@@ -1940,7 +1925,7 @@ class Nepoogle(QWidget):
                         ## Improve a little bit readability.
                         #print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
 
-                    #self.setAppCursor(Qt.WaitCursor)
+                    #self.setAppCursor(Qt.BusyCursor)
                     #self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
                     #self.setAppCursor()
 
@@ -1950,7 +1935,7 @@ class Nepoogle(QWidget):
                     if self.sparqlBuilderV1:
                         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
-                    self.setAppCursor(Qt.WaitCursor)
+                    self.setAppCursor(Qt.BusyCursor)
                     self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
                     self.lastSPARQLQuery = self.sparql.lastSPARQLQuery
                     self.setAppCursor()
