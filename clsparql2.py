@@ -87,7 +87,7 @@ class cSparqlBuilder2():
                 [_('--topics'), ['?r', [[0, 'pimo:tagLabel', True, True, True]], ['nao:identifier'], ['pimo:Topic']]], \
                 [_('--tvseries'), ['?r', [[0, 'nie:title', True, True, True], [1, 'nie:url', True, True, True]], ['nie:title'], ['nmm:TVSeries']]], \
                 [_('--tvshows'), ['?r', [[0, 'nie:url', True, True, True], [1, 'nie:title', True, True, True]], ['nie:title'], ['nmm:TVShow']]], \
-                [_('--videos'), ['?r', [[0, 'nie:title', True, True, True], [1, 'nie:url', True, True, True]], ['nie:title'], ['nfo:Video']]], \
+                [_('--videos'), ['?r', [[0, 'nie:title', True, True, True], [1, 'nie:url', True, True, True]], ['nie:url'], ['nfo:Video']]], \
                 [_('--writers'), ['?x1', [[0, 'nco:fullname', True, True, True]], ['nmm:writer->nco:fullname'], ['nco:Contact']]] \
             ]
 
@@ -135,6 +135,8 @@ class cSparqlBuilder2():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
                     ['nao:altLabel', _('altlabel'), _('all')], \
+                    ['_nmm:composer->nco:fullname',_('composer'), _('co')], \
+                    ['_nmm:composer?->nco:fullname', _('composers'), _('cos')], \
                     ['?ont->nco:fullname', _('contact'), _('co')], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
                     ['nao:created', _('created'), _('cd')], \
@@ -154,6 +156,7 @@ class cSparqlBuilder2():
                     ['_nao:hasTag->nao:identifier', _('hastag'), _('ht')], \
                     ['nfo:height', _('height'), _('he')], \
                     ['kext:indexingLevel', _('indexinglevel'), _('il')], \
+                    ['rdf:type=nfo:RasterImage->nie:url', _('images'), _('ims')], \
                     ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
                     ['nexif:meteringMode', _('meteringmode'), _('mm')], \
                     ['nie:mimeType', _('mimetype'), _('mt')], \
@@ -186,6 +189,7 @@ class cSparqlBuilder2():
                     ['!rdf:type', _('type'), _('ty')], \
                     ['%nie:url', _('url'), _('ur')], \
                     ['nuao:usageCount', _('usagecount'), _('uc')], \
+                    ['rdf:type=nfo:Video->nie:url', _('videos'), _('vis')], \
                     ['nfo:width', _('width'), _('wi')], \
                     ['nexif:whiteBalance', _('whitebalance'), _('wb')], \
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr')], \
