@@ -831,7 +831,7 @@ class Nepoogle(QWidget):
 
             self.wvOutput.setHtml(html)
 
-            self.setCursor(Qt.ArrowCursor)
+            self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
 
@@ -1496,7 +1496,7 @@ class Nepoogle(QWidget):
                 refresh = True
 
         if refresh:
-            self.setCursor(Qt.BusyCursor)
+            self.setAppCursor(Qt.BusyCursor)
             searchString = self.cache[self.queriesIndex].searchString
             #if searchString[:3] == "e1 ":
             #    searchString = searchString[3:]
@@ -1514,7 +1514,7 @@ class Nepoogle(QWidget):
 
             self.wvOutput.setHtml(html)
 
-            self.setCursor(Qt.ArrowCursor)
+            self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
@@ -1531,7 +1531,7 @@ class Nepoogle(QWidget):
         #print("Go forward")
         if (self.queriesIndex < (len(self.cache) - 1)):
             self.queriesIndex += 1
-            self.setCursor(Qt.BusyCursor)
+            self.setAppCursor(Qt.BusyCursor)
             searchString = self.cache[self.queriesIndex].searchString
             #if searchString[:3] == "e1 ":
             #    searchString = searchString[3:]
@@ -1549,7 +1549,7 @@ class Nepoogle(QWidget):
 
             self.wvOutput.setHtml(html)
 
-            self.setCursor(Qt.ArrowCursor)
+            self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
@@ -1785,7 +1785,7 @@ class Nepoogle(QWidget):
 
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
-        self.setCursor(Qt.BusyCursor)
+        self.setAppCursor(Qt.BusyCursor)
         self.repaint()
 
         self.renderedRows = 0
@@ -2030,7 +2030,7 @@ class Nepoogle(QWidget):
 
             self.wvOutput.setHtml(output)
 
-        self.setCursor(Qt.ArrowCursor)
+        self.setAppCursor()
         self.leSearch.readOnly = False
         self.repaint()
 
