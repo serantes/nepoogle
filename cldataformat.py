@@ -2535,7 +2535,7 @@ class cDataFormat():
 
                 output += "<b>File name</b>:<em><a title=\"%(title)s\" href=\"%(uri)s\">%(title)s</a></em>" % {"url": url, "title": item[1], "uri": item[2]}
                 iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(url)}
-                output += iconRun.replace('"', "'")
+                output += " " + iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(url))}
                 output += iconDir.replace('"', "'")
                 output += "<br />"
