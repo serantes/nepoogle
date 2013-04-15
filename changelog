@@ -1,9 +1,9 @@
 v1.0.2 -- 2013/04/14
--FIX: cache not updated on refresh.
--FIX: can't add a nao:Tag resources as a nao:hasTag.
--FIX: queries using nao:identifier ontology and unicode values failed.
--FIX: queries with float numbers was not enough accurate.
--FIX: queries with including value ontologies was failed using negation if there are more than one value.
+-BUG: cache not updated on refresh.
+-BUG: can't add a nao:Tag resources as a nao:hasTag.
+-BUG: queries using nao:identifier ontology and unicode values failed.
+-BUG: queries with float numbers was not enough accurate.
+-BUG: queries including value ontologies with negation failed if there are more than one value.
 -CHANGE: navigation toolbar detects when must be enabled or active and informs about position.
 -CHANGE: nexif values are the same used by digikam.
 -NEW: added --sort command.
