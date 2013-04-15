@@ -148,7 +148,7 @@ class nCompleter(QCompleter):
 
     separator = " "
 
-    def __init__(self, *args):
+    def __init__(self, sparqlBuilderV1, *args):
         super(nCompleter, self).__init__(*args)
 
         model = QStringListModel()
@@ -156,7 +156,11 @@ class nCompleter(QCompleter):
                     u"and", u"or",\
                     ]
 
-        oSparqlBuilder = cSparqlBuilder2()
+        if sparqlBuilderV1:
+            oSparqlBuilder = cSparqlBuilder()
+
+        else:
+            oSparqlBuilder = cSparqlBuilder2()
 
         for shortcut in oSparqlBuilder.shortcuts:
             wordList += [shortcut[1] + ":"]
@@ -340,7 +344,7 @@ class Nepoogle(QWidget):
         self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
 
         self.leSearch = QLineEdit(self)
-        self.leSearch.setCompleter(nCompleter())
+        self.leSearch.setCompleter(nCompleter(self.sparqlBuilderV1))
         self.leSearch.selectOnEntry = True
 
         self.pbBackward = QPushButton(self)
@@ -1588,6 +1592,12 @@ class Nepoogle(QWidget):
                         % {'border': 0, 'cellpadding': 0}
         for shortcut in oSparqlBuilder.shortcuts:
             info = ''
+            try:
+                ontHelp = shortcut[3]
+
+            except:
+                ontHelp = ""
+
             fmtOntology = shortcut[0]
             if fmtOntology.find('%') >= 0:
                 fmtOntology = fmtOntology.replace('%', '')
@@ -1601,8 +1611,10 @@ class Nepoogle(QWidget):
                 fmtOntology = fmtOntology.replace('_', '')
                 info += ' (using optionals to negate)'
 
-            shortcuts += '<tr><td><b>%(abr)s</b>, <b>%(shortcut)s</b>:</td><td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
-                                % {'abr': shortcut[2], 'shortcut': shortcut[1], 'ontology': fmtOntology, 'info': info}
+            shortcuts += '<tr><td width=150px><b>%(abr)s</b>,<b>%(shortcut)s</b>:</td>' \
+                            '<td>%(help)s</td>' \
+                            '<td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
+                        % {'abr': shortcut[2], 'shortcut': shortcut[1], 'help': ontHelp, 'ontology': fmtOntology, 'info': info}
 
         shortcuts += htmlTableFooter + '</ul></p>\n'
 

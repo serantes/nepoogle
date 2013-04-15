@@ -128,74 +128,74 @@ class cSparqlBuilder2():
     stdoutQuery = False
 
     shortcuts = [ \
-                    ['_nmm:actor->nco:fullname',_('actor'), _('ac')], \
-                    ['_nmm:actor?->nco:fullname', _('actors'), _('acs')], \
-                    ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa')], \
-                    ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay')], \
-                    ['nmm:musicAlbum->nie:title', _('album'), _('al')], \
-                    ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als')], \
-                    ['nao:altLabel', _('altlabel'), _('all')], \
-                    ['_nmm:composer->nco:fullname',_('composer'), _('co')], \
-                    ['_nmm:composer?->nco:fullname', _('composers'), _('cos')], \
-                    ['?ont->nco:fullname', _('contact'), _('co')], \
-                    ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos')], \
-                    ['nao:created', _('created'), _('cd')], \
-                    ['nie:contentCreated', _('contentcreated'), _('cc')], \
-                    ['_nco:creator->nco:fullname', _('creator'), _('cr')], \
-                    ['_nco:creator?->nco:fullname', _('creators'), _('crs')], \
-                    ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds')], \
-                    ['nao:description', _('description'), _('de')], \
-                    ['_nmm:director->nco:fullname', _('director'), _('di')], \
-                    ['_nmm:director?->nco:fullname', _('directors'), _('dis')], \
-                    ['nmm:setNumber', _('discnumber'), _('dn')], \
-                    ['nfo:duration', _('duration'), _('du')], \
-                    ['nmm:episodeNumber', _('episode'), _('ep')], \
-                    ['nexif:flash', _('flash'), _('fl')], \
-                    ['nco:fullname', _('fullname'), _('fn')], \
-                    ['!nmm:genre', _('genre'), _('ge')], \
-                    ['_nao:hasTag->nao:identifier', _('hastag'), _('ht')], \
-                    ['nfo:height', _('height'), _('he')], \
-                    ['kext:indexingLevel', _('indexinglevel'), _('il')], \
-                    ['rdf:type=nfo:RasterImage->nie:url', _('images'), _('ims')], \
-                    ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir')], \
-                    ['nexif:meteringMode', _('meteringmode'), _('mm')], \
-                    ['nie:mimeType', _('mimetype'), _('mt')], \
-                    ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos')], \
-                    ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps')], \
-                    ['nie:url', _('name'), _('na')], \
-                    ['nao:numericRating', _('numericrating'), _('nr')], \
-                    ['_nmm:performer->nco:fullname', _('performer'), _('pe')], \
-                    ['_nmm:performer?->nco:fullname', _('performers'), _('pes')], \
-                    ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa')], \
-                    ['_nmm:producer->nco:fullname', _('producer'), _('pr')], \
-                    ['_nmm:producer?->nco:fullname', _('producers'), _('prs')], \
-                    ['nco:photo<-nco:fullname', _('photos'), _('ps')], \
-                    ['nuao:usageCount', _('playcount'), _('pc')], \
-                    ['nao:prefLabel', _('preflabel'), _('pl')], \
-                    ['nao:numericRating', _('rating'), _('ra')], \
-                    ['nmm:releaseDate', _('releasedate'), _('rd')], \
-                    ['nexif:saturation', _('saturation'), _('sa')], \
-                    ['nexif:sharpness', _('sharpness'), _('sh')], \
-                    ['nmm:season', _('season'), _('se')], \
-                    ['nmm:setNumber', _('setnumber'), _('sn')], \
-                    ['nao:identifier', _('tag'), _('ta')], \
-                    ['nfo:depiction<-nie:title', _('tdepictions'), _('tds')], \
-                    ['nie:title', _('title'), _('ti')], \
-                    ['nmm:trackNumber', _('tracknumber'), _('tn')], \
-                    ['_nco:topic->nco:fullname',_('topic'), _('to')], \
-                    ['_nco:topic?->nco:fullname', _('topics'), _('tos')], \
-                    ['nmm:series->nie:title', _('tvserie'), _('ts')], \
-                    ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs')], \
-                    ['nmm:series->nie:title', _('tvshow'), _('tv')], \
-                    ['rdf:type=nmm:TVShow->nie:title', _('tvshows'), _('tvw')], \
-                    ['!rdf:type', _('type'), _('ty')], \
-                    ['%nie:url', _('url'), _('ur')], \
-                    ['nuao:usageCount', _('usagecount'), _('uc')], \
-                    ['rdf:type=nfo:Video->nie:url', _('videos'), _('vis')], \
-                    ['nfo:width', _('width'), _('wi')], \
-                    ['nexif:whiteBalance', _('whitebalance'), _('wb')], \
-                    ['_nmm:writer->nco:fullname', _('writer'), _('wr')], \
-                    ['_nmm:writer?->nco:fullname', _('writers'), _('wrs')] \
+                    ['_nmm:actor->nco:fullname',_('actor'), _('ac'), _("resources by actor")], \
+                    ['_nmm:actor?->nco:fullname', _('actors'), _('acs'), _("actors")], \
+                    ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("resources by artist")], \
+                    ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay'), _("album published year")], \
+                    ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
+                    ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
+                    ['nao:altLabel', _('altlabel'), _('all'), _("alternative label")], \
+                    ['_nmm:composer->nco:fullname',_('composer'), _('co'), _("music pieces by composer")], \
+                    ['_nmm:composer?->nco:fullname', _('composers'), _('cos'), _("composers")], \
+                    ['?ont->nco:fullname', _('contact'), _('co'), _("resources by contact")], \
+                    ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos'), _("contacts")], \
+                    ['nao:created', _('created'), _('cd'), _("created")], \
+                    ['nie:contentCreated', _('contentcreated'), _('cc'), _("content created")], \
+                    ['_nco:creator->nco:fullname', _('creator'), _('cr'), _("resources by creator")], \
+                    ['_nco:creator?->nco:fullname', _('creators'), _('crs'), _("creators")], \
+                    ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds'), _("contact depictions")], \
+                    ['nao:description', _('description'), _('de'), _("description")], \
+                    ['_nmm:director->nco:fullname', _('director'), _('di'), _("resources by director")], \
+                    ['_nmm:director?->nco:fullname', _('directors'), _('dis'), _("directors")], \
+                    ['nmm:setNumber', _('discnumber'), _('dn'), _("music album disc number")], \
+                    ['nfo:duration', _('duration'), _('du'), _("duration")], \
+                    ['nmm:episodeNumber', _('episode'), _('ep'), _("tvshow episode number")], \
+                    ['nexif:flash', _('flash'), _('fl'), _("photograph flash")], \
+                    ['nco:fullname', _('fullname'), _('fn'), _("contact's fullname")], \
+                    ['!nmm:genre', _('genre'), _('ge'), _("genre")], \
+                    ['_nao:hasTag->nao:identifier', _('hastag'), _('ht'), _("tag name")], \
+                    ['nfo:height', _('height'), _('he'), _("height")], \
+                    ['kext:indexingLevel', _('indexinglevel'), _('il'), _("nepomuk indexing level")], \
+                    ['rdf:type=nfo:RasterImage->nie:url', _('images'), _('ims'), _("images")], \
+                    ['nao:isRelated<-nco:fullname', _('isrelated'), _('ir'), _("contact is related")], \
+                    ['nexif:meteringMode', _('meteringmode'), _('mm'), _("photograph metering mode")], \
+                    ['nie:mimeType', _('mimetype'), _('mt'), _("file mime type")], \
+                    ['rdf:type=nmm:Movie->nie:title', _('movies'), _('mos'), _("movies")], \
+                    ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps'), _("music pieces")], \
+                    ['nie:url', _('name'), _('na'), _("file urls")], \
+                    ['nao:numericRating', _('numericrating'), _('nr'), _("rating")], \
+                    ['_nmm:performer->nco:fullname', _('performer'), _('pe'), _("music pieces by performer")], \
+                    ['_nmm:performer?->nco:fullname', _('performers'), _('pes'), _("performers")], \
+                    ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa'), _("albums by performer")], \
+                    ['_nmm:producer->nco:fullname', _('producer'), _('pr'), _("resources by producer")], \
+                    ['_nmm:producer?->nco:fullname', _('producers'), _('prs'), _("producers")], \
+                    ['nco:photo<-nco:fullname', _('photos'), _('ps'), _("photographs")], \
+                    ['nuao:usageCount', _('playcount'), _('pc'), _("media file play count")], \
+                    ['nao:prefLabel', _('preflabel'), _('pl'), _("preferred label")], \
+                    ['nao:numericRating', _('rating'), _('ra'), _("rating")], \
+                    ['nmm:releaseDate', _('releasedate'), _('rd'), _("resource release datae")], \
+                    ['nexif:saturation', _('saturation'), _('sa'), _("photograph saturation")], \
+                    ['nexif:sharpness', _('sharpness'), _('sh'), _("photograph sharpness")], \
+                    ['nmm:season', _('season'), _('se'), _("tvshow season")], \
+                    ['nmm:setNumber', _('setnumber'), _('sn'), _("music album disc number")], \
+                    ['nao:identifier', _('tag'), _('ta'), _("tag name")], \
+                    ['nfo:depiction<-nie:title', _('tdepictions'), _('tds'), _("tvseries depictions")], \
+                    ['nie:title', _('title'), _('ti'), _("resource title")], \
+                    ['nmm:trackNumber', _('tracknumber'), _('tn'), _("song track number")], \
+                    ['_nco:topic->nco:fullname',_('topic'), _('to'), _("resources by topic")], \
+                    ['_nco:topic?->nco:fullname', _('topics'), _('tos'), _("topics")], \
+                    ['nmm:series->nie:title', _('tvserie'), _('ts'), _("tvshows by series")], \
+                    ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs'), _("tvseries")], \
+                    ['nmm:series->nie:title', _('tvshow'), _('tv'), _("tvshows by title")], \
+                    ['rdf:type=nmm:TVShow->nie:title', _('tvshows'), _('tvw'), _("tvshows")], \
+                    ['!rdf:type', _('type'), _('ty'), _("resource type")], \
+                    ['%nie:url', _('url'), _('ur'), _("file url")], \
+                    ['nuao:usageCount', _('usagecount'), _('uc'), _("media file play count")], \
+                    ['rdf:type=nfo:Video->nie:url', _('videos'), _('vis'), _("videos")], \
+                    ['nfo:width', _('width'), _('wi'), _("width")], \
+                    ['nexif:whiteBalance', _('whitebalance'), _('wb'), _("photograph white balance")], \
+                    ['_nmm:writer->nco:fullname', _('writer'), _('wr'), _("resources by writer")], \
+                    ['_nmm:writer?->nco:fullname', _('writers'), _('wrs'), _("writers")] \
                 ]
     #(movies: and actor:"takeuchi") or nmm:series<-nmm:actor->nco:fullname:"takeuchi"
 
