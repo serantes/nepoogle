@@ -1572,7 +1572,7 @@ class cDataFormat():
         return data, variables, optionals, optionalsEmpty
 
 
-    def formatResource(self, resource, pattern):
+    def formatResourceLine(self, resource, pattern):
         # Variables substitution.
         data, variables, optionals, optionalsEmpty = self.processFormatPattern(pattern)
         listSeparation = ", "
@@ -1783,7 +1783,7 @@ class cDataFormat():
                 columns += ["<b title='%s'>" % itemType + ontologyToHuman(itemType) + "</b>"]
 
             else:
-                columns += [self.formatResource(resource, pattern)]
+                columns += [self.formatResourceLine(resource, pattern)]
                 isValid = True
 
         if isValid:
