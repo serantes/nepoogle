@@ -1135,7 +1135,8 @@ class cSparqlBuilder2():
             raise Exception(_("Syntax error, please check your search text."))
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
-            if command.lower() not in ('--playlist', '--playmixed', '--sort'):
+            commandLower = command.lower()
+            if (commandLower not in ("--playlist", "--playmixed") and (commandLower[:6] != "--sort")):
                 allFilters = []
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
