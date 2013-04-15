@@ -182,6 +182,8 @@ class cSparqlBuilder2():
                     ['nfo:depiction<-nie:title', _('tdepictions'), _('tds')], \
                     ['nie:title', _('title'), _('ti')], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn')], \
+                    ['_nco:topic->nco:fullname',_('topic'), _('to')], \
+                    ['_nco:topic?->nco:fullname', _('topics'), _('tos')], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts')], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs')], \
                     ['nmm:series->nie:title', _('tvshow'), _('tv')], \
