@@ -91,8 +91,9 @@ except:
 #_TODO: musicpiece debe de incluir el intérprete
 #_TODO: añadir más información al contacto en la vista de resultados
 #_TODO: implementar cache al moverse de atrás adelante (ojo con la vista por partes)
+#_BUG: BUG001 -> negation without a shorcut is failing.
+#_TODO: paréntesis
 
-#BUG: BUG001 -> negation without a shorcut is failing.
 #TODO: bif:lower(?x) in ('x', 'y', 'z')
 #TODO: añadir soporte a nepomuk:/ en consola
 #TODO: count()
@@ -104,7 +105,6 @@ except:
 #}
 #TODO: configuración externa
 #TODO: multilenguage
-#TODO: paréntesis
 #TODO: soporte para la gestión de tags. Idea:
 #       Más usados: los 10 tags más usados listados alfabéticamente.
 #       Usados: los últimos tags usados, debajo los últimos que has usado.
@@ -144,64 +144,54 @@ from clsparql2 import *
 from cldataformat import *
 #ENDIF
 
-#class nCompleter(QCompleter):
+class nCompleter(QCompleter):
 
-    #separator = " "
+    separator = " "
 
-    #def __init__(self, *args):
+    def __init__(self, *args):
+        super(nCompleter, self).__init__(*args)
 
-        #super(nCompleter, self).__init__(*args)
+        model = QStringListModel()
+        wordList = [ \
+                    u"and", u"or",\
+                    ]
 
-        #model = QStringListModel()
-        #wordList = [ \
-                    #u"and", u"or",\
-                    #u"actor:", \
-                    #u"album", \
-                    #u"creator", \
-                    #u"director:", \
-                    #u"genre", \
-                    #u"hasTag:", \
-                    #u"name:", \
-                    #u"performer", \
-                    #u"preflabel:", \
-                    #u"rating:", \
-                    #u"tag:", \
-                    #u"title:", \
-                    #u"url:", \
-                    #u"writer:", \
-                    #u"--help", \
-                    #u"--allActors", \
-                    #u"--allAlbums", \
-                    ##u"--allCreators", \
-                    #u"--allDirectors", \
-                    #u"--allGenres", \
-                    #u"--allPerformers", \
-                    #u"--allTags", \
-                    #u"--allWriters" \
-                    #]
+        oSparqlBuilder = cSparqlBuilder2()
 
-        #model.setStringList(wordList)
-        #self.setModel(model)
-        #self.setCaseSensitivity(Qt.CaseInsensitive);
-        #self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
+        for shortcut in oSparqlBuilder.shortcuts:
+            wordList += [shortcut[1] + ":"]
 
-        ##self.setCompletionMode(QCompleter.PopupCompletion)
-        ##self.setCompletionMode(QCompleter.InlineCompletion)
+        for command in oSparqlBuilder.commands:
+            if (command[0] in ("--help", "--playlist", "--playmixed", "--shownepoogleupdates")):
+                wordList += [command[0]]
+
+            else:
+                wordList += [command[0] + ":"]
+
+        model.setStringList(wordList)
+
+        self.setMaxVisibleItems(25)
+        self.setModel(model)
+        self.setCaseSensitivity(Qt.CaseInsensitive);
+        self.setModelSorting(QCompleter.CaseSensitivelySortedModel)
+
+        #self.setCompletionMode(QCompleter.PopupCompletion)
+        #self.setCompletionMode(QCompleter.InlineCompletion)
 
 
-    #def pathFromIndex(self, index):
-        #path = QCompleter.pathFromIndex(self, index)
+    def pathFromIndex(self, index):
+        path = QCompleter.pathFromIndex(self, index)
 
-        #lst = str(self.widget().text()).split(self.separator)
-        #if len(lst) > 1:
-            #path = '%s%s%s' % (self.separator.join(lst[:-1]), self.separator, path)
+        lst = str(self.widget().text()).split(self.separator)
+        if len(lst) > 1:
+            path = '%s%s%s' % (self.separator.join(lst[:-1]), self.separator, path)
 
-        #return path
+        return path
 
 
-    #def splitPath(self, path):
-        #path = str(path.split(self.separator)[-1]).lstrip(self.separator)
-        #return [path]
+    def splitPath(self, path):
+        path = str(path.split(self.separator)[-1]).lstrip(self.separator)
+        return [path]
 
 
 #
@@ -350,7 +340,7 @@ class Nepoogle(QWidget):
         self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
 
         self.leSearch = QLineEdit(self)
-        #self.leSearch.setCompleter(nCompleter())
+        self.leSearch.setCompleter(nCompleter())
         self.leSearch.selectOnEntry = True
 
         self.pbBackward = QPushButton(self)
