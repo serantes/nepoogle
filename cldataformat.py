@@ -52,10 +52,12 @@ class cDataFormat():
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
     enableImageViewer = True
+    hiddenOntologiesGroup = ["kao"] # This hidden ontologies are for results view.
     #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"]
     #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
     hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
+    hiddenResults = 0
     maxPageNumber = 20
     model = None
     navegable = False
@@ -1773,6 +1775,9 @@ class cDataFormat():
         else:
             itemType = NOCR(resource.type())
 
+        if (itemType.split(":")[0] in self.hiddenOntologiesGroup):
+            return ""
+
         idx = lindex(self.ontologyFormat, itemType, column = 0)
         if (idx == None):
             idx = 0
@@ -1834,6 +1839,7 @@ class cDataFormat():
 
             rowsToRender = self.renderSize
             self.renderedLines =[]
+            self.hiddenResults = 0
 
         else:
             if not param1:
@@ -1861,6 +1867,7 @@ class cDataFormat():
             maxPageLinks = max(min(len(self.data)/self.renderSize, self.maxPageNumber), 1)
             numElementsPage = (len(self.data)/maxPageLinks)+1
             if not self.renderedLines:
+                self.hiddenResults = 0
                 for i in range(0, maxPageLinks):
                     self.renderedLines += [[]]
 
@@ -1872,6 +1879,10 @@ class cDataFormat():
                 #print "[Page %s: %s..%s]" % (renderPage, firstRow, lastRow)
                 for i in range(firstRow, lastRow):
                     row = self.data[i]
+                    if (row[0][:9] != "nepomuk:/"):
+                        self.hiddenResults += 1
+                        continue
+
                     line = value = uri = icons = ""
                     for j in range(0, numColumns):
                         column = row[j]
@@ -1898,7 +1909,7 @@ class cDataFormat():
 
                     else:
                         for i in range(0, numColumns):
-                            if line != "":
+                            if line:
                                 line += "<br />\n"
 
                             line += "%s" % row[i]
@@ -1908,6 +1919,9 @@ class cDataFormat():
                     if line:
                         self.renderedLines[renderPage] += [line]
                         self.renderedDataText += line + "\n"
+
+                    else:
+                        self.hiddenResults += 1
 
             else:
                 for line in self.renderedLines[renderPage]:
@@ -1924,7 +1938,7 @@ class cDataFormat():
 
                 rowNavigation += "<a href=\"render:/pag%s\">%s</a>&nbsp;&nbsp;" % (i, pageLabel)
 
-            rowNavigation += "</td><td>%s records found</td><td>%s All resources</td><tr>" % (len(self.data), self.htmlLinkRemoveAll)
+            rowNavigation += "</td><td>%s records found</td><td>%s All resources</td><tr>" % (len(self.data) - self.hiddenResults, self.htmlLinkRemoveAll)
 
         else:
             # If remains less than self.renderSize half then renders all.
