@@ -1238,9 +1238,6 @@ class cSparqlBuilder2():
 
                     self.fields += [[i, item, True, True, ascending]]
 
-                if (commandsFound > 1):
-                    raise Exception(_("Syntax error, only one command per query."))
-
                 commandsFound -= 1
                 commandLower = ""
 
@@ -1258,6 +1255,9 @@ class cSparqlBuilder2():
             else:
                 allFilters = []
 
+            if (commandsFound > 1):
+                raise Exception(_("Syntax error, only one command per query."))
+            
             command = commandLower
 
         # Commands associated to queries.
