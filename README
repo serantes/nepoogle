@@ -6,21 +6,22 @@ Requirements
 
 Nepoogle is developed in Python so PyKDE bingdings are mandatory.
 
-Since version 1.0.0 Nepomuk2 Python bingdings are required to work. You can get this bindings
-in http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git
+Since version 1.0.0 Nepomuk2 Python bingdings are required to work. You can get this
+bindings in http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git
 
 
 Usage
 -----
 
-Nepoogle works in console or in gui mode. Try "nepoogle --help", without brackets, in console
-or click in the help button in gui to obtain more information.
+Nepoogle works in console or in gui mode. Try "nepoogle --help", without brackets, in
+console or click in the help button in gui to obtain more information.
 
 
 Installation
 ------------
 
-For convenience there is an script called "install.sh" to install Nepoogle in current.
+For convenience there is an script called "install.sh" to install Nepoogle in current
+user.
 
 install.sh copy nepoogle to ~/bin so this directory must be in the path.
 
