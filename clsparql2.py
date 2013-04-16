@@ -106,6 +106,8 @@ class cSparqlBuilder2():
             ]
 
     filters = []
+    #filterHard = "  FILTER(REGEX(%s, \"^nepomuk:/res/\"^^xsd:string, \"i\"))\n\n"
+    filterHard = ""
 
     getOptionalFields = True
 
@@ -297,6 +299,10 @@ class cSparqlBuilder2():
             else:
                 columns = self.tempData[0]
 
+        filterHard = self.filterHard
+        if filterHard:
+            filterHard = (self.filterHard % self.resultField)
+
         footer = self._private_query_footer
         header = self._private_query_header % columns
         having = self.bsHaving()
@@ -318,6 +324,7 @@ class cSparqlBuilder2():
         self.lastSPARQLQuery = header \
                                 + subqueries \
                                 + optionalFields \
+                                + filterHard \
                                 + footer \
                                 + having \
                                 + sort \
