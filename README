@@ -1,38 +1,48 @@
-nepoogle is a gui to query the Nepomuk's database with a syntax inspired in Google's
+Nepoogle is a gui to query Nepomuk's database with a syntax inspired in Google's
 
 
 Requirements
 ------------
 
-nepoogle is developend in Python so PyKDE bingdings are mandatory.
+Nepoogle is developed in Python so PyKDE bingdings are mandatory.
+
+Since version 1.0.0 Nepomuk2 Python bingdings are required to work. You can get this bindings
+in http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git
 
 
 Usage
 -----
 
-nepoogle works in console or in gui mode. Try nepoogle --help in console
-mode.
+Nepoogle works in console or in gui mode. Try "nepoogle --help", without brackets, in console
+or click in the help button in gui to obtain more information.
 
 
-User installation
------------------
+Installation
+------------
 
-For convenience there are an install.sh and uninstall.sh scripts to install nepoogle in current user.
+For convenience there is an script called "install.sh" to install Nepoogle in current.
 
 install.sh copy nepoogle to ~/bin so this directory must be in the path.
+
+
+Uninstallation
+--------------
+
+To uninstall Nepoogle use "uninstall.sh" script.
 
 
 Git
 ---
 
-To create only one file with all the development files you must use build.py. Syntax is the next:
+In git Nepoogle consist in several files but there is a tool, called "build.py", to merge all
+development files in only one file for easy distribution. Syntax is the next:
 
-./build.py nepoogle nepooglev1
+./build.py nepoogle nepoogle_v1
 
 
 Contact
 -------
 
-For bugs, suggestions or comments write an email to
+For bugs, suggestions or comments write an email to:
 
 kde@aynoa.net
