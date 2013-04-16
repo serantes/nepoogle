@@ -53,7 +53,7 @@ class cDataFormat():
     data = []
     enableImageViewer = True
     #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
-    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible"]
+    hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"]
     #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
     hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
     model = None
