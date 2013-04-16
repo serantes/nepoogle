@@ -56,6 +56,7 @@ class cDataFormat():
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"]
     #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
     hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
+    maxPageNumber = 20
     model = None
     navegable = False
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
@@ -66,6 +67,7 @@ class cDataFormat():
     renderSize = 50
     renderedDataRows = 0
     renderedDataText = ""
+    renderedLines = []
     skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource", False)]
     structure = []
     uri = None
@@ -1758,7 +1760,7 @@ class cDataFormat():
         return icons
 
 
-    def formatHtmlLine(self, uri):
+    def formatHtmlLine(self, uri, index = None):
         if INTERNAL_RESOURCE_IN_RESULTS_LIST:
             resource = cResource(uri)
 
@@ -1791,7 +1793,11 @@ class cDataFormat():
 
         if isValid:
             #TODO: columnsformat, this must be automatic.
-            line = self.htmlTableRow % (columns[0], columns[1], columns[2])
+            if index:
+                line = self.htmlTableRow % (("%5d - " % index) + columns[0], columns[1], columns[2])
+
+            else:
+                line = self.htmlTableRow % (columns[0], columns[1], columns[2])
 
         else:
             line = ""
@@ -1819,82 +1825,171 @@ class cDataFormat():
 
         text += self.htmlTableHeader
 
-        if vartype(param1) == "list":
+        pageMode = True
+        renderPage = 0
+        if (vartype(param1) == "list"):
             if self.data == []:
                 self.data = list(param1)
                 self.structure = list(structure)
 
             rowsToRender = self.renderSize
+            self.renderedLines =[]
 
         else:
-            if param1 == "all":
+            if not param1:
+                renderPage = 1
+
+            elif (param1[:3] == "pag"):
+                renderPage = int(param1[3:])
+
+            elif (param1 == "all"):
+                pageMode = False
                 rowsToRender = len(self.data) # No calculations, a number that always work.
 
-            elif param1 == "more":
+            elif (param1 == "more"):
+                pageMode = False
                 rowsToRender = self.renderSize
 
             else:
                 rowsToRender = 0
 
-        # If remains less than self.renderSize half then renders all.
-        if ((len(self.data) - self.renderedDataRows - rowsToRender) < (self.renderSize / 2)):
-            rowsToRender = len(self.data) # No calculations, a number that always work.
+        if not len(self.data):
+            rowNavigation = "<tr><td></td><td>%s records found</td><td></td><tr>" % (len(self.data))
 
-        if self.renderedDataRows < len(self.data):
-            numColumns = len(self.structure)
-            for i in range(self.renderedDataRows, min(len(self.data), rowsToRender + self.renderedDataRows)):
-                row = self.data[i]
-                icons = ""
-                line = ""
-                value = ""
-                uri = ""
-                for i in range(0, numColumns):
-                    column = row[i]
-                    if column == '':
-                        pass
+        elif pageMode:
+            self.renderedDataText = ""
+            maxPageLinks = max(min(len(self.data)/self.renderSize, self.maxPageNumber), 1)
+            numElementsPage = (len(self.data)/maxPageLinks)+1
+            if not self.renderedLines:
+                for i in range(0, maxPageLinks):
+                    self.renderedLines += [[]]
 
-                    elif column[:9] == 'nepomuk:/':
-                        uri = column
+            renderPage = max(renderPage-1, 0)
+            if not self.renderedLines[renderPage]:
+                numColumns = len(self.structure)
+                firstRow = renderPage*numElementsPage
+                lastRow = min(firstRow + numElementsPage, len(self.data))
+                #print "[Page %s: %s..%s]" % (renderPage, firstRow, lastRow)
+                for i in range(firstRow, lastRow):
+                    row = self.data[i]
+                    line = value = uri = icons = ""
+                    for j in range(0, numColumns):
+                        column = row[j]
+                        if not column:
+                            pass
+
+                        elif (column[:9] == 'nepomuk:/'):
+                            uri = column
+
+                        else:
+                            if value:
+                                value += ', '
+
+                            value += column
+
+                    if uri:
+                        #if True:
+                        try:
+                            #line = self.formatHtmlLine(uri, i+1)
+                            line = self.formatHtmlLine(uri)
+
+                        except:
+                            line = self.htmlTableRow % (value, "", "")
 
                     else:
-                        if value != "":
-                            value += ', '
+                        for i in range(0, numColumns):
+                            if line != "":
+                                line += "<br />\n"
 
-                        value += column
+                            line += "%s" % row[i]
 
-                if uri != "":
-                    #if True:
-                    try:
-                        line = self.formatHtmlLine(uri)
+                        line = self.htmlTableRow % (line, "", "")
 
-                    except:
-                        line = self.htmlTableRow % (value, "", "")
+                    if line:
+                        self.renderedLines[renderPage] += [line]
+                        self.renderedDataText += line + "\n"
+
+            else:
+                for line in self.renderedLines[renderPage]:
+                    if line:
+                        self.renderedDataText += line + "\n"
+
+            rowNavigation = "<tr><td>"
+            for i in range(1, min(len(self.data)/self.renderSize, 20)+1):
+                if (i == renderPage+1):
+                    pageLabel = "<b>%s</b>" % i
 
                 else:
-                    for i in range(0, numColumns):
-                        if line != "":
-                            line += "<br />\n"
+                    pageLabel = "%s" % i
 
-                        line += "%s" % row[i]
+                rowNavigation += "<a href=\"render:/pag%s\">%s</a>&nbsp;&nbsp;" % (i, pageLabel)
 
-                    line = self.htmlTableRow % (line, "", "")
-
-                if line != '':
-                    self.renderedDataText += line + "\n"
-
-                self.renderedDataRows += 1
-
-        rowNavigation = ""
-        if self.renderedDataRows < len(self.data):
-            rowNavigation = '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
-                    '<td>%s of %s records</td><td>%s All resources</td><tr>' \
-                        % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data), self.htmlLinkRemoveAll)
+            rowNavigation += "</td><td>%s records found</td><td>%s All resources</td><tr>" % (len(self.data), self.htmlLinkRemoveAll)
 
         else:
-            if (len(self.data) > 0):
-                rowNavigation = '<tr><td></td><td>%s records</td><td>%s All resources</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
+            # If remains less than self.renderSize half then renders all.
+            if ((len(self.data) - self.renderedDataRows - rowsToRender) < (self.renderSize / 2)):
+                rowsToRender = len(self.data) # No calculations, a number that always work.
 
-        text += rowNavigation +  self.renderedDataText + rowNavigation
+            if (self.renderedDataRows < len(self.data)):
+                numColumns = len(self.structure)
+                for i in range(self.renderedDataRows, min(len(self.data), rowsToRender + self.renderedDataRows)):
+                    row = self.data[i]
+                    icons = ""
+                    line = ""
+                    value = ""
+                    uri = ""
+                    for i in range(0, numColumns):
+                        column = row[i]
+                        if column == '':
+                            pass
+
+                        elif column[:9] == 'nepomuk:/':
+                            uri = column
+
+                        else:
+                            if value != "":
+                                value += ', '
+
+                            value += column
+
+                    if uri:
+                        #if True:
+                        try:
+                            line = self.formatHtmlLine(uri)
+
+                        except:
+                            line = self.htmlTableRow % (value, "", "")
+
+                    else:
+                        for i in range(0, numColumns):
+                            if line != "":
+                                line += "<br />\n"
+
+                            line += "%s" % row[i]
+
+                        line = self.htmlTableRow % (line, "", "")
+
+                    if line:
+                        self.renderedDataText += line + "\n"
+
+                    self.renderedDataRows += 1
+
+            rowNavigation = ""
+            if (self.renderedDataRows < len(self.data)):
+                rowNavigation = '<tr><td><a href="render:/more">%s more</a>, <a href="render:/all">all records</a></td>' \
+                        '<td>%s of %s records</td><td>%s All resources</td><tr>' \
+                            % (min(self.renderSize, len(self.data) - self.renderedDataRows), self.renderedDataRows, len(self.data), self.htmlLinkRemoveAll)
+
+            else:
+                if (len(self.data) > 0):
+                    rowNavigation = '<tr><td></td><td>%s records</td><td>%s All resources</td><tr>' % (len(self.data), self.htmlLinkRemoveAll)
+
+        if len(self.data):
+            text += rowNavigation + self.renderedDataText + rowNavigation
+
+        else:
+            text += rowNavigation
 
         text += self.htmlTableFooter
         text += "<br />\n" + self.htmlStadistics \
