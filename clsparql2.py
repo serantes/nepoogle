@@ -130,7 +130,7 @@ class cSparqlBuilder2():
     shortcuts = [ \
                     ['_nmm:actor->nco:fullname',_('actor'), _('ac'), _("resources by actor")], \
                     ['_nmm:actor?->nco:fullname', _('actors'), _('acs'), _("actors")], \
-                    ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("resources by artist")], \
+                    ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("albums by artist")], \
                     ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay'), _("album published year")], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
