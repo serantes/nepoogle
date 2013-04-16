@@ -66,7 +66,7 @@ class cDataFormat():
     playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
     queryString = ""
-    renderSize = 50
+    renderSize = 25
     renderedDataRows = 0
     renderedDataText = ""
     renderedLines = []
@@ -1833,12 +1833,12 @@ class cDataFormat():
         pageMode = True
         renderPage = 0
         if (vartype(param1) == "list"):
-            if self.data == []:
+            if not self.data:
                 self.data = list(param1)
                 self.structure = list(structure)
 
             rowsToRender = self.renderSize
-            self.renderedLines =[]
+            self.renderedLines = []
             self.hiddenResults = 0
 
         else:
@@ -1864,8 +1864,15 @@ class cDataFormat():
 
         elif pageMode:
             self.renderedDataText = ""
-            maxPageLinks = max(min(len(self.data)/self.renderSize, self.maxPageNumber), 1)
-            numElementsPage = (len(self.data)/maxPageLinks)+1
+            maxPageLinks = (len(self.data)/self.renderSize) + 1
+            #TODO: create a list with ... 1 2 3 4 5 ... 88 89 90 91
+            if (maxPageLinks > self.maxPageNumber):
+                maxPageLinks = max(min((len(self.data)/self.renderSize)+1, self.maxPageNumber), 1)
+                numElementsPage = (len(self.data)/maxPageLinks)+1
+
+            else:
+                numElementsPage = self.renderSize
+
             if not self.renderedLines:
                 self.hiddenResults = 0
                 for i in range(0, maxPageLinks):
@@ -1929,14 +1936,15 @@ class cDataFormat():
                         self.renderedDataText += line + "\n"
 
             rowNavigation = "<tr><td>"
-            for i in range(1, min(len(self.data)/self.renderSize, 20)+1):
-                if (i == renderPage+1):
-                    pageLabel = "<b>%s</b>" % i
+            if (maxPageLinks > 1):
+                for i in range(1, maxPageLinks+1):
+                    if (i == renderPage+1):
+                        pageLabel = "<b>%s</b>" % i
 
-                else:
-                    pageLabel = "%s" % i
+                    else:
+                        pageLabel = "%s" % i
 
-                rowNavigation += "<a href=\"render:/pag%s\">%s</a>&nbsp;&nbsp;" % (i, pageLabel)
+                    rowNavigation += "<a href=\"render:/pag%s\">%s</a>&nbsp;&nbsp;" % (i, pageLabel)
 
             rowNavigation += "</td><td>%s records found</td><td>%s All resources</td><tr>" % (len(self.data) - self.hiddenResults, self.htmlLinkRemoveAll)
 
