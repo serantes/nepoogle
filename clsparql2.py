@@ -131,6 +131,7 @@ class cSparqlBuilder2():
                     ['_nmm:actor->nco:fullname',_('actor'), _('ac'), _("resources by actor")], \
                     ['_nmm:actor?->nco:fullname', _('actors'), _('acs'), _("actors")], \
                     ['nmm:actor<-nie:title', _('actorsmedia'), _('am'), _("actors in media title")], \
+                    ['nmm:actor<-nmm:series->nie:title', _('actorstvseries'), _('at'), _("actors in tv series")], \
                     ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("albums by artist")], \
                     ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay'), _("album published year")], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
@@ -149,6 +150,7 @@ class cSparqlBuilder2():
                     ['_nmm:director->nco:fullname', _('director'), _('di'), _("resources by director")], \
                     ['_nmm:director?->nco:fullname', _('directors'), _('dis'), _("directors")], \
                     ['nmm:director<-nie:title', _('directorsmedia'), _('dm'), _("directors in media title")], \
+                    ['nmm:director<-nmm:series->nie:title', _('directorstvseries'), _('dt'), _("directors in tv series")], \
                     ['nmm:setNumber', _('discnumber'), _('dn'), _("music album disc number")], \
                     ['nfo:duration', _('duration'), _('du'), _("duration")], \
                     ['nmm:episodeNumber', _('episode'), _('ep'), _("tvshow episode number")], \
@@ -171,7 +173,8 @@ class cSparqlBuilder2():
                     ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa'), _("albums by performer")], \
                     ['_nmm:producer->nco:fullname', _('producer'), _('pr'), _("resources by producer")], \
                     ['_nmm:producer?->nco:fullname', _('producers'), _('prs'), _("producers")], \
-                    ['nmm:producer<-nie:title', _('producersmedia'), _('pm'), _("directors in media title")], \
+                    ['nmm:producer<-nie:title', _('producersmedia'), _('pm'), _("producers in media title")], \
+                    ['nmm:producer<-nmm:series->nie:title', _('directorstvseries'), _('pt'), _("producers in tv series")], \
                     ['nco:photo<-nco:fullname', _('photos'), _('ps'), _("photographs")], \
                     ['nuao:usageCount', _('playcount'), _('pc'), _("media file play count")], \
                     ['nao:prefLabel', _('preflabel'), _('pl'), _("preferred label")], \
@@ -202,6 +205,7 @@ class cSparqlBuilder2():
                     ['_nmm:writer->nco:fullname', _('writer'), _('wr'), _("resources by writer")], \
                     ['_nmm:writer?->nco:fullname', _('writers'), _('wrs'), _("writers")], \
                     ['nmm:writer<-nie:title', _('writersmedia'), _('wm'), _("writers in media title")], \
+                    ['nmm:writer<-nmm:series->nie:title', _('writerstvseries'), _('wt'), _("writers in tv series")] \
                 ]
     #(movies: and actor:"takeuchi") or nmm:series<-nmm:actor->nco:fullname:"takeuchi"
 
