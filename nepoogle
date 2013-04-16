@@ -1504,6 +1504,15 @@ class Nepoogle(QWidget):
             self.leSearch.setText(searchString)
             self.pendingQuery = False
 
+            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
+                self.navigationData = self.cache[self.queriesIndex - 1].data
+
+            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
+                self.navigationData = self.cache[self.queriesIndex].data
+
+            else:
+                self.navigationData = []
+                
             html = self.cache[self.queriesIndex].formatAsHtml()
             if (self.queriesIndex >= 0):
                 if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
@@ -1517,14 +1526,6 @@ class Nepoogle(QWidget):
             self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
-            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
-                self.navigationData = self.cache[self.queriesIndex - 1].data
-
-            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
-                self.navigationData = self.cache[self.queriesIndex].data
-
-            else:
-                self.navigationData = []
 
 
     def goForward(self):
@@ -1539,6 +1540,15 @@ class Nepoogle(QWidget):
             self.leSearch.setText(searchString)
             self.pendingQuery = False
 
+            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
+                self.navigationData = self.cache[self.queriesIndex - 1].data
+
+            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
+                self.navigationData = self.cache[self.queriesIndex].data
+
+            else:
+                self.navigationData = []
+
             html = self.cache[self.queriesIndex].formatAsHtml()
             if (self.queriesIndex >= 0):
                 if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
@@ -1552,14 +1562,6 @@ class Nepoogle(QWidget):
             self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
-            if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
-                self.navigationData = self.cache[self.queriesIndex - 1].data
-
-            elif ((self.queriesIndex >= 0) and (self.cache[self.queriesIndex].navegable)):
-                self.navigationData = self.cache[self.queriesIndex].data
-
-            else:
-                self.navigationData = []
 
 
     def showHelp(self):
