@@ -1207,10 +1207,7 @@ class cSparqlBuilder2():
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
-        if commandsFound > 1:
-            raise Exception(_("Syntax error, only one command per query."))
-
-        elif commandsFound == 1:
+        if (commandsFound >= 1):
             dummy = command.split(':')
             commandLower = dummy[0].lower()
 
@@ -1218,6 +1215,8 @@ class cSparqlBuilder2():
             if commandLower in ("--playlist", "--playmixed"):
                 if (len(dummy) > 1):
                     raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % commandLower)
+
+                commandsFound -= 1
 
             # Sort command.
             elif (commandLower == "--sort"):
@@ -1239,8 +1238,10 @@ class cSparqlBuilder2():
 
                     self.fields += [[i, item, True, True, ascending]]
 
-                print self.fields
+                if (commandsFound > 1):
+                    raise Exception(_("Syntax error, only one command per query."))
 
+                commandsFound -= 1
                 commandLower = ""
 
             # Commands that support filters.
