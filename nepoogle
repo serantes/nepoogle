@@ -2203,17 +2203,6 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False, SPARQLBui
 def develFunction():
     # Whithout this nepomuk don't works.
     app = QCoreApplication(sys.argv)
-
-    uri = QUrl("nepomuk:/res/cbeff59c-3ecd-45a6-aef7-8f4e81f537d2")
-    ontology = NOC("nco:imNickname")
-
-    from PyKDE4.soprano import Soprano
-    from PyKDE4.nepomuk import Nepomuk
-
-    resource = Nepomuk.Resource(QUrl("nepomuk:/res/7ebafd7a-0970-4e1f-96ad-582d0cfe759c"))
-    print(resource.property(Nepomuk.Vocabulary.NIE.url()).toUrl().toString().toUtf8())
-    resource = None
-
     quit()
 
     resource = Nepomuk2.Resource(uri)
