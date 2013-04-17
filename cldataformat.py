@@ -52,7 +52,7 @@ class cDataFormat():
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
     enableImageViewer = True
-    hiddenOntologiesGroup = ["kao"] # This hidden ontologies are for results view.
+    hiddenOntologiesInResults = ["kao", "rdfs:Resource"] # This hidden ontologies are for results view.
     #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"]
     #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
@@ -236,7 +236,7 @@ class cDataFormat():
                         [None, \
                             "{uri|l|of}%[<br /><b>Full name</b>: {nco:fullname}%]%[<br /><b>Label</b>: {nao:prefLabel}%]%[<br /><b>Title</b>: {nie:title}%]" \
                                 "%[<br /><b>Url</b>: {nie:url|of|ol}%]" \
-                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]" \
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
@@ -343,7 +343,7 @@ class cDataFormat():
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nfo:depiction->nie:url|1}\"'>%]" \
                             "<b>Title</b>: {nie:title|l|of|ol}" \
                                 "%[<br /><b>Alternative titles</b>: {nao:altLabel}%]" \
-                                "%[<br /><b>Rating</b>: {nao:numericRating}%]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]" \
                                 "<br /><b>Actors</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:actor ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:actor{/SPARQL}" \
                                 "%[<br /><b>Description</b>: {nie:description}%]", \
                             "{type}", \
@@ -351,8 +351,9 @@ class cDataFormat():
                         ["nmm:MusicAlbum", \
                             "%[<img width=48 style='float:left; vertical-align:text-bottom;' src=\"{nmm:artwork->nie:url|1}\"'>%]" \
                             "{nie:title|l|s:album}" \
-                                "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]<br />" \
-                                "<b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
+                                "%[ <b>by</b> {SPARQL}SELECT DISTINCT ?uri ?value WHERE { <%(uri)s> nmm:albumArtist ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:albumartist{/SPARQL}%]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]" \
+                                "<br /><b>Performers</b>: {SPARQL}SELECT DISTINCT ?uri ?value WHERE { ?r nmm:musicAlbum <%(uri)s> . ?r nmm:performer ?uri . ?uri nco:fullname ?value . } ORDER BY ?value|l|s:performer{/SPARQL}", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["nmm:MusicPiece", \
@@ -369,6 +370,7 @@ class cDataFormat():
                         ["nmm:TVSeries", \
                                 "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
                                 "{nie:title|l|s:tvserie|ok:tvshow}" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]" \
                                 "%[<br /><b>Last watched episode</b>: S{SPARQL}SELECT DISTINCT ?uri ?season AS ?value WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 "E{SPARQL}SELECT DISTINCT ?uri ?episode AS ?value ?season WHERE { ?x1 nmm:series <%(uri)s> ; nmm:episodeNumber ?episode ; nmm:season ?season ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|f%02d{/SPARQL}" \
                                 " - {SPARQL}SELECT DISTINCT ?x1 AS ?uri ?value WHERE { ?x1 nmm:series <%(uri)s> . ?x1 nmm:episodeNumber ?episode ; nmm:season ?season ; nie:title ?value ; nuao:usageCount ?v2 . FILTER(?v2 > 0) . } ORDER BY DESC(1000*?season + ?episode) LIMIT 1|l|s:tvshows{/SPARQL}%]"
@@ -381,7 +383,8 @@ class cDataFormat():
                             "{SPARQL}SELECT ?banner AS ?uri ?url AS ?value WHERE { <%(uri)s> nmm:series ?series . ?series nfo:depiction ?banner . ?banner nfo:height 140 . ?banner nie:url ?url . } LIMIT 1|i{/SPARQL}" \
                             "%[<b>Episode:</b> S{nmm:season|f%02d}E{nmm:episodeNumber|f%02d} - %]{nie:title|l|of|ol}" \
                                 "%[<br \><b>Series</b>: {nmm:series->nie:title|l|ol|ok:tvshow}%]"\
-                                "%[ <b>Watched</b>: {nuao:usageCount} times%]", \
+                                "%[ <b>Watched</b>: {nuao:usageCount} times%]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
                         ["rdfs:Resource", \
@@ -512,7 +515,7 @@ class cDataFormat():
 
     def getOrientationHtml(self, orientation = 1, size = 48):
         if (vartype(orientation) == "Resource"):
-            orientation = rating.property(NOC("nexif:orientation", True))
+            orientation = orientation.property(NOC("nexif:orientation", True))
 
         if not (vartype(orientation) in ("int", "long")):
             try:
@@ -540,7 +543,7 @@ class cDataFormat():
         return html
 
 
-    def getRatingHtml(self, rating = None, size = 32):
+    def getRatingHtml(self, rating = None, size = 32, listMode = False):
         #if (self.iconRatingEmpty == self.iconUnknown) \
         #        or (self.iconRatingFull == self.iconUnknown) \
         #        or (self.iconRatingHalf == self.iconUnknown):
@@ -563,23 +566,29 @@ class cDataFormat():
             empty_count = max(empty_count - full_count - half_count, 0)
 
         #starHtml = "<a href=\"setrating:/%s\"><img style=\"-webkit-filter: blur(2px) grayscale(1);\" src=\"file://%s\"></a>"
-        starHtml = "<a href=\"setrating:/%%s\"><img style=\"width:%spx\" src=\"file://%%s\"></a>" % size
         html = ""
-        html += "<div class=\"rating\">"
+        if listMode:
+            starHtml = "<img style=\"width:%spx\" src=\"file://%%(icon)s\">" % size
+
+        else:
+            starHtml = "<a href=\"setrating:/%%(rating)s\"><img style=\"width:%spx\" src=\"file://%%(icon)s\"></a>" % size
+            html += "<div class=\"rating\">"
+
         i = 1
         for j in range(0, full_count):
-            html += starHtml % (i*2-1, self.iconRatingFull)
+            html += starHtml % {"rating": i*2-1, "icon": self.iconRatingFull}
             i += 1
 
         for j in range(0, half_count):
-            html += starHtml % (i*2-2, self.iconRatingHalf)
+            html += starHtml % {"rating": i*2-2, "icon": self.iconRatingHalf}
             i += 1
 
         for j in range(0, empty_count):
-            html += starHtml % (i*2, self.iconRatingEmpty)
+            html += starHtml % {"rating": i*2, "icon": self.iconRatingEmpty}
             i += 1
 
-        html += "</div>"
+        if not listMode:
+            html += "</div>"
 
         return html
 
@@ -1227,6 +1236,17 @@ class cDataFormat():
 
     def fmtValue(self, value, valueType):
         valueType = valueType.lower()
+        if (vartype(value) == "Node"):
+            if value.isLiteral():
+                #print valueType, value.dataType()
+                #print "literal:", value.literal().toInt()
+                value = toUnicode(value.literal().toString())
+                #print value
+
+            else:
+                value = toUnicode(value.toString())
+                #print "string:", value
+
         #if True:
         try:
             if (valueType == 'boolean'):
@@ -1269,17 +1289,22 @@ class cDataFormat():
                 result = "%s" % datetime.timedelta(0, int(value), 0)
 
             elif (valueType == 'size'):
-                result = "%0.2f" % (int(value)/1024.00/1024.00)
-                if (result == "0.00"):
-                    result = "%0.2f" % (int(value)/1024.00)
-                    if (result == "0.00"):
-                        result = "%0.2f Bytes" % (int(value))
+                result = "%0.2f" % (int(value)/1024.00/1024.00/1024.00)
+                if (result[:2] == "0."):
+                    result = "%0.2f" % (int(value)/1024.00/1024.00)
+                    if (result[:2] == "0."):
+                        result = "%0.2f" % (int(value)/1024.00)
+                        if (result[:2] == "0."):
+                            result = "%0.2f Bytes" % (int(value))
+
+                        else:
+                            result += " KiB"
 
                     else:
-                        result += " KiB"
+                        result += " MiB"
 
                 else:
-                    result += " MiB"
+                    result += " GiB"
 
 
             elif (valueType == 'string'):
@@ -1587,6 +1612,7 @@ class cDataFormat():
             variable = toUnicode(variable)
             elements = variable.split("|")
             addImage = addLink = addLinkOpenFile = addLinkOpenLocation = addOpenFile = addOpenLocation = addOpenKIO = addSearch = limitToOne = False
+            specialDisplay = None
             KIOName = ""
             for item in elements:
                 if item == "l" or item[:1] == "l":
@@ -1616,6 +1642,9 @@ class cDataFormat():
 
                     else:
                         searchTerm = elements[0]
+
+                elif ((item == "x") or (item[:2] == "x:")):
+                    specialDisplay = item[2:].lower()
 
                 elif item == "n":
                     listSeparation = "<br />"
@@ -1653,7 +1682,18 @@ class cDataFormat():
 
             formatValue = ""
             for value in values:
-                if formatValue != "":
+                if specialDisplay:
+                    if (specialDisplay == "rating"):
+                        try:
+                            ratingValue = int(value[1])
+
+                        except:
+                            ratingValue = 0
+
+                        formatValue += self.getRatingHtml(ratingValue, 16, True)
+                        continue
+
+                if formatValue:
                     formatValue += listSeparation
 
                 if len(value) == 1:
@@ -1775,7 +1815,8 @@ class cDataFormat():
         else:
             itemType = NOCR(resource.type())
 
-        if (itemType.split(":")[0] in self.hiddenOntologiesGroup):
+        if (itemType.split(":")[0] in self.hiddenOntologiesInResults) \
+                or (itemType in self.hiddenOntologiesInResults) :
             return ""
 
         idx = lindex(self.ontologyFormat, itemType, column = 0)
@@ -2201,7 +2242,7 @@ class cDataFormat():
                     continue
 
                 ontInfo = ontologyInfo(data["ont"].toString(), self.model)
-                value = self.fmtValue(toUnicode(data["val"].toString()), ontInfo[2])
+                value = self.fmtValue(data["val"], ontInfo[2])
                 if value[:9] == 'nepomuk:/':
                     if INTERNAL_RESOURCE:
                         resource = cResource(value)
