@@ -793,6 +793,17 @@ class cSparqlBuilder2():
                 strTerm += indent2 + "} .\n"
                 strTerm += indent + "} .\n"
 
+            elif (operator == "=="):
+                strTerm += indent + "{\n"
+                strTerm += indent2 + "%s ?p ?v . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, value)
+                strTerm += indent + "} UNION {\n"
+                strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, value)
+                if self.searchForUrlsTooInBasicSearch:
+                    strTerm += indent + "} UNION {\n"
+                    strTerm += indent2 + "%s nie:url ?v . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, value)
+
+                strTerm += indent + "}\n"
+
             else:
                 strTerm += indent + "{\n"
                 strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
