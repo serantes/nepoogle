@@ -116,7 +116,7 @@ class cSparqlBuilder2():
 
     lastSPARQLQuery = ""
 
-    regExpOntologies = ("nie:url")
+    regExpOntologies = ("nie:url", "rdf:type")
 
     resultField = "?r"
     resultFieldSubqueries = resultField
