@@ -903,7 +903,7 @@ class cSparqlBuilder2():
         return strTerm
 
 
-    def bsSubquery(self, term, isUnion = False):
+    def bsSubquery(self, term, buildMethod = "none"):
         if (term[0] == "("):
             indent = "%%%ds" % (self.indentationLevel*2)
             subquery = (indent + "{\n") % ""
@@ -915,25 +915,38 @@ class cSparqlBuilder2():
             subquery = ("\n" + indent + "}") % ""
 
         else:
-            strTerm = self.bsSubqueryTerm(term, self.indentationLevel + 2)
+            if (buildMethod in ("product", "union", "subquery")):
+                localIndentation = 2
+
+            else:
+                localIndentation = 0
+
+            strTerm = self.bsSubqueryTerm(term, self.indentationLevel + localIndentation)
             subquery = ""
 
             if (strTerm != ""):
                 indent = "%%%ds" % (self.indentationLevel*2)
                 indent2 = "%%%ds" % ((self.indentationLevel+1)*2)
-                if isUnion:
+                if (buildMethod == "union"):
                     subquery += "{\n"
 
-                else:
+                elif (buildMethod in ("product", "subquery")):
                     subquery += (indent + "{\n") % ("")
 
-                subquery += "\n"
-                subquery += (indent2 + "SELECT DISTINCT %s\n") % ("", self.resultFieldSubqueries)
-                subquery += (indent2 + "WHERE {\n\n") % ("")
-                subquery += strTerm + '\n'
-                subquery += (indent2 + "}\n") % ("")
-                subquery += "\n"
-                subquery += (indent + "}") % ("")
+                else:
+                    pass
+
+                if (buildMethod in ("product", "union", "subquery")):
+                    subquery += "\n"
+                    subquery += (indent2 + "SELECT DISTINCT %s\n") % ("", self.resultFieldSubqueries)
+                    subquery += (indent2 + "WHERE {\n\n") % ("")
+                    subquery += strTerm + '\n'
+                    subquery += (indent2 + "}\n") % ("")
+                    subquery += "\n"
+                    subquery += (indent + "}") % ("")
+
+                else:
+                    subquery += strTerm
 
         return subquery
 
@@ -972,16 +985,25 @@ class cSparqlBuilder2():
 
         #[termino [<and | or> termino]...
         #[[u'iu', '=', u'performer'], ['and', '', ''], [u'iu', '=', u'_nco:creator->nco:fullname']]
+        if (len(self.filters) < 2):
+            #buildMethod = "none"
+            buildMethod = "subquery"
+
+        else:
+            buildMethod = "subquery"
+
         unionClause = ""
         for term in self.filters:
             if (term[0] == "and"):
+                buildMethod = "product"
                 unionClause = ""
 
             elif (term[0] == "or"):
+                buildMethod = "union"
                 unionClause = " UNION "
 
             else:
-                subquery = self.bsSubquery(term, unionClause == " UNION ")
+                subquery = self.bsSubquery(term, buildMethod)
                 if (subquery != ""):
                     subqueries += unionClause + subquery
 
