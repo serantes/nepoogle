@@ -2172,7 +2172,7 @@ class cDataFormat():
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
-        if param1 == None:
+        if (not param1 and self.renderedDataText):
             return self.renderedDataText
 
         htmlQueryTime = time.time()
@@ -2234,7 +2234,7 @@ class cDataFormat():
                 resource = None
 
         if count == 0:
-            output += "<b>There is no multimedia data to display.</b>\n"
+            output += "<b>There is no multimedia data to display.</b><br />\n"
 
         else:
             if (mode == 'playmixed'):
@@ -2274,7 +2274,7 @@ class cDataFormat():
         if self.searchString[:9] == "nepomuk:/":
             return self.formatResourceInfo()
 
-        if not param1:
+        if (not param1 and self.renderedDataText):
             return self.renderedDataText
 
         htmlQueryTime = time.time()
@@ -2329,7 +2329,9 @@ class cDataFormat():
                 resource = None
 
         if (count == 0):
-            output += "<b>There is no multimedia data to display.</b>\n"
+            output = self.htmlHeader % ('Music player', script) \
+                    + '<b title=\"Music player\"><h2>Music player</b></h2>\n<hr>\n'
+            output += "<b>There is no multimedia data to display.</b><br />\n"
 
         else:
             if (len(audios) > 0):
