@@ -166,7 +166,7 @@ class nCompleter(QCompleter):
             wordList += [shortcut[1] + ":"]
 
         for command in oSparqlBuilder.commands:
-            if (command[0] in ("--help", "--playlist", "--playmixed", "--shownepoogleupdates")):
+            if (command[0] in ("--help", "--musicplayer", "--playlist", "--playmixed", "--shownepoogleupdates")):
                 wordList += [command[0]]
 
             else:
@@ -1903,7 +1903,7 @@ class Nepoogle(QWidget):
                         return True
 
                     oNQP = Nepomuk2.Query.QueryParser()
-                    for command in ["--playlist", "--playmixed", "--sort"]:
+                    for command in ["--musicplayer", "--playlist", "--playmixed", "--sort"]:
                         if processedSearchString.find(command) >= 0:
                             externalParameters += [command]
                             processedSearchString = processedSearchString.replace(command, "")
@@ -1958,7 +1958,10 @@ class Nepoogle(QWidget):
                     self.sparql.warningsList = []
 
                 oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
-                if ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
+                if ((self.sparql.externalParameters == ['musicplayer']) or (externalParameters == ['--musicplayer'])):
+                    output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
+
+                elif ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
 
                 elif ((self.sparql.externalParameters == ['playmixed']) or (externalParameters == ['--playmixed'])):

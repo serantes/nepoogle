@@ -72,6 +72,7 @@ class cSparqlBuilder2():
                 [_('--images'), ['?r', [[0, 'nie:url', True, True, True], [1, 'nie:title', True, True, True]], ['nie:url'], ['nfo:RasterImage']]], \
                 [_('--movies'), ['?r', [[0, 'nie:title', True, True, True], [1, 'nie:url', True, True, True]], ['nie:title'], ['nmm:Movie']]], \
                 [_('--musicpieces'), ['?r', [[0, 'nie:title', True, True, True], [1, 'nie:url', True, True, True]], ['nie:title'], ['nmm:MusicPiece']]], \
+                [_('--musicplayer'), ['musicplayer', [], [], []]], \
                 [_('--newcontact'), ['newcontact', [], [], []]], \
                 [_('--nextepisodestowatch'), ['SELECT ?r\nWHERE {\n  ?r nmm:series ?series .\n  ?r nmm:season ?season .\n  ?r nmm:episodeNumber ?episode . FILTER(?season*1000+?episode = ?se)\n  ?r rdf:type nmm:TVShow .\n  {\n    SELECT ?series MIN(?s*1000+?e) AS ?se ?seriesTitle\n    WHERE {\n      ?r a nmm:TVShow ; nmm:series ?series ; nmm:episodeNumber ?e ; nmm:season ?s .\n      OPTIONAL { ?r nuao:usageCount ?u . } . FILTER(!BOUND(?u) or (?u < 1)) .\n      OPTIONAL { ?series nie:title ?seriesTitle . } .\n    }\n  }\n}\nORDER BY bif:lower(?seriesTitle)\n', [], [], []]], \
                 [_('--notindexed'), ['notindexed', [], [], []]], \
@@ -283,7 +284,7 @@ class cSparqlBuilder2():
             elif (self.tempData[0] == 'newcontact'):
                 raise Exception(self.tempData[0])
 
-            elif (self.tempData[0] in ('playlist', 'playmixed')):
+            elif (self.tempData[0] in ("musicplayer", "playlist", "playmixed")):
                 self.externalParameters = [self.tempData[0]]
                 self.tempData = ['', [], [], []]
 
@@ -1249,7 +1250,7 @@ class cSparqlBuilder2():
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
             commandLower = command.lower()
-            if (commandLower not in ("--playlist", "--playmixed") and (commandLower[:6] != "--sort")):
+            if (commandLower not in ("--musicplayer", "--playlist", "--playmixed") and (commandLower[:6] != "--sort")):
                 allFilters = []
                 raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
@@ -1259,7 +1260,7 @@ class cSparqlBuilder2():
             commandLower = dummy[0].lower()
 
             # Commands that don't support filters.
-            if commandLower in ("--playlist", "--playmixed"):
+            if commandLower in ("--musicplayer", "--playlist", "--playmixed"):
                 if (len(dummy) > 1):
                     raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % commandLower)
 
@@ -1308,7 +1309,7 @@ class cSparqlBuilder2():
             command = commandLower
 
         # Commands associated to queries.
-        if ((len(allFilters) == 0) and (command in ("--playlist", "--playmixed", "--sort"))):
+        if ((len(allFilters) == 0) and (command in ("--musicplayer", "--playlist", "--playmixed", "--sort"))):
             raise Exception(_("Syntax error, command <b>%s</b> require an associated query.") % command)
 
         self.command = command

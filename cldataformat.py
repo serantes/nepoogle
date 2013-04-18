@@ -625,7 +625,14 @@ class cDataFormat():
         return  ", ".join(result)
 
 
-    def buildPlaylist(self, data = [], listType = "audio"):
+    def buildPlaylist(self, data = [], listType = "audio", playlistMode = True):
+
+        if playlistMode:
+            enableButtons = True
+
+        else:
+            enableButtons = False
+
         listType = listType.lower()
         #TODO: Añadir soporte para imágenes..., algún tipo de slideshow.
         #TODO: Mantener volumen entre preproducciones.
@@ -644,6 +651,9 @@ class cDataFormat():
         oldTitle = ["", "", 0]
         oldPerformers = []
         albumYear = None
+        trackInfo = ""
+        trackCover = ""
+        trackAlbumArtists = ""
 
         for item in data:
             sortColumn = ""
@@ -667,6 +677,8 @@ class cDataFormat():
 
                 else:
                     songSearch = "&quot;%s&quot;" % urlHtmlEncode(trackName)
+
+                trackInfo = "<b>%s</b>" % trackName
 
                 trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                 % {"uri": item[1], "title": trackName}
@@ -712,6 +724,8 @@ class cDataFormat():
                 else:
                     performers = [[None, _("No performers")]]
 
+                trackInfo += "<br/>&nbsp;&nbsp;by <b>" + ", ".join([item[1] for item in performers]) + "</b>"
+
                 if performers == oldPerformers:
                     performers = []
 
@@ -730,6 +744,12 @@ class cDataFormat():
                         resTmp = Nepomuk2.Resource(resUri)
 
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
+
+                    if albumTitle:
+                        trackInfo += "<br /><br />on <b>%s</b>" % oldTitle[1]
+
+                    else:
+                        trackInfo += "<br /><br />on <b>%s</b>" % _("Unknown album")
 
                     if albumTitle == None:
                         oldTitle = [None, "", 0, ""]
@@ -758,6 +778,9 @@ class cDataFormat():
                                     albumArtists += [[itemUri, fullname]]
 
                         albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
+                        if albumArtists:
+                            trackAlbumArtists = "<br/>&nbsp;&nbsp;by <b>" + ", ".join([item[1] for item in albumArtists]) + "</b>"
+
                         linkAlbumArtists = ""
                         for artist in albumArtists:
                             if linkAlbumArtists != "":
@@ -803,6 +826,7 @@ class cDataFormat():
 
                     # Cover.
                     coverUrl = self.getCoverUrl(albumTitle[0], toUnicode(self.readProperty(res, 'nie:url', 'str')))
+                    trackCover = coverUrl
                     trackName = "<img width=48 style='float:left; " \
                                     "vertical-align:text-bottom; margin:2px' " \
                                     "src='%s'>" % (coverUrl) \
@@ -835,6 +859,7 @@ class cDataFormat():
                         if coverUrl == None:
                             coverUrl = "file://" + self.iconNoCover
 
+                        trackCover = coverUrl
                         trackName = "<img width=48 style='float:left; " \
                                         "vertical-align:text-bottom; margin:2px' " \
                                         "src='%s'>" % (coverUrl) \
@@ -849,6 +874,8 @@ class cDataFormat():
 
                 sortColumn = "%s_%s_%s" % (oldTitle[2] - sortAdjustment, oldTitle[1], sortColumn)
 
+                trackInfo += trackAlbumArtists
+
             elif listType == 'video':
                 # Thumbnail.
                 thumbnailUrl = None
@@ -862,11 +889,13 @@ class cDataFormat():
                 trackName = self.readProperty(res, 'nie:title', 'str')
                 if ((trackName == None) or (trackName == "")):
                     dummyVal = os.path.basename(url)
+                    trackInfo = "<b>%s</b>" % dummyVal
                     sortColumn = dummyVal
                     trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                     % {"uri": toUnicode(res.uri()), "title": dummyVal}
 
                 else:
+                    trackInfo = "<b>%s</b>" % trackName
                     sortColumn = trackName
                     trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                     % {"uri": toUnicode(res.uri()), "title": trackName}
@@ -914,7 +943,7 @@ class cDataFormat():
 
                 trackName = trackName.replace('"', '&quot;')
 
-            playList += [[item[1], i, url, trackName, sortColumn, songSearch]]
+            playList += [[item[1], i, url, trackName, sortColumn, songSearch, trackCover, trackInfo]]
             i += 1
 
         playList = sorted(playList, key=lambda item: toUtf8(item[4]))
@@ -922,19 +951,26 @@ class cDataFormat():
         if url[:7] == "file://":
             url = url[7:]
 
-        if listType == 'audio':
+        pageTitle = ""
+        if (listType == 'audio'):
+            if playlistMode:
+                pageTitle = "<b>Audio player</b><br />\n"
+
             output += "<div class=\"audioplayer\">\n"
-            output += "<b>Audio player</b><br />\n" \
+            output += "%s" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
-                            % (listType, urlHtmlEncode(url))
+                            % (pageTitle, listType, urlHtmlEncode(url))
 
-        elif listType == 'video':
+        elif (listType == 'video'):
+            if playlistMode:
+                pageTitle = "<b>Video player</b><br />\n"
+
             output += "<div class=\"videoplayer\">\n"
-            output += "<b>Video player</b><br />\n" \
+            output += "%s" \
                         "<video id=\"%splayer\" " \
                             "src=\"file://%s\" height=\"%s\" width=\"%s\" controls preload>No video support</video><br />\n" \
-                            % (listType, urlHtmlEncode(url), self.videoHeight, self.videoWidth)
+                            % (pageTitle, listType, urlHtmlEncode(url), self.videoHeight, self.videoWidth)
 
         if self.playlistShowWithOneElement or len(data) > 1:
             output += "<img onclick='%(type)splayTrack(-1)' style='margin:2px' src='file://%(f)s'>" \
@@ -943,8 +979,42 @@ class cDataFormat():
                         "<img onclick='%(type)splayTrack(-4)' style='margin:2px' src='file://%(l)s'>" \
                         "<br />" \
                          % {"type": listType, "f": self.iconPlaylistFirst, "p": self.iconPlaylistPrevious, "n": self.iconPlaylistNext, "l": self.iconPlaylistLast}
-            output += "<b>Playlist</b>:<br />\n" \
-                        "<script>\n" \
+
+
+            if playlistMode:
+                output += "<b>Playlist</b>:<br />\n"
+
+            else:
+                output += "<div id='playerinfo'><table style='width:100%%;'>\n" \
+                            "<table style='width:100%%;'>\n" \
+                            "<tr style='vertical-align:top;'><td style='width:45%%;'>\n" \
+                            "<table style='width:100%%;'>\n" \
+                            "<tr><td>\n" \
+                            "<table>\n" \
+                            "<tr>\n" \
+                            "<td>\n" \
+                            "<img id='trackcover' style='float:top-left; width:100px; margin:4px;' src='file://%s'><br />\n" \
+                            "</td>\n" \
+                            "<td style='vertical-align:top; width:100%%;'>\n" \
+                            "<b>Listening:</b><br /><br />\n" \
+                            "<div id='nowplaying'>\n" \
+                            "</div>\n" \
+                            "</td>\n" \
+                            "</tr>\n" \
+                            "</table>\n" \
+                            "</td></tr>\n" \
+                            "<tr><td>\n" \
+                            "<hr>\n" \
+                            "<div id='lyrics'>\n" \
+                            "No lyrics found\n" \
+                            "</div>\n" \
+                            "</td></tr>\n" \
+                            "</table>\n" \
+                            "</td>\n" \
+                            "<td>\n" \
+                            % urlHtmlEncode(self.iconNoCover)
+
+            output += "<script>\n" \
                         "var %(type)scurrItem = 0;\n" \
                         "var %(type)splayerVolume = 0;\n" \
                         "var %(type)stotalItems = %(i)s;\n" \
@@ -954,7 +1024,16 @@ class cDataFormat():
             output += "document.write(\"<table style='width:100%;'>\")\n"
             i = 0
             for item in playList:
-                output += "%splayList[%s] = [\"%s\", \"%s\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
+                if playlistMode:
+                    output += "%splayList[%s] = [\"%s\", \"%s\", \"\", \"\"]\n" % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3])
+
+                else:
+                    trackCover = item[6]
+                    trackInfo = item[7]
+                    output += "%splayList[%s] = [\"%s\", \"%s\", \"%s\", \"%s\"]\n" \
+                                % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3], \
+                                    trackCover, trackInfo)
+
                 iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
                 iconRun = iconRun.replace('"', "'")
                 iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
@@ -967,8 +1046,10 @@ class cDataFormat():
                     iconGoogleLyrics = ""
 
                 row = "<tr>"
-                row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
+                if enableButtons:
+                    row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
                             "%(trackNumber)02d</button></td>" % {"type": listType, "i": i, "trackNumber": i + 1 }
+
                 row += "<td id='%(type)strack%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='%(type)splayTrack(%(i)s)'>" \
                             "%(title)s</td>" % {"type": listType, "color": "LightBlue", "i": i, "title": item[3]}
                 row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s%(iconGoogleLyrics)s</td>" \
@@ -1003,13 +1084,21 @@ class cDataFormat():
                 "        oldTrackOffsetTop = %(type)strack.offsetTop\n" \
                 "    }\n" \
                 "    %(type)splayer.volume = %(type)splayerVolume;\n" \
+                "    var trackcover = document.getElementById('trackcover');\n" \
+                "    trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
+                "    var nowplaying = document.getElementById('nowplaying');\n" \
+                "    nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
                 "    //window.alert(%(type)splayer.volume);\n" \
                 "} );\n" % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
 
             output += \
                 "%(type)splayer.addEventListener('ended', function () {\n" \
                 "    %(type)scurrItem += 1;\n" \
+                "    var trackcover = document.getElementById('trackcover');\n" \
+                "    var nowplaying = document.getElementById('nowplaying');\n" \
                 "    if (%(type)scurrItem < %(type)stotalItems) {\n" \
+                "        trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
+                "        nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
                 "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
                 "        %(type)splayer.play();\n" \
                 "    } else {\n" \
@@ -1018,8 +1107,10 @@ class cDataFormat():
                 "        %(type)strack.style.fontWeight = 'normal';\n" \
                 "        %(type)scurrItem = 0;\n" \
                 "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                "        trackcover.setAttribute('src', 'file://%(nocover)s');\n" \
+                "        nowplaying.innerHTML = '';\n" \
                 "    }\n" \
-                "} );\n" % {"type": listType}
+                "} );\n" % {"type": listType, "nocover": urlHtmlEncode(self.iconNoCover)}
 
             output += \
                 "%(type)splayer.addEventListener('volumechange', function() {\n" \
@@ -1042,6 +1133,11 @@ class cDataFormat():
                 "}\n" % {"type": listType}
 
             output += "</script>\n"
+
+            if not playlistMode:
+                output += "</td></tr>\n" \
+                            "</table>\n" \
+                            "</div>\n"
 
             #print '<html>\n<body>\n' + toUtf8(output) + '\n</body>\n</html>'
 
@@ -1862,6 +1958,10 @@ class cDataFormat():
             self.navegable = False
             return self.formatAsHtmlPlaylist()
 
+        if (self.searchString.find('--musicplayer') >= 0):
+            self.navegable = False
+            return self.formatAsMusicPlayer()
+
         self.navegable = True
         htmlQueryTime = time.time()
 
@@ -2088,7 +2188,7 @@ class cDataFormat():
 
         script = ""
         output = self.htmlHeader % ('Playlist viewer', script) \
-                    + '<b title=\"Título\"><h2>Playlist viewer</b>&nbsp;</h2>\n<hr>\n'
+                    + '<b title=\"Playlist viewer\"><h2>Playlist viewer</b>&nbsp;</h2>\n<hr>\n'
 
         output = toUnicode(output)
 
@@ -2163,6 +2263,89 @@ class cDataFormat():
                     + self.htmlFooter
 
         if stdout:
+            print toUtf8(output)
+
+        self.renderedDataText = output
+
+        return output
+
+
+    def formatAsMusicPlayer(self, mode = 'musicplayer', param1 = None, structure = [], queryTime = 0, stdout = False):
+        if self.searchString[:9] == "nepomuk:/":
+            return self.formatResourceInfo()
+
+        if not param1:
+            return self.renderedDataText
+
+        htmlQueryTime = time.time()
+
+        if (vartype(param1) != "list"):
+            raise Exception('error')
+
+        if not self.data:
+            self.data = list(param1)
+            self.structure = list(structure)
+
+        rowsToRender = self.renderSize
+
+        script = ""
+        output = self.htmlHeader % ('Music player', script)
+        output = toUnicode(output)
+
+        # Build playlist here.
+        nfoArchiveItem = NOC('nfo:ArchiveItem', True)
+        nfoVideo = NOC('nfo:Video', True)
+        nieUrl = NOC('nie:url', True)
+        nieTitle = NOC('nie:title', True)
+        nmmMusicPiece = NOC('nmm:MusicPiece', True)
+
+        audios = []
+        #videos = []
+        count = 0
+        if len(self.data) > 0:
+            lines = u""
+            for item in self.data:
+                url = title = ""
+                if INTERNAL_RESOURCE:
+                    resource = cResource(item[0])
+
+                else:
+                    resource = Nepomuk2.Resource(QUrl(item[0]))
+
+                if ((resource.type() != nfoArchiveItem) and resource.hasProperty(nieUrl)):
+                    url = fromPercentEncoding(toUnicode(resource.property(nieUrl).toString().toUtf8()))
+                    ext = os.path.splitext(url)[1][1:].lower()
+                    if ((ext != '') and fileExists(url)):
+                        if ext in self.supportedAudioFormats:
+                            if lindex(audios, url) == None:
+                                audios += [[url, item[0]]]
+
+                        #elif ext in self.supportedVideoFormats:
+                        #    if lindex(videos, url) == None:
+                        #        videos += [[url, item[0]]]
+
+                    count += 1
+
+                resource = None
+
+        if (count == 0):
+            output += "<b>There is no multimedia data to display.</b>\n"
+
+        else:
+            if (len(audios) > 0):
+                oldPlaylistHeigh = self.playlistHeight
+                self.playlistHeight = self.playlistHeight*1.5
+                output += self.buildPlaylist(audios, 'audio', False)
+                self.playlistHeight = oldPlaylistHeigh
+
+            #if (len(videos) > 0):
+            #    output += self.buildPlaylist(videos, 'video')
+
+        output += self.htmlTableFooter
+        output += self.htmlFooter
+
+        if True:
+        #if stdout:
             print toUtf8(output)
 
         self.renderedDataText = output
