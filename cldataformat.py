@@ -825,8 +825,9 @@ class cDataFormat():
                                     % (linkTitle, linkPerformers, trackName)
 
                     # Cover.
-                    coverUrl = self.getCoverUrl(albumTitle[0], toUnicode(self.readProperty(res, 'nie:url', 'str')))
+                    coverUrl = self.getCoverUrl(albumTitle[0], toUnicode(self.readProperty(res, 'nie:url', 'str')), False)
                     trackCover = coverUrl
+                    coverUrl = urlHtmlEncode(trackCover)
                     trackName = "<img width=48 style='float:left; " \
                                     "vertical-align:text-bottom; margin:2px' " \
                                     "src='%s'>" % (coverUrl) \
@@ -987,7 +988,7 @@ class cDataFormat():
             else:
                 output += "<div id='playerinfo'><table style='width:100%%;'>\n" \
                             "<table style='width:100%%;'>\n" \
-                            "<tr style='vertical-align:top;'><td style='width:45%%;'>\n" \
+                            "<tr style='vertical-align:top;'><td style='width:50%%;'>\n" \
                             "<table style='width:100%%;'>\n" \
                             "<tr><td>\n" \
                             "<table>\n" \
@@ -1032,28 +1033,30 @@ class cDataFormat():
                     trackInfo = item[7]
                     output += "%splayList[%s] = [\"%s\", \"%s\", \"%s\", \"%s\"]\n" \
                                 % (listType, i, item[2].replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), item[3], \
-                                    trackCover, trackInfo)
+                                    trackCover.replace("\"", "\\\"").replace("#", "%23").replace("?", "%3F"), trackInfo)
 
-                iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
-                iconRun = iconRun.replace('"', "'")
-                iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
-                iconDir = iconDir.replace('"', "'")
-                if item[5] != "":
-                    iconGoogleLyrics = self.htmlRenderLink('googlemultisearch', "lyrics " + item[5])
-                    iconGoogleLyrics = iconGoogleLyrics.replace('"', "'")
-
-                else:
-                    iconGoogleLyrics = ""
+                iconRun = iconDir = iconGoogleLyrics = ""
+                if enableButtons:
+                    iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(item[2])}
+                    iconRun = iconRun.replace('"', "'")
+                    iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
+                    iconDir = iconDir.replace('"', "'")
+                    if item[5] != "":
+                        iconGoogleLyrics = self.htmlRenderLink('googlemultisearch', "lyrics " + item[5])
+                        iconGoogleLyrics = iconGoogleLyrics.replace('"', "'")
 
                 row = "<tr>"
                 if enableButtons:
                     row += "<td width='30px'><button onclick='%(type)splayTrack(%(i)s)' type='%(type)sbtnTrack%(i)s'>" \
                             "%(trackNumber)02d</button></td>" % {"type": listType, "i": i, "trackNumber": i + 1 }
 
-                row += "<td id='%(type)strack%(i)s' style='background-color:%(color)s;padding:0 0 0 5;' onclick='%(type)splayTrack(%(i)s)'>" \
+                row += "<td id='%(type)strack%(i)s' style='height: 50px;background-color:%(color)s;padding:0 0 0 5;' onclick='%(type)splayTrack(%(i)s)'>" \
                             "%(title)s</td>" % {"type": listType, "color": "LightBlue", "i": i, "title": item[3]}
-                row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s%(iconGoogleLyrics)s</td>" \
-                            % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir, "iconGoogleLyrics": iconGoogleLyrics}
+
+                if enableButtons:
+                    row += "<td width='15px' style='background-color:%(color)s;' >%(iconRun)s%(iconDir)s%(iconGoogleLyrics)s</td>" \
+                                % {"color": "LightGray", "iconRun": iconRun, "iconDir": iconDir, "iconGoogleLyrics": iconGoogleLyrics}
+
                 row += "</tr>"
                 output += "document.write(\"%s\");\n" % (row)
                 i += 1
