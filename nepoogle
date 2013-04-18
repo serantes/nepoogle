@@ -786,6 +786,11 @@ class Nepoogle(QWidget):
                     self.setAppCursor(Qt.BusyCursor)
                     for uri in uris:
                         resource = Nepomuk2.Resource(uri)
+                        itemType = NOCR(resource.type())
+                        if (itemType.split(":")[0] in self.cache[self.queriesIndex].hiddenOntologiesInResults) \
+                            or (itemType in self.cache[self.queriesIndex].hiddenOntologiesInResults):
+                            continue
+
                         resource.remove()
 
                     self.setAppCursor()
