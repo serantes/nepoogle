@@ -115,6 +115,8 @@ class cSparqlBuilder2():
 
     lastSPARQLQuery = ""
 
+    regExpOntologies = ("nie:url")
+
     resultField = "?r"
     resultFieldSubqueries = resultField
     resultFieldOutput = "?id"
@@ -472,7 +474,7 @@ class cSparqlBuilder2():
         return "FILTER(?v %s %s) ." % (op, intVal)
 
 
-    def buildExpressionFilter(self, valType, operator, value):
+    def buildExpressionFilter(self, valType, operator, value, forceRegEx = False):
         # If string is between " they must be removed.
         if (value[0] == value[-1] == '"'):
             value = value[1:-1]
@@ -604,14 +606,27 @@ class cSparqlBuilder2():
 
             else:
                 value = value.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
-                if (operator == "="):
-                    filterExpression = "FILTER(REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
+                useRegEx = forceRegEx or not (("*" not in value) and (value[0] != "^") and (value[-1] != "$"))
+                if useRegEx:
+                    if (operator == "="):
+                        filterExpression = "FILTER(REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
-                elif (operator == "!="):
-                    filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
+                    elif (operator == "!="):
+                        filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
+
+                    else:
+                        filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
 
                 else:
-                    filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+                    if (operator == "="):
+                        filterExpression = "FILTER(bif:contains(?v, \"'%(val)s'\")) ." % {'val': value}
+
+                    elif (operator == "!="):
+                        filterExpression = "FILTER(!bif:contains((?v, \"'%(val)s'\")) ." % {'val': value}
+
+                    else:
+                        filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
+
 
         return filterExpression
 
@@ -794,6 +809,7 @@ class cSparqlBuilder2():
                 clause = ""
                 fieldUsedAsResult = "?x%d " % 0
                 firstOntology = None
+                lastOntology = None
                 filterToUse = None
                 for ontology in ontologyElements:
                     ontology = self.ontologyConversion(ontology)
@@ -856,20 +872,20 @@ class cSparqlBuilder2():
 
                         if (len(ontologyGroup) > 1):
                             valType = self.ontologyVarType(ontologyGroup[0])
-                            filterToUse = self.buildExpressionFilter(valType, operator, value)
+                            filterToUse = self.buildExpressionFilter(valType, operator, value, ontologyGroup[0] in self.regExpOntologies)
                             clause += "{\n"
                             clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[0], 'r': rName, 'v': vName, 'f': filterToUse}
                             clause += indent + "} %s " % addUnion
 
                             for j in range(1, len(ontologyGroup)-1):
                                 valType = self.ontologyVarType(ontologyGroup[j])
-                                filterToUse = self.buildExpressionFilter(valType, operator, value)
+                                filterToUse = self.buildExpressionFilter(valType, operator, value, ontologyGroup[j] in self.regExpOntologies)
                                 clause += "{\n"
                                 clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[j], 'r': rName, 'v': vName, 'f': filterToUse}
                                 clause += indent + "} %s " % addUnion
 
                             valType = self.ontologyVarType(ontologyGroup[-1])
-                            filterToUse = self.buildExpressionFilter(valType, operator, value)
+                            filterToUse = self.buildExpressionFilter(valType, operator, value, ontologyGroup[-1] in self.regExpOntologies)
                             clause += "{\n"
                             clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[-1], 'r': rName, 'v': vName, 'f': filterToUse}
                             clause += indent + "}"
@@ -881,11 +897,13 @@ class cSparqlBuilder2():
                         if (firstOntology == None):
                             firstOntology = ontology
 
+                        lastOntology = ontology
+
                 clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
                 if negationWithNotExists:
                     if (filterToUse == None):
                         strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
-                                + indent2 + clause + self.buildExpressionFilter(valType, "=", value) + "\n" \
+                                + indent2 + clause + self.buildExpressionFilter(valType, "=", value, lastOntology in self.regExpOntologies) + "\n" \
                                 + indent + "}\n"
 
                     else:
@@ -895,7 +913,7 @@ class cSparqlBuilder2():
 
                 else:
                     if (filterToUse == None):
-                        strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value) + "\n"
+                        strTerm = indent + clause + self.buildExpressionFilter(valType, operator, value, lastOntology in self.regExpOntologies) + "\n"
 
                     else:
                         strTerm = indent + clause + "\n"
