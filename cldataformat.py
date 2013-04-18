@@ -1915,7 +1915,7 @@ class cDataFormat():
             itemType = NOCR(resource.type())
 
         if (itemType.split(":")[0] in self.hiddenOntologiesInResults) \
-                or (itemType in self.hiddenOntologiesInResults) :
+                or (itemType in self.hiddenOntologiesInResults):
             return ""
 
         idx = lindex(self.ontologyFormat, itemType, column = 0)

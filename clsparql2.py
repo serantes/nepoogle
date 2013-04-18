@@ -1364,7 +1364,7 @@ class cSparqlBuilder2():
                     #value = toUnicode(toPercentEncoding(bindings[bindingName].toString()))
                     value = toUnicode(bindings[bindingName].toString())
 
-                    if value != '':
+                    if value:
                         if bindingName == 'type':
                             value = os.path.basename(toUnicode(value))
                             value = value.split("#")
@@ -1374,7 +1374,7 @@ class cSparqlBuilder2():
                             except:
                                 value = value[0]
 
-                        elif value[:7] == 'file://' or value[:7] == 'http://' or value[:8] == 'https://':
+                        elif (value.split("://")[0] in ("file", "http", "https")):
                             # Novedad en kde 4.7.0
                             qurl = QUrl()
                             qurl.setEncodedUrl(toUtf8(value))
