@@ -1339,7 +1339,7 @@ class cSparqlBuilder2():
         return allFilters
 
 
-    def executeQuery(self, query = []):
+    def executeQuery(self, query = ""):
         try:
             if DO_NOT_USE_NEPOMUK:
                 model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -1413,5 +1413,112 @@ class cSparqlBuilder2():
             raise Exception('Can\'t execute query, check syntax and test if Nepomuk is running.')
 
         return data, structure, queryTime
+
+
+class runSparqlQuery(QThread):
+
+    def __init__(self, model = None, query = "", enableInference = False):
+        QThread.__init__(self)
+        self.model = model
+        self.query = query
+        if enableInference:
+            self.queryType = Soprano.Query.QueryLanguageSparql
+
+        else:
+            self.queryType = Soprano.Query.QueryLanguageSparqlNoInference
+
+        self.result = None
+        self.error = None
+        self.queryTime = None
+
+
+    def execQuery(self):
+        try:
+            if not self.model:
+                if DO_NOT_USE_NEPOMUK:
+                    self.model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+                else:
+                    self.model = Nepomuk2.ResourceManager.instance().mainModel()
+
+            self.queryTime = time.time()
+            self.result = self.model.executeQuery(self.query, self.queryType)
+            self.queryTime = time.time() - queryTime
+
+        except:
+            self.error = ("Seems like Nepomuk is not running.")
+
+        self.emit(SIGNAL("SparqlExecuted"))
+
+
+    def getResult(self):
+        structure = []
+        data = []
+        sortSuffix = '_sort'
+
+        if self.result.isValid():
+            for bindings in self.result.allBindings():
+                if not structure:
+                    for bindingName in bindings.bindingNames():
+                        if (bindingName[-len(sortSuffix):] == sortSuffix):
+                            continue
+
+                        structure += [toUnicode(bindingName.toUtf8())]
+
+                aRow = []
+                for bindingName in bindings.bindingNames():
+                    # Fields to case insensitive sort must be ignored.
+                    if (bindingName[-len(sortSuffix):] == sortSuffix):
+                        continue
+
+                    value = toUnicode(bindings[bindingName].toString())
+                    if value:
+                        if (bindingName == 'type'):
+                            value = os.path.basename(toUnicode(value))
+                            value = value.split("#")
+                            try:
+                                value = '[' + value[1] + ']'
+
+                            except:
+                                value = value[0]
+
+                        elif (value.split("://")[0] in ("file", "http", "https")):
+                            qUrl = QUrl()
+                            qUrl.setEncodedUrl(toUtf8(value))
+                            value = toUnicode(qUrl.toString())
+
+                        aRow += [value]
+
+                if len(aRow) > 0:
+                    if (len(aRow) < len(structure)):
+                        for i in range(len(aRow), len(structure)):
+                            aRow += ['']
+
+                    data += [aRow]
+
+            self.result.close()
+
+        else:
+            self.result.close()
+            raise Exception('Can\'t execute query, check syntax and test if Nepomuk is running.')
+
+        return data, structure, self.queryTime
+
+
+    def printResults(self):
+        data, structure, queryTime = self.getResult()
+        for item in structure:
+            print item
+
+        for item in data:
+            for element in item:
+                print element
+
+        print queryTime
+
+        qApp.quit()
+
+    def run(self):
+        self.exec_()
 
 #END clsparql.py

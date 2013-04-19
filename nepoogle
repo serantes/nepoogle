@@ -23,7 +23,7 @@
 #*   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.         *
 #***************************************************************************
 
-import datetime, gettext, locale, md5, os, re, signal, subprocess, sys, time, tempfile
+import datetime, gettext, locale, md5, os, re, signal, subprocess, sys, tempfile, threading, time
 
 try:
     from PyQt4.QtCore import *
@@ -2242,33 +2242,45 @@ def findNotIndexed(url = None, recursiveMode = True, pipeMode = False, SPARQLBui
 def develFunction():
     # Whithout this nepomuk don't works.
     app = QCoreApplication(sys.argv)
-    quit()
+    #quit()
 
-    resource = Nepomuk2.Resource(uri)
-    print("resource(nco:fullname): " + toUnicode(resource.property(NOC("nco:fullname")).toString()))
-    value = toUnicode(resource.property(ontology).toString())
+    query = "SELECT * WHERE { ?r ?p ?v . } LIMIT 1000"
+    model = Nepomuk2.ResourceManager.instance().mainModel()
+    queryTime = time.time()
 
-    print("updateResorce = Nepomuk2.SimpleResource()")
-    updateResource = Nepomuk2.SimpleResource(resource.uri())
-    updateResource.remove(ontology, toVariant(value))
-    updateResource.addProperty(ontology, toVariant(value + "1"))
+    #http://techbase.kde.org/Development/Tutorials/Python_introduction_to_signals_and_slots#Signals_and_slots_and_threading
+    threadQuery = runSparqlQuery(model, query, False)
+    threadQuery.start()
+    QObject.connect(threadQuery, SIGNAL("SparqlExecuted"), threadQuery.printResults, Qt.QueuedConnection)
+    threadQuery.execQuery()
 
-    print("graph = Nepomuk2.SimpleResourceGraph()")
-    graph = Nepomuk2.SimpleResourceGraph()
-    graph.insert(updateResource)
-    print("Resources count: %d" % graph.count())
+    sys.exit(app.exec_())
 
-    print("graph.save()")
-    job = graph.save()
-    print("job.exec(): %s " % job.exec_())
+    #resource = Nepomuk2.Resource(uri)
+    #print("resource(nco:fullname): " + toUnicode(resource.property(NOC("nco:fullname")).toString()))
+    #value = toUnicode(resource.property(ontology).toString())
 
-    if (job.error() != 0):
-        print("ERROR(%s): %s" % (job.error(), job.errorString()))
+    #print("updateResorce = Nepomuk2.SimpleResource()")
+    #updateResource = Nepomuk2.SimpleResource(resource.uri())
+    #updateResource.remove(ontology, toVariant(value))
+    #updateResource.addProperty(ontology, toVariant(value + "1"))
 
-    # Cleaning up to avoid a crash.
-    job = graph = updateResource = resource = None
+    #print("graph = Nepomuk2.SimpleResourceGraph()")
+    #graph = Nepomuk2.SimpleResourceGraph()
+    #graph.insert(updateResource)
+    #print("Resources count: %d" % graph.count())
 
-    print "finished."
+    #print("graph.save()")
+    #job = graph.save()
+    #print("job.exec(): %s " % job.exec_())
+
+    #if (job.error() != 0):
+        #print("ERROR(%s): %s" % (job.error(), job.errorString()))
+
+    ## Cleaning up to avoid a crash.
+    #job = graph = updateResource = resource = None
+
+    #print "finished."
 
 
 def main(args):
