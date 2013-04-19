@@ -234,42 +234,18 @@ def ontologyInfo(ontology = '', model = None):
     ontology = ontology.split("=")[0].split("->")[0]
     shortOnt = NOCR(ontology)
     i = lindex(ontologiesInfo, shortOnt, column = 0)
-    if i == None:
-        # Data tipes
-        #SELECT DISTINCT ?range
-        #WHERE {
-        #    [] rdfs:range ?range . FILTER(REGEX(?range, "^http://www.w3.org/2001/XMLSchema")) .
-        #}
-        #ORDER BY ?range
-        #Result: boolean, date, dateTime, duration, float, int, integer, nonNegativeInteger, string
-        #http://www.w3.org/2001XMLSchema#boolean
-        #SELECT DISTINCT ?range
-        #WHERE {
-        #    nao:userVisible rdfs:range ?range .
-        #}
-        #ORDER BY ?range
-        #SELECT DISTINCT *
-        #WHERE {
-        #    ?r nao:userVisible ?v . FILTER(?v != "false"^^xsd:boolean) .
-        #}
-
-        # Must search for ontology.
-        #query = "SELECT ?label ?range\n" \
-                #"WHERE {\n" \
-                    #"\t%(ont)s rdfs:range ?range\n" \
-                    #"\tOPTIONAL { %(ont)s rdfs:label ?label . }\n" \
-                #"}" % {"ont": ontology}
-
-        if (model == None):
+    if (i == None):
+        if not model:
             if DO_NOT_USE_NEPOMUK:
                 model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
 
             else:
                 model = Nepomuk2.ResourceManager.instance().mainModel()
 
-        query = "SELECT ?label ?range\n" \
+        query = "SELECT *\n" \
                 "WHERE {\n" \
                     "\t%(ont)s rdfs:label ?label .\n" \
+                    "\tOPTIONAL { %(ont)s rnrl:maxCardinality ?cardinality . }\n" \
                     "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
                 "}" % {"ont": shortOnt}
 
@@ -277,15 +253,17 @@ def ontologyInfo(ontology = '', model = None):
         if data.isValid():
             while data.next():
                 ontType = lvalue(ontologyTypes, shortOnt.lower().strip(), 0, 1)
-                if ontType == None:
+                if (ontType == None):
                     ontologyRange = toUnicode(data["range"].toString())
-                    if ontologyRange.find("#") >= 0:
+                    if (ontologyRange.find("#") >= 0):
                         ontType = toUnicode(ontologyRange.split("#")[1])
 
                     else:
                         ontType = ontologyRange
 
-                ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType]]
+                    cardinality == data["range"].toInt()
+
+                ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType, cardinality]]
                 i = -1
 
     if i == None:
