@@ -66,6 +66,7 @@ class cDataFormat():
     playlistShowWithOneElement = True
     playlistDescendingOrderInAlbumYear = True
     queryString = ""
+    readOnlyOntologies = ["kext:indexingLevel", "nie:url", "rdf:type"]
     renderSize = 25
     renderedDataRows = 0
     renderedDataText = ""
@@ -615,7 +616,7 @@ class cDataFormat():
 
         for ontology in ontologies:
             if not ontology in self.skippedOntologiesInResourceIsA:
-                result += [ontologyInfo(ontology)[1]]
+                result += [self.ontologyInfo(ontology)[1]]
 
         # list -> to set (duplicates are removed) -> to list again.
         result = list(set(result))
@@ -1701,6 +1702,13 @@ class cDataFormat():
         return values
 
 
+    def ontologyInfo(self, ontology = "", model = None):
+        if not model:
+            model = self.model
+
+        return ontologyInfo(ontology, model)
+
+
     def processFormatPattern(self, pattern):
         pattern = toUnicode(pattern)
         data = pattern
@@ -2456,7 +2464,7 @@ class cDataFormat():
                 if ((currOnt in self.hiddenOntologies) or (currOnt.find(":") < 0)):
                     continue
 
-                ontInfo = ontologyInfo(data["ont"].toString(), self.model)
+                ontInfo = self.ontologyInfo(data["ont"].toString(), self.model)
                 value = self.fmtValue(data["val"], ontInfo[2])
                 if value[:9] == 'nepomuk:/':
                     if INTERNAL_RESOURCE:
@@ -2649,17 +2657,32 @@ class cDataFormat():
                     '<a title=\"%(title)s\" href=\"propadd:/%(uri)s\"><b>%(label)s</b></a></td><td></td></tr>\n' \
                         % {"uri": uri, "title": _("Click to add a new value (Ctrl++)"), "label": _("Add new value")}
             for row in processedData:
-                if (oldOnt != row[1]):
-                    if text != '':
+                if (oldOnt != row[0]):
+                    if text:
                         text += '</td></tr>\n'
 
                     delIcon = self.htmlLinkRemoveOntology % ("propedit:/%s&%s&remove" % (uri, row[0]))
-                    text += '<tr><td valign=\"top\" width=\"120px\">' \
-                            '%(delicon)s' \
-                            '<a title=\"%(ont)s (Click, Shift+Click, Ctrl+Click to add, edit or remove)\" ' \
-                            'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
-                                % {"delicon": delIcon, "uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
-                    oldOnt = row[1]
+                    if (row[0] in self.readOnlyOntologies):
+                        text += '<tr><td valign=\"top\" width=\"120px\">' \
+                                '&nbsp;&nbsp;&nbsp;&nbsp;<b title=\"%(ont)s\">%(label)s</b>:</td><td>%(value)s' \
+                                    % {"ont": row[0], "label": row[1], "value": row[2]}
+
+                    elif (self.ontologyInfo(row[0], self.model)[3] == 1):
+                        # Cardinality = 1.
+                        text += '<tr><td valign=\"top\" width=\"120px\">' \
+                                '%(delicon)s' \
+                                '<a title=\"%(ont)s (Shift+Click, Ctrl+Click to edit or remove)\" ' \
+                                'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
+                                    % {"delicon": delIcon, "uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
+
+                    else:
+                        text += '<tr><td valign=\"top\" width=\"120px\">' \
+                                '%(delicon)s' \
+                                '<a title=\"%(ont)s (Click, Shift+Click, Ctrl+Click to add, edit or remove)\" ' \
+                                'href=\"propedit:/%(uri)s&%(ont)s\"><b>%(label)s</b></a>:</td><td>%(value)s' \
+                                    % {"delicon": delIcon, "uri": uri, "ont": row[0], "label": row[1], "value": row[2]}
+
+                    oldOnt = row[0]
 
                 else:
                     text += ', ' + row[2]
@@ -2734,7 +2757,7 @@ class cDataFormat():
                                     % {"fmt": "style=\"float:left; vertical-align:text-top; width: 100px\" border=\"2px\" hspace=\"10px\" vspace=\"0\"", \
                                         'title': os.path.basename(symbol), 'url': symbol, "addCoverLink": addCoverLink}
 
-                        output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": ontologyInfo(defaultType)[1], "newResource": newResource}
+                        output += "<td><h3>%(resourceType)s%(newResource)s</h3>" % {"resourceType": self.ontologyInfo(defaultType)[1], "newResource": newResource}
 
                         if (defaultType == ONTOLOGY_TYPE_CONTACT):
                             fullname = toUnicode(mainResource.property(NOC("nco:fullname", True)).toString())

@@ -245,32 +245,36 @@ def ontologyInfo(ontology = '', model = None):
         query = "SELECT *\n" \
                 "WHERE {\n" \
                     "\t%(ont)s rdfs:label ?label .\n" \
-                    "\tOPTIONAL { %(ont)s rnrl:maxCardinality ?cardinality . }\n" \
                     "\tOPTIONAL { %(ont)s rdfs:range ?range . }\n" \
+                    "\tOPTIONAL { %(ont)s nrl:maxCardinality ?cardinality . }\n" \
                 "}" % {"ont": shortOnt}
 
         data = model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
         if data.isValid():
             while data.next():
                 ontType = lvalue(ontologyTypes, shortOnt.lower().strip(), 0, 1)
-                if (ontType == None):
+                if ontType == None:
                     ontologyRange = toUnicode(data["range"].toString())
-                    if (ontologyRange.find("#") >= 0):
+                    if ontologyRange.find("#") >= 0:
                         ontType = toUnicode(ontologyRange.split("#")[1])
 
                     else:
                         ontType = ontologyRange
 
-                    cardinality == data["range"].toInt()
+                try:
+                    cardinality = data["cardinality"].literal().toInt()
+
+                except:
+                    cardinality = 0
 
                 ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType, cardinality]]
                 i = -1
 
     if i == None:
-        return [shortOnt, shortOnt, "string"]
+        return [shortOnt, shortOnt, "string", 0]
 
     else:
-        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2]]
+        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2], ontologiesInfo[i][3]]
 
 
 def toN3(url = ''):
