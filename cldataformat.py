@@ -1090,10 +1090,12 @@ class cDataFormat():
                 % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
 
             if not playlistMode:
-                "    var trackcover = document.getElementById('trackcover');\n" \
-                "    trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
-                "    var nowplaying = document.getElementById('nowplaying');\n" \
-                "    nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n"
+                output += \
+                    "    var trackcover = document.getElementById('trackcover');\n" \
+                    "    trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
+                    "    var nowplaying = document.getElementById('nowplaying');\n" \
+                    "    nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
+                    % {"type": listType}
 
             output += "} );\n"
 
