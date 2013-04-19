@@ -302,6 +302,7 @@ class Nepoogle(QWidget):
     screenWidth = 800
     sparql = None
     sparqlBuilderV1 = False
+    resizeMainWindowInMusicPlayerView = True
     textToFind = ""
     verboseMode = False
     warningsList = []
@@ -1965,6 +1966,8 @@ class Nepoogle(QWidget):
                 oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
                 if ((self.sparql.externalParameters == ['musicplayer']) or (externalParameters == ['--musicplayer'])):
                     output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
+                    if self.resizeMainWindowInMusicPlayerView:
+                        self.resize(600,450)
 
                 elif ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
