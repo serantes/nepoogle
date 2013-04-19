@@ -746,7 +746,7 @@ class cDataFormat():
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
                     if albumTitle:
-                        trackInfo += "<br /><br />on <b>%s</b>" % oldTitle[1]
+                        trackInfo += "<br /><br />on <b>%s</b>" % albumTitle
 
                     else:
                         trackInfo += "<br /><br />on <b>%s</b>" % _("Unknown album")
@@ -2384,8 +2384,8 @@ class cDataFormat():
         output += self.htmlTableFooter
         output += self.htmlFooter
 
-        if True:
-        #if stdout:
+        #if True:
+        if stdout:
             print toUtf8(output)
 
         self.renderedDataText = output
