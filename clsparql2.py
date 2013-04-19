@@ -133,8 +133,8 @@ class cSparqlBuilder2():
     stdoutQuery = False
 
     shortcuts = [ \
-                    ['_nmm:actor->nco:fullname',_('actor'), _('ac'), _("resources by actor")], \
-                    ['_nmm:actor?->nco:fullname', _('actors'), _('acs'), _("actors")], \
+                    ['_nmm:actor->*',_('actor'), _('ac'), _("resources by actor")], \
+                    ['_nmm:actor?->*', _('actors'), _('acs'), _("actors")], \
                     ['_nmm:actor<-nie:title', _('actorsmedia'), _('am'), _("actors in media title")], \
                     ['_nmm:actor<-nmm:series->nie:title', _('actorstvseries'), _('at'), _("actors in tv series")], \
                     ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("albums by artist")], \
@@ -142,18 +142,18 @@ class cSparqlBuilder2():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
                     ['nao:altLabel', _('altlabel'), _('all'), _("alternative label")], \
-                    ['_nmm:composer->nco:fullname',_('composer'), _('co'), _("music pieces by composer")], \
-                    ['_nmm:composer?->nco:fullname', _('composers'), _('cos'), _("composers")], \
+                    ['_nmm:composer->*',_('composer'), _('co'), _("music pieces by composer")], \
+                    ['_nmm:composer?->*', _('composers'), _('cos'), _("composers")], \
                     ['?ont->nco:fullname', _('contact'), _('co'), _("resources by contact")], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos'), _("contacts")], \
                     ['nao:created', _('created'), _('cd'), _("created")], \
                     ['nie:contentCreated', _('contentcreated'), _('cc'), _("content created")], \
-                    ['_nco:creator->nco:fullname', _('creator'), _('cr'), _("resources by creator")], \
-                    ['_nco:creator?->nco:fullname', _('creators'), _('crs'), _("creators")], \
+                    ['_nco:creator->*', _('creator'), _('cr'), _("resources by creator")], \
+                    ['_nco:creator?->*', _('creators'), _('crs'), _("creators")], \
                     ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds'), _("contact depictions")], \
                     ['nao:description', _('description'), _('de'), _("description")], \
-                    ['_nmm:director->nco:fullname', _('director'), _('di'), _("resources by director")], \
-                    ['_nmm:director?->nco:fullname', _('directors'), _('dis'), _("directors")], \
+                    ['_nmm:director->*', _('director'), _('di'), _("resources by director")], \
+                    ['_nmm:director?->*', _('directors'), _('dis'), _("directors")], \
                     ['_nmm:director<-nie:title', _('directorsmedia'), _('dm'), _("directors in media title")], \
                     ['_nmm:director<-nmm:series->nie:title', _('directorstvseries'), _('dt'), _("directors in tv series")], \
                     ['nmm:setNumber', _('discnumber'), _('dn'), _("music album disc number")], \
@@ -173,11 +173,11 @@ class cSparqlBuilder2():
                     ['rdf:type=nmm:MusicPiece->nie:title',_('musicpieces'),  _('mps'), _("music pieces")], \
                     ['nie:url', _('name'), _('na'), _("file urls")], \
                     ['nao:numericRating', _('numericrating'), _('nr'), _("rating")], \
-                    ['_nmm:performer->nco:fullname', _('performer'), _('pe'), _("music pieces by performer")], \
-                    ['_nmm:performer?->nco:fullname', _('performers'), _('pes'), _("performers")], \
+                    ['_nmm:performer->*', _('performer'), _('pe'), _("music pieces by performer")], \
+                    ['_nmm:performer?->*', _('performers'), _('pes'), _("performers")], \
                     ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa'), _("albums by performer")], \
-                    ['_nmm:producer->nco:fullname', _('producer'), _('pr'), _("resources by producer")], \
-                    ['_nmm:producer?->nco:fullname', _('producers'), _('prs'), _("producers")], \
+                    ['_nmm:producer->*', _('producer'), _('pr'), _("resources by producer")], \
+                    ['_nmm:producer?->*', _('producers'), _('prs'), _("producers")], \
                     ['_nmm:producer<-nie:title', _('producersmedia'), _('pm'), _("producers in media title")], \
                     ['_nmm:producer<-nmm:series->nie:title', _('directorstvseries'), _('pt'), _("producers in tv series")], \
                     ['nco:photo<-nco:fullname', _('photos'), _('ps'), _("photographs")], \
@@ -195,8 +195,8 @@ class cSparqlBuilder2():
                     ['nfo:depiction<-nie:title', _('tdepictions'), _('tds'), _("tvseries depictions")], \
                     ['nie:title', _('title'), _('ti'), _("resource title")], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn'), _("song track number")], \
-                    ['_nco:topic->nco:fullname',_('topic'), _('to'), _("resources by topic")], \
-                    ['_nco:topic?->nco:fullname', _('topics'), _('tos'), _("topics")], \
+                    ['_nco:topic->*',_('topic'), _('to'), _("resources by topic")], \
+                    ['_nco:topic?->*', _('topics'), _('tos'), _("topics")], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts'), _("tvshows by series")], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs'), _("tvseries")], \
                     ['_nmm:seriesr<-nmm:actor->nco:fullname', _('tvseriesactors'), _('tva'), _("tv series by actor")], \
@@ -211,8 +211,8 @@ class cSparqlBuilder2():
                     ['rdf:type=nfo:Video->nie:url', _('videos'), _('vis'), _("videos")], \
                     ['nfo:width', _('width'), _('wi'), _("width")], \
                     ['nexif:whiteBalance', _('whitebalance'), _('wb'), _("photograph white balance")], \
-                    ['_nmm:writer->nco:fullname', _('writer'), _('wr'), _("resources by writer")], \
-                    ['_nmm:writer?->nco:fullname', _('writers'), _('wrs'), _("writers")], \
+                    ['_nmm:writer->*', _('writer'), _('wr'), _("resources by writer")], \
+                    ['_nmm:writer?->*', _('writers'), _('wrs'), _("writers")], \
                     ['_nmm:writer<-nie:title', _('writersmedia'), _('wm'), _("writers in media title")], \
                     ['_nmm:writer<-nmm:series->nie:title', _('writerstvseries'), _('wt'), _("writers in tv series")] \
                 ]
@@ -651,7 +651,7 @@ class cSparqlBuilder2():
                 ontology = self.shortcuts[idx][0]
 
             else:
-                if (ontology[0] != "?"): # A variable is set instead an ontology.
+                if (ontology[0] not in ("?", "*")): # Especial: variable or all.
                     raise Exception("Unknown ontology <b>%s</b>." % ontology)
 
         return ontology
@@ -697,7 +697,7 @@ class cSparqlBuilder2():
 
 
     def bsHaving(self):
-        return '\n'
+        return ''
         #return "HAVING !(?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
         #return "HAVING (?type = <http://www.w3.org/2000/01/rdf-schema#Resource>)\n"
         #return "GROUP BY (?x0)\n"
@@ -860,8 +860,7 @@ class cSparqlBuilder2():
                     else:
                         # Here is where relations are stablished:
                         # Normal sample:  { ?r ?ont1 ?x1 . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
-                        # Inverse sample: #{ ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "iu"^^xsd:string, 'i')) }
-
+                        # Inverse sample: { ?x1 ?ont1 ?r . ?x1 ?ont2 ?x2 . FILTER(REGEX(?x2, "text"^^xsd:string, 'i')) }
                         try:
                             doSwap = (ontologyRelations[i] == "<-")
 
@@ -910,7 +909,13 @@ class cSparqlBuilder2():
                             clause += indent + "}"
 
                         else:
-                            clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                            if (ontology == "*"):
+                                # Text search in all resource ontologies.
+                                # Sample: ?r nmm:performer [ ?p ?v ] .
+                                clause += "%(r)s ?p %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+                                
+                            else:
+                                clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
 
                         i += 1
                         if (firstOntology == None):
