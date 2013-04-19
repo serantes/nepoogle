@@ -1086,33 +1086,54 @@ class cDataFormat():
                 "        oldTrackOffsetTop = %(type)strack.offsetTop\n" \
                 "    }\n" \
                 "    %(type)splayer.volume = %(type)splayerVolume;\n" \
+                "    //window.alert(%(type)splayer.volume);\n" \
+                % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
+
+            if not playlistMode:
                 "    var trackcover = document.getElementById('trackcover');\n" \
                 "    trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
                 "    var nowplaying = document.getElementById('nowplaying');\n" \
-                "    nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
-                "    //window.alert(%(type)splayer.volume);\n" \
-                "} );\n" % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
+                "    nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n"
 
-            output += \
-                "%(type)splayer.addEventListener('ended', function () {\n" \
-                "    %(type)scurrItem += 1;\n" \
-                "    var trackcover = document.getElementById('trackcover');\n" \
-                "    var nowplaying = document.getElementById('nowplaying');\n" \
-                "    if (%(type)scurrItem < %(type)stotalItems) {\n" \
-                "        trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
-                "        nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
-                "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
-                "        %(type)splayer.play();\n" \
-                "    } else {\n" \
-                "        %(type)scurrItem = %(type)scurrItem - 1;\n" \
-                "        var %(type)strack = document.getElementById('%(type)strack' + %(type)scurrItem);\n" \
-                "        %(type)strack.style.fontWeight = 'normal';\n" \
-                "        %(type)scurrItem = 0;\n" \
-                "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
-                "        trackcover.setAttribute('src', 'file://%(nocover)s');\n" \
-                "        nowplaying.innerHTML = '';\n" \
-                "    }\n" \
-                "} );\n" % {"type": listType, "nocover": urlHtmlEncode(self.iconNoCover)}
+            output += "} );\n"
+
+            if playlistMode:
+                output += \
+                    "%(type)splayer.addEventListener('ended', function () {\n" \
+                    "    %(type)scurrItem += 1;\n" \
+                    "    if (%(type)scurrItem < %(type)stotalItems) {\n" \
+                    "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                    "        %(type)splayer.play();\n" \
+                    "    } else {\n" \
+                    "        %(type)scurrItem = %(type)scurrItem - 1;\n" \
+                    "        var %(type)strack = document.getElementById('%(type)strack' + %(type)scurrItem);\n" \
+                    "        %(type)strack.style.fontWeight = 'normal';\n" \
+                    "        %(type)scurrItem = 0;\n" \
+                    "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                    "    }\n" \
+                    "} );\n" % {"type": listType, "nocover": urlHtmlEncode(self.iconNoCover)}
+
+            else:
+                output += \
+                    "%(type)splayer.addEventListener('ended', function () {\n" \
+                    "    %(type)scurrItem += 1;\n" \
+                    "    var trackcover = document.getElementById('trackcover');\n" \
+                    "    var nowplaying = document.getElementById('nowplaying');\n" \
+                    "    if (%(type)scurrItem < %(type)stotalItems) {\n" \
+                    "        trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
+                    "        nowplaying.innerHTML = %(type)splayList[%(type)scurrItem][3];\n" \
+                    "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                    "        %(type)splayer.play();\n" \
+                    "    } else {\n" \
+                    "        %(type)scurrItem = %(type)scurrItem - 1;\n" \
+                    "        var %(type)strack = document.getElementById('%(type)strack' + %(type)scurrItem);\n" \
+                    "        %(type)strack.style.fontWeight = 'normal';\n" \
+                    "        %(type)scurrItem = 0;\n" \
+                    "        %(type)splayer.setAttribute('src', %(type)splayList[%(type)scurrItem][0]);\n" \
+                    "        trackcover.setAttribute('src', 'file://%(nocover)s');\n" \
+                    "        nowplaying.innerHTML = '';\n" \
+                    "    }\n" \
+                    "} );\n" % {"type": listType, "nocover": urlHtmlEncode(self.iconNoCover)}
 
             output += \
                 "%(type)splayer.addEventListener('volumechange', function() {\n" \
