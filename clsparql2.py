@@ -606,9 +606,9 @@ class cSparqlBuilder2():
                 filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': "=", 'val': value}
 
             else:
-                value = value.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
                 useRegEx = forceRegEx or not (("*" not in value) and (value[0] != "^") and (value[-1] != "$"))
                 if useRegEx:
+                    value = value.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
                     if (operator == "="):
                         filterExpression = "FILTER(REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
