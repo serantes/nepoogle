@@ -307,19 +307,7 @@ class Nepoogle(QWidget):
     verboseMode = False
     warningsList = []
 
-    iconDelete = KIconLoader().iconPath('edit-delete', KIconLoader.NoGroup)
-    iconDocumentInfo = KIconLoader().iconPath('documentinfo', KIconLoader.NoGroup)
-    iconDocumentProp = KIconLoader().iconPath('document-properties', KIconLoader.NoGroup)
-    iconFileManager = KIconLoader().iconPath('system-file-manager', KIconLoader.NoGroup)
-    iconKonqueror = KIconLoader().iconPath('konqueror', KIconLoader.NoGroup)
-    iconNavigateFirst = KIconLoader().iconPath('go-first', KIconLoader.NoGroup)
-    iconNavigateLast = KIconLoader().iconPath('go-last', KIconLoader.NoGroup)
-    iconNavigateNext = KIconLoader().iconPath('go-next', KIconLoader.NoGroup)
-    iconNavigatePrevious = KIconLoader().iconPath('go-previous', KIconLoader.NoGroup)
     iconProcessIdle = KIconLoader().iconPath('process-idle', KIconLoader.NoGroup)
-    iconSystemRun = KIconLoader().iconPath('system-run', KIconLoader.NoGroup)
-    iconSystemSearch = KIconLoader().iconPath('system-search', KIconLoader.NoGroup)
-
 
     def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None, SPARQLBuilderV1 = False):
         super(Nepoogle, self).__init__(parent)
