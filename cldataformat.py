@@ -626,7 +626,6 @@ class cDataFormat():
 
 
     def buildPlaylist(self, data = [], listType = "audio", playlistMode = True):
-
         if playlistMode:
             enableButtons = True
 
@@ -986,7 +985,7 @@ class cDataFormat():
                 output += "<b>Playlist</b>:<br />\n"
 
             else:
-                output += "<div id='playerinfo'><table style='width:100%%;'>\n" \
+                output += "<div id='playerinfo'>\n" \
                             "<table style='width:100%%;'>\n" \
                             "<tr style='vertical-align:top;'><td style='width:50%%;'>\n" \
                             "<table style='width:100%%;'>\n" \
@@ -1144,7 +1143,7 @@ class cDataFormat():
 
             #print '<html>\n<body>\n' + toUtf8(output) + '\n</body>\n</html>'
 
-            output += "<br /></div>\n"
+            output += "</div><hr>\n"
 
         return output
 
@@ -1190,7 +1189,12 @@ class cDataFormat():
                     altLabel = resource.property(NOC('nao:altLabel', True)).toString()
                     fullname = resource.property(NOC('nco:fullname', True)).toString()
                     identifier = resource.property(NOC('nao:identifier', True)).toString()
-                    itemType = toUnicode(str(resource.type()).split('#')[1])
+                    try:
+                        itemType = toUnicode(str(resource.type().toString()).split('#')[1])
+                        
+                    except:
+                        itemType = toUnicode(str(resource.type()).split('#')[1])
+                        
                     prefLabel = resource.property(NOC('nao:prefLabel', True)).toString()
                     title = resource.property(NOC('nie:title', True)).toString()
                     url = resource.property(NOC('nie:url', True)).toString()
