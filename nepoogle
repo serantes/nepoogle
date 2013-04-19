@@ -284,6 +284,7 @@ class Nepoogle(QWidget):
     cacheRendered = []
     currUri = None
     clearResourceManagerCache = True
+    defaultTextInSearchControl = _(u'Type search here')
     keyModifiers = Qt.NoModifier
     lastOntologySelected = ONTOLOGY_TITLE
     lastSPARQLQuery = ""
@@ -339,15 +340,23 @@ class Nepoogle(QWidget):
         self.pbBackward = QPushButton(self)
         self.pbBackward.setIcon(QIcon(KIconLoader().loadIcon('go-previous', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
         #self.pbBackward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.pbBackward.setToolTip(_("Go backward"))
         self.connect(self.pbBackward, SIGNAL("clicked()"), self.goBackward)
 
         self.pbForward = QPushButton(self)
         self.pbForward.setIcon(QIcon(KIconLoader().loadIcon('go-next', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+        self.pbForward.setToolTip(_("Go fordward"))
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbForward, SIGNAL("clicked()"), self.goForward)
 
+        self.pbRefreshStop = QPushButton(self)
+        self.pbRefreshStop.setIcon(QIcon(KIconLoader().loadIcon('view-refresh', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+        self.pbRefreshStop.setToolTip(_("Refresh"))
+        self.connect(self.pbRefreshStop, SIGNAL("clicked()"), self.refreshStopAction)
+
         self.pbHelp = QPushButton(self)
         self.pbHelp.setIcon(QIcon(KIconLoader().loadIcon('help-contents', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+        self.pbHelp.setToolTip(_("Help"))
         #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
         self.connect(self.pbHelp, SIGNAL("clicked()"), self.showHelp)
 
@@ -355,6 +364,7 @@ class Nepoogle(QWidget):
         self.hbl.setSpacing(1)
         self.hbl.addWidget(self.pbBackward)
         self.hbl.addWidget(self.pbForward)
+        self.hbl.addWidget(self.pbRefreshStop)
         self.hbl.addWidget(self.leSearch)
         self.hbl.addWidget(self.pbHelp)
 
@@ -399,7 +409,7 @@ class Nepoogle(QWidget):
         self.resize(int((self.screenWidth) / 2), self.screenHeight - 50)
 
         if searchString == '':
-            self.leSearch.setText(toUnicode('Type search here'))
+            self.leSearch.setText(self.defaultTextInSearchControl)
 
         else:
             self.leSearch.setText(searchString)
@@ -1506,7 +1516,7 @@ class Nepoogle(QWidget):
 
             else:
                 self.navigationData = []
-                
+
             html = self.cache[self.queriesIndex].formatAsHtml()
             if (self.queriesIndex >= 0):
                 if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
@@ -1556,6 +1566,20 @@ class Nepoogle(QWidget):
             self.setAppCursor()
             self.leSearch.readOnly = False
             self.repaint()
+
+
+    def refreshStopAction(self):
+        if self.pendingQuery:
+            #TODO: implement this.
+            pass
+
+        else:
+            if (self.queriesIndex >= 0):
+                self.setAppCursor(Qt.BusyCursor)
+                self.pendingQuery = True
+                self.queryMethod = "refresh"
+                self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
+                    % self.iconProcessIdle)
 
 
     def showHelp(self):
