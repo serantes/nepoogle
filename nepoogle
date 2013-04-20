@@ -1993,7 +1993,7 @@ class Nepoogle(QWidget):
                 if ((self.sparql.externalParameters == ['musicplayer']) or (externalParameters == ['--musicplayer'])):
                     output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
                     if self.resizeMainWindowInMusicPlayerView:
-                        self.resize(600,450)
+                        self.resize(800,500)
 
                 elif ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
                     output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)

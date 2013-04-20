@@ -2415,7 +2415,7 @@ class cDataFormat():
         else:
             if (len(audios) > 0):
                 oldPlaylistHeigh = self.playlistHeight
-                self.playlistHeight = self.playlistHeight*1.5
+                self.playlistHeight = self.playlistHeight*1.80
                 output += self.buildPlaylist(audios, 'audio', False)
                 self.playlistHeight = oldPlaylistHeigh
 
