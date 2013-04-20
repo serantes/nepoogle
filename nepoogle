@@ -776,8 +776,10 @@ class Nepoogle(QWidget):
                     uri = toUnicode(self.leSearch.text()).strip()
                     if (not uri[:13] == "nepomuk:/res/"):
                         if self.cache[self.queriesIndex].navegable:
+                            lenIgnoredRowMark = len(self.cache[self.queriesIndex].ignoredRowMark)
                             for uri in self.cache[self.queriesIndex].data:
-                                uris += [uri[0]]
+                                if not (uri[0][:lenIgnoredRowMark] == self.cache[self.queriesIndex].ignoredRowMark):
+                                    uris += [uri[0]]
 
                     else:
                         uris += [uri]
@@ -786,10 +788,6 @@ class Nepoogle(QWidget):
                     for uri in uris:
                         resource = Nepomuk2.Resource(uri)
                         itemType = NOCR(resource.type())
-                        if (itemType.split(":")[0] in self.cache[self.queriesIndex].hiddenOntologiesInResults) \
-                            or (itemType in self.cache[self.queriesIndex].hiddenOntologiesInResults):
-                            continue
-
                         resource.remove()
 
                     self.setAppCursor()
@@ -1235,8 +1233,10 @@ class Nepoogle(QWidget):
         uri = toUnicode(self.leSearch.text()).strip()
         if (not uri[:13] == "nepomuk:/res/"):
             if self.cache[self.queriesIndex].navegable:
+                lenIgnoredRowMark = len(self.cache[self.queriesIndex].ignoredRowMark)
                 for uri in self.cache[self.queriesIndex].data:
-                    uris += [uri[0]]
+                    if not (uri[0][:lenIgnoredRowMark] == self.cache[self.queriesIndex].ignoredRowMark):
+                        uris += [uri[0]]
 
             else:
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("You can't drop data here."))
@@ -2244,7 +2244,7 @@ def develFunction():
     app = QCoreApplication(sys.argv)
     #quit()
 
-    query = "SELECT * WHERE { ?r ?p ?v . } LIMIT 1000"
+    query = "SELECT * WHERE { ?r ?p ?v . } LIMIT 10"
     model = Nepomuk2.ResourceManager.instance().mainModel()
     queryTime = time.time()
 

@@ -58,6 +58,7 @@ class cDataFormat():
     #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
     hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
     hiddenResults = 0
+    ignoredRowMark = "[#]"
     maxPageNumber = 20
     model = None
     navegable = False
@@ -1047,7 +1048,7 @@ class cDataFormat():
                             "</td></tr>\n" \
                             "<tr><td>\n" \
                             "<hr>\n" \
-                            "<div id='lyrics'>\n" \
+                            "<div id='lyrics' style='overflow: auto;'>\n" \
                             "No lyrics found\n" \
                             "</div>\n" \
                             "</td></tr>\n" \
@@ -1992,7 +1993,7 @@ class cDataFormat():
 
         if (itemType.split(":")[0] in self.hiddenOntologiesInResults) \
                 or (itemType in self.hiddenOntologiesInResults):
-            return ""
+            return None
 
         idx = lindex(self.ontologyFormat, itemType, column = 0)
         if (idx == None):
@@ -2108,6 +2109,7 @@ class cDataFormat():
                     row = self.data[i]
                     if (row[0][:9] != "nepomuk:/"):
                         self.hiddenResults += 1
+                        self.data[i] = self.ignoredRowMark + self.data[i]
                         continue
 
                     line = value = uri = icons = ""
@@ -2148,6 +2150,7 @@ class cDataFormat():
                         self.renderedDataText += line + "\n"
 
                     else:
+                        self.data[i] = self.ignoredRowMark + self.data[i]
                         self.hiddenResults += 1
 
             else:
