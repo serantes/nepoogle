@@ -936,7 +936,48 @@ class cDataFormat():
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
                                             % {"uri": toUnicode(resTmp.uri()), "title": dummyVal, "trackName": trackName}
 
-                if thumbnailUrl != None:
+                # Maybe it's a music video with Performers.
+                performers = []
+                if res.hasProperty(NOC('nmm:performer', True)):
+                    if INTERNAL_RESOURCE_IN_PLAYLIST:
+                        resUris = res.property(NOC('nmm:performer', True))
+                        if vartype(resUris) != "list":
+                            resUris = [resUris]
+
+                    else:
+                        resUris = res.property(NOC('nmm:performer', True)).toStringList()
+
+                    for itemUri in resUris:
+                        if INTERNAL_RESOURCE_IN_PLAYLIST:
+                            resTmp = cResource(itemUri)
+
+                        else:
+                            resTmp = Nepomuk2.Resource(itemUri)
+
+                        fullname = self.readProperty(resTmp, 'nco:fullname', 'str')
+                        if fullname != None:
+                            performers += [[itemUri, fullname]]
+                            songSearch += " &quot;%s&quot;" % urlHtmlEncode(fullname)
+
+                    if (len(performers) > 0):
+                        performers = sorted(performers, key=lambda item: toUtf8(item[1]))
+                        linkPerformers = ""
+                        for performer in performers:
+                            if linkPerformers:
+                                linkPerformers += ", "
+
+                            linkPerformers += "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
+                                                % {"uri": performer[0], "title": performer[1]}
+
+                        if (len(performers) == 1):
+                            perfLabel = _("Performer")
+
+                        else:
+                            perfLabel = _("Performers")
+
+                        trackName += "<br /><b>%s</b>: " % (perfLabel) + linkPerformers
+
+                if thumbnailUrl:
                     trackName = "<img width=48 style='float:left; " \
                                     "vertical-align:text-bottom; margin:2px' " \
                                     "src='%s'>" % (thumbnailUrl) \
