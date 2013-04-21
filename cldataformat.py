@@ -1876,7 +1876,7 @@ class cDataFormat():
                     displayValue += [""]
 
                 if addLink:
-                    if value[1] == "":
+                    if not value[1]:
                         displayValue = value[0]
 
                     else:
@@ -1905,7 +1905,7 @@ class cDataFormat():
                     formatValue += "<a title=\"%s\" href=\"%s\">%s</a>" % (value[0], value[0], displayValue)
 
                 elif addImage:
-                    formatValue += "<img title=\"%s\" src=\"%s\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 100%%;\"><br />" % (value[1], value[1])
+                    formatValue += "<img title=\"%s\" src=\"%s\" border=\"0\" hspace=\"0\" vspace=\"0\" style=\"width: 100%%;\"><br />" % (value[1], urlHtmlEncode(value[1]))
 
                 else:
                     formatValue += value[1]
@@ -1934,6 +1934,10 @@ class cDataFormat():
                 variable = variable[7:]
 
             else:
+                if (vartype(formatValue) in ("unicode", "str")):
+                    if (formatValue[:7] == "file://"):
+                        formatValue = urlHtmlEncode(formatValue)
+
                 data = data.replace("{" + variable + "}", formatValue)
 
             for i in range(0, len(optionalsEmpty)):
@@ -2972,11 +2976,11 @@ class cDataFormat():
                     url = 'file://' + url
 
                 if self.enableImageViewer:
-                    output += imageViewer % {"title": item[1], 'url': url}
+                    output += imageViewer % {"title": item[1], 'url': urlHtmlEncode(url)}
 
                 else:
                     output += '<img title=\"%(title)s\" style=\"height:auto; width: %(width)s; scalefit=1\" src=\"%(url)s\">\n' \
-                                % {"title": item[1], 'url': url, "width": self.viewerColumnsWidth}
+                                % {"title": item[1], 'url': urlHtmlEncode(url), "width": self.viewerColumnsWidth}
 
                 output += "<b>File name</b>:<em><a title=\"%(title)s\" href=\"%(uri)s\">%(title)s</a></em>" % {"url": url, "title": item[1], "uri": item[2]}
                 iconRun = self.htmlLinkSystemRun % {"uri": urlHtmlEncode(url)}
