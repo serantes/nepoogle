@@ -681,24 +681,40 @@ class Nepoogle(QWidget):
                 return True
 
             idx = lindex(self.navigationData, self.leSearch.text(), 0)
-            if idx != None:
+            tryIdx = -1
+            if idx:
+                lenIgnoredRowMark = len(self.cache[self.queriesIndex].ignoredRowMark)
                 navigateTo = url[10:].lower().split("/")
-                if navigateTo[0] == "first":
-                    idx = 0
+                if (navigateTo[0] == "first"):
+                    tryIdx = 0
+                    while (self.navigationData[tryIdx][0][:lenIgnoredRowMark] == self.cache[self.queriesIndex].ignoredRowMark):
+                        tryIdx += 1
 
-                elif navigateTo[0] == "previous":
-                    if idx > 0:
-                        idx -= 1
+                    if ((tryIdx >= 0) and (tryIdx < len(self.navigationData))):
+                        idx = tryIdx
 
-                elif navigateTo[0] == "next":
+                elif (navigateTo[0] == "previous"):
+                    if (idx > 0):
+                        tryIdx = idx - 1
+
+                    while (self.navigationData[tryIdx][0][:lenIgnoredRowMark] == self.cache[self.queriesIndex].ignoredRowMark):
+                        tryIdx -= 1
+
+                elif (navigateTo[0] == "next"):
                     if idx < len(self.navigationData) - 1:
-                        idx += 1
+                        tryIdx = idx + 1
 
-                elif navigateTo[0] == "last":
+                    while (self.navigationData[tryIdx][0][:lenIgnoredRowMark] == self.cache[self.queriesIndex].ignoredRowMark):
+                        tryIdx += 1
+
+                elif (navigateTo[0] == "last"):
                     idx = len(self.navigationData) - 1
 
                 #else:
                     #pass
+
+                if ((tryIdx >= 0) and (tryIdx < len(self.navigationData))):
+                    idx = tryIdx
 
                 try:
                     self.queryMethod = navigateTo[1]

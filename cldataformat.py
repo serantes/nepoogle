@@ -1350,7 +1350,7 @@ class cDataFormat():
                                                 self.htmlLinkNavigateNext, \
                                                 self.htmlLinkNavigateLast)
 
-
+                    #TODO: fix problems with hidden records.
                     result += " (%s/%s)" % (dataIndex+1, dataLength)
 
             return result
