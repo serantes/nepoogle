@@ -2109,7 +2109,7 @@ class cDataFormat():
                     row = self.data[i]
                     if (row[0][:9] != "nepomuk:/"):
                         self.hiddenResults += 1
-                        self.data[i] = self.ignoredRowMark + self.data[i]
+                        self.data[i][0] = self.ignoredRowMark + self.data[i][0]
                         continue
 
                     line = value = uri = icons = ""
@@ -2150,7 +2150,7 @@ class cDataFormat():
                         self.renderedDataText += line + "\n"
 
                     else:
-                        self.data[i] = self.ignoredRowMark + self.data[i]
+                        self.data[i][0] = self.ignoredRowMark + self.data[i][0]
                         self.hiddenResults += 1
 
             else:
