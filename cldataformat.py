@@ -2699,7 +2699,7 @@ class cDataFormat():
             # Default to add values.
             text += '<tr><td valign=\"top\" width=\"120px\">' \
                     '<a title=\"%(title)s\" href=\"propadd:/%(uri)s\"><b>%(label)s</b></a></td><td></td></tr>\n' \
-                        % {"uri": uri, "title": _("Click to add a new value (Ctrl++)"), "label": _("Add new value")}
+                        % {"uri": uri, "title": _("Click to add a new property"), "label": _("Add new property")}
             for row in processedData:
                 if (oldOnt != row[0]):
                     if text:
