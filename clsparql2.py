@@ -1417,9 +1417,10 @@ class cSparqlBuilder2():
 
 class runSparqlQuery(QThread):
 
-    def __init__(self, model = None, query = "", enableInference = False):
+    def __init__(self, model = None, searchString = "", query = "", enableInference = False):
         QThread.__init__(self)
         self.model = model
+        self.searchString = searchString
         self.query = query
         if enableInference:
             self.queryType = Soprano.Query.QueryLanguageSparql
@@ -1443,7 +1444,7 @@ class runSparqlQuery(QThread):
 
             self.queryTime = time.time()
             self.result = self.model.executeQuery(self.query, self.queryType)
-            self.queryTime = time.time() - queryTime
+            self.queryTime = time.time() - self.queryTime
 
         except:
             self.error = ("Seems like Nepomuk is not running.")
@@ -1507,12 +1508,16 @@ class runSparqlQuery(QThread):
 
     def printResults(self):
         data, structure, queryTime = self.getResult()
+        print("Structure: "),
         for item in structure:
-            print item
+            print(item),
 
+        print("")
         for item in data:
             for element in item:
-                print element
+                print(element),
+
+            print("")
 
         print queryTime
 

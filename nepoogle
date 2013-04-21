@@ -296,6 +296,7 @@ class Nepoogle(QWidget):
     renderedCache = ''
     renderedRows = 0
     renderSize = 50
+    resizeMainWindowInMusicPlayerView = True
     resultData = []
     resultStructure = []
     resultTime = None
@@ -303,8 +304,8 @@ class Nepoogle(QWidget):
     screenWidth = 800
     sparql = None
     sparqlBuilderV1 = False
-    resizeMainWindowInMusicPlayerView = True
     textToFind = ""
+    threadModeEnabled = False
     verboseMode = False
     warningsList = []
 
@@ -428,6 +429,18 @@ class Nepoogle(QWidget):
         KApplication.setOverrideCursor(QCursor(cursor))
 
 
+    def setPendingQuery(self, enableIt = True):
+        self.pendingQuery = enableIt
+        if self.threadModeEnabled:
+            if enableIt:
+                self.pbRefreshStop.setIcon(QIcon(KIconLoader().loadIcon('dialog-cancel', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+                self.pbRefreshStop.setToolTip(_("Cancel query"))
+
+            else:
+                self.pbRefreshStop.setIcon(QIcon(KIconLoader().loadIcon('view-refresh', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+                self.pbRefreshStop.setToolTip(_("Refresh"))
+
+
     def closeEvent(self, event):
         sys.exit()
 
@@ -514,14 +527,14 @@ class Nepoogle(QWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "manual"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
 
         elif event.key() == Qt.Key_F5:
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -633,24 +646,24 @@ class Nepoogle(QWidget):
             url = url[9:]
             self.leSearch.setText(url)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             if forceExec:
                 self.execQuery()
-                self.pendingQuery = False
+                self.setPendingQuery(False)
 
         elif url[:8] == 'delete:/':
             reply = QMessageBox.question(self, '%s - delete item' % PROGRAM_NAME, "Do you really want to send to trash this item??\n\n%s" % url[8:], QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 subprocess.Popen(['kioclient', 'move', url[8:], 'trash:/'])
                 self.setAppCursor(Qt.BusyCursor)
-                self.pendingQuery = True
+                self.setPendingQuery(True)
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                         % self.iconProcessIdle)
                 if forceExec:
                     self.execQuery()
-                    self.pendingQuery = False
+                    self.setPendingQuery(False)
 
         elif url[:6] == 'dolp:/':
             subprocess.Popen(['dolphin', url[6:]])
@@ -698,12 +711,12 @@ class Nepoogle(QWidget):
         elif url[:9] == 'nepomuk:/':
             self.leSearch.setText(url)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             if forceExec:
                 self.execQuery()
-                self.pendingQuery = False
+                self.setPendingQuery(False)
 
         elif url[:6] == 'prop:/':
             subprocess.Popen(['kioclient', 'openProperties', url[6:]])
@@ -757,12 +770,12 @@ class Nepoogle(QWidget):
 
             self.leSearch.setText(tmpUrl)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                     % self.iconProcessIdle)
             if forceExec:
                 self.execQuery()
-                self.pendingQuery = False
+                self.setPendingQuery(False)
 
         elif url[:9] == "reindex:/":
             subprocess.Popen(["nepomukindexer", url[9:].replace("?", "%3F")])
@@ -793,13 +806,13 @@ class Nepoogle(QWidget):
                     self.setAppCursor()
 
                     self.setAppCursor(Qt.BusyCursor)
-                    self.pendingQuery = True
+                    self.setPendingQuery(True)
                     self.queryMethod = "refresh"
                     self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                             % self.iconProcessIdle)
                     if forceExec:
                         self.execQuery()
-                        self.pendingQuery = False
+                        self.setPendingQuery(False)
 
             else:
                 reply = QMessageBox.question(self, '%s - remove resource' % PROGRAM_NAME, "Really delete this resource?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -807,13 +820,13 @@ class Nepoogle(QWidget):
                     resource = Nepomuk2.Resource(QUrl(url[8:]))
                     resource.remove()
                     self.setAppCursor(Qt.BusyCursor)
-                    self.pendingQuery = True
+                    self.setPendingQuery(True)
                     self.queryMethod = "refresh"
                     self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                                             % self.iconProcessIdle)
                     if forceExec:
                         self.execQuery()
-                        self.pendingQuery = False
+                        self.setPendingQuery(False)
 
         elif url[:8] == 'render:/':
             self.leSearch.readOnly = True
@@ -847,7 +860,7 @@ class Nepoogle(QWidget):
         #elif url[:6] == 'view:/':
             #self.leSearch.setText(url[6:])
             #self.setAppCursor(Qt.BusyCursor)
-            #self.pendingQuery = True
+            #self.setPendingQuery(True)
             #self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
                                     #% self.iconProcessIdle)
 
@@ -929,7 +942,7 @@ class Nepoogle(QWidget):
         if (vartype(uri) != "Resource"):
             time.sleep(SLEEP_AFTER_UPDATE)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -1040,7 +1053,7 @@ class Nepoogle(QWidget):
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -1128,7 +1141,7 @@ class Nepoogle(QWidget):
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -1203,7 +1216,7 @@ class Nepoogle(QWidget):
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -1485,7 +1498,7 @@ class Nepoogle(QWidget):
         if (mustRefresh > SLEEP_NO_SLEEP):
             time.sleep(mustRefresh)
             self.setAppCursor(Qt.BusyCursor)
-            self.pendingQuery = True
+            self.setPendingQuery(True)
             self.queryMethod = "refresh"
             self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                 % self.iconProcessIdle)
@@ -1513,7 +1526,7 @@ class Nepoogle(QWidget):
             #    searchString = searchString[3:]
 
             self.leSearch.setText(searchString)
-            self.pendingQuery = False
+            self.setPendingQuery(False)
 
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
                 self.navigationData = self.cache[self.queriesIndex - 1].data
@@ -1549,7 +1562,7 @@ class Nepoogle(QWidget):
             #    searchString = searchString[3:]
 
             self.leSearch.setText(searchString)
-            self.pendingQuery = False
+            self.setPendingQuery(False)
 
             if ((self.queriesIndex - 1 >= 0) and (self.cache[self.queriesIndex - 1].navegable)):
                 self.navigationData = self.cache[self.queriesIndex - 1].data
@@ -1576,14 +1589,16 @@ class Nepoogle(QWidget):
 
 
     def refreshStopAction(self):
-        if self.pendingQuery:
+        if (self.threadModeEnabled and self.pendingQuery):
             #TODO: implement this.
-            pass
+            self.threadQuery.terminate()
+            self.setPendingQuery(False)
+            set.wvOutput.setHtml(_("Cancel on user request."))
 
         else:
             if (self.queriesIndex >= 0):
                 self.setAppCursor(Qt.BusyCursor)
-                self.pendingQuery = True
+                self.setPendingQuery(True)
                 self.queryMethod = "refresh"
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                     % self.iconProcessIdle)
@@ -1591,7 +1606,7 @@ class Nepoogle(QWidget):
 
     def showHelp(self):
         self.leSearch.setText("--help")
-        self.pendingQuery = False
+        self.setPendingQuery(False)
         self.wvOutput.setHtml(self.buildHelp(self.sparql))
         self.repaint()
 
@@ -1817,6 +1832,88 @@ class Nepoogle(QWidget):
         return searchString
 
 
+    def runQuery(self, searchString = "", query = ""):
+        #http://techbase.kde.org/Development/Tutorials/Python_introduction_to_signals_and_slots#Signals_and_slots_and_threading
+        self.threadQuery = runSparqlQuery(self.model, searchString, query, False)
+        self.threadQuery.start()
+        QObject.connect(self.threadQuery, SIGNAL("SparqlExecuted"), self.getQueryData, Qt.QueuedConnection)
+        self.threadQuery.execQuery()
+
+
+    def getQueryData(self, searchString = None):
+        if not searchString:
+            # Invoqued by signal.
+            self.resultData, self.resultStructure, self.resultTime = self.threadQuery.getResult()
+            searchString = self.threadQuery.searchString
+
+        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
+        if (('musicplayer' in self.sparql.externalParameters) or ('--musicplayer' in self.sparql.externalParameters)):
+            output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
+            if self.resizeMainWindowInMusicPlayerView:
+                self.resize(800,500)
+
+        elif (('playlist' in self.sparql.externalParameters) or ('--playlist' in self.sparql.externalParameters)):
+            output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
+
+        elif (('playmixed' in self.sparql.externalParameters) or ('--playmixed' in self.sparql.externalParameters)):
+            output = oDataFormat.formatAsHtmlPlaylist('playmixed', self.resultData, self.resultStructure, self.resultTime)
+
+        else:
+            output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
+
+        # Cache must be trunked in current position if query changed.
+        if ((self.queriesIndex >= 0) and (self.queriesIndex + 1 < len(self.cache))):
+            if self.cache[self.queriesIndex].searchString != searchString:
+                self.cache = self.cache[:self.queriesIndex + 1]
+
+        if (self.cache == []) or (self.cache[self.queriesIndex].searchString != searchString):
+            self.cache += [oDataFormat]
+            self.queriesIndex += 1
+
+        else:
+            self.cache[self.queriesIndex] = oDataFormat
+
+        self.navigationData = self.cache[self.queriesIndex].data
+        self.setAppCursor()
+
+        self.setPendingQuery(False)
+        self.queryMethod = None
+        if (output != ""):
+            if (self.queriesIndex >= 0):
+                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                    dataIndex = lindex(self.navigationData, searchString)
+                    if (dataIndex != None):
+                        dataLength = len(self.navigationData)
+                        output = output.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+
+            self.wvOutput.setHtml(output)
+
+        self.setAppCursor()
+        self.leSearch.readOnly = False
+        self.repaint()
+
+        ## Handle possible warnings.
+        warningMsg = ""
+        for warning in self.warningsList:
+            if warningMsg:
+                warningMsg += "\n\n"
+
+            #if (warning[0] == "BUG001"):
+                #warningMsg += "There is a know bug using negation without a shortcut.\n" \
+                        #"Please notice that the results may be inaccurate.\n\n"
+                #for i in range(1, len(warning)):
+                    #warningMsg += "Change \"%s\" for something like \"title:%s\" to solve this issue.\n" \
+                    #% (warning[i], warning[i])
+
+            #else:
+                #pass
+
+        self.warningsList = []
+
+        if warningMsg:
+            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
+
+
     def execQuery(self, searchString = ''):
         self.leSearch.readOnly = True
         self.setAppCursor(Qt.BusyCursor)
@@ -1849,7 +1946,9 @@ class Nepoogle(QWidget):
             else:
                 self.sparql = cSparqlBuilder2()
 
+            threadModeEnabled = self.threadModeEnabled
             if (searchString[:9] == 'nepomuk:/'):
+                threadModeEnabled = False
                 cachedData = None
                 oDataFormat = None
                 self.currUri = searchString
@@ -1948,75 +2047,35 @@ class Nepoogle(QWidget):
                         print(readableQuery)
 
                     #query = hackQueryParser(query, 'e0')
+                    self.sparql.externalParameters += externalParameters
                     self.setAppCursor(Qt.BusyCursor)
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+                    if threadModeEnabled:
+                        self.runQuery(searchString, query)
+
+                    else:
+                        self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
+
                     self.lastSPARQLQuery = readableQuery
-                    self.setAppCursor()
-
-                #elif (searchEngine == 2):
-                    #processedSearchString = searchString[3:]
-                    #if processedSearchString.find("--help") >= 0:
-                        #self.execQuery("e1 " + processedSearchString)
-                        #return True
-
-                    #oNQP = Nepomuk2.Query.QueryParser()
-                    #for command in ["--playlist", "--playmixed", "--sort"]:
-                        #if processedSearchString.find(command) >= 0:
-                            #externalParameters += [command]
-                            #processedSearchString = processedSearchString.replace(command, "")
-
-                    #query = toUnicode(oNQP.parse(processedSearchString).toSparqlQuery())
-                    #oNQP = None
-                    #query = hackQueryParser(query, 'e2')
-                    #if (self.verboseMode and sys.stdout.isatty()):
-                        ## Improve a little bit readability.
-                        #print(toUtf8(query.replace(" where ", " WHERE ").replace("{", "{\n").replace("}", "\n}").replace("} .", "} .\n").replace("} UNION {", " } UNION {").replace(". ?", ".\n ?").replace("\n ?", "\n  ?").replace("\n} .", "\n } .").replace("} .\n  ?", "} .\n ?")))
-
-                    #self.setAppCursor(Qt.BusyCursor)
-                    #self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(query)
-                    #self.setAppCursor()
 
                 else:
-                    searchString = searchString[3:]
                     self.sparql.stdoutQuery = (self.verboseMode and sys.stdout.isatty())
                     if self.sparqlBuilderV1:
                         self.sparql.columns = '?x0 AS ?id ' + self.sparql.columns
 
+                    self.sparql.externalParameters += externalParameters
                     self.setAppCursor(Qt.BusyCursor)
-                    self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString))
+                    if threadModeEnabled:
+                        self.runQuery(searchString, self.sparql.buildQuery(searchString[3:]))
+
+                    else:
+                        self.resultData, self.resultStructure, self.resultTime = self.sparql.executeQuery(self.sparql.buildQuery(searchString[3:]))
+
                     self.lastSPARQLQuery = self.sparql.lastSPARQLQuery
-                    self.setAppCursor()
                     self.warningsList = self.sparql.warningsList
                     self.sparql.warningsList = []
 
-                oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
-                if ((self.sparql.externalParameters == ['musicplayer']) or (externalParameters == ['--musicplayer'])):
-                    output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
-                    if self.resizeMainWindowInMusicPlayerView:
-                        self.resize(800,500)
-
-                elif ((self.sparql.externalParameters == ['playlist']) or (externalParameters == ['--playlist'])):
-                    output = oDataFormat.formatAsHtmlPlaylist('playlist', self.resultData, self.resultStructure, self.resultTime)
-
-                elif ((self.sparql.externalParameters == ['playmixed']) or (externalParameters == ['--playmixed'])):
-                    output = oDataFormat.formatAsHtmlPlaylist('playmixed', self.resultData, self.resultStructure, self.resultTime)
-
-                else:
-                    output = oDataFormat.formatAsHtml(self.resultData, self.resultStructure, self.resultTime)
-
-                # Cache must be trunked in current position if query changed.
-                if ((self.queriesIndex >= 0) and (self.queriesIndex + 1 < len(self.cache))):
-                    if self.cache[self.queriesIndex].searchString != searchString:
-                        self.cache = self.cache[:self.queriesIndex + 1]
-
-                if (self.cache == []) or (self.cache[self.queriesIndex].searchString != searchString):
-                    self.cache += [oDataFormat]
-                    self.queriesIndex += 1
-
-                else:
-                    self.cache[self.queriesIndex] = oDataFormat
-
-                self.navigationData = self.cache[self.queriesIndex].data
+                if not threadModeEnabled:
+                    self.getQueryData(searchString[3:])
 
             else:
                 raise Exception('Please, type something.')
@@ -2056,43 +2115,43 @@ class Nepoogle(QWidget):
                                 }
 
 
-        self.setAppCursor()
-        self.pendingQuery = False
-        self.queryMethod = None
-        if (output != ""):
-            if (self.queriesIndex >= 0):
-                if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
-                    dataIndex = lindex(self.navigationData, searchString)
-                    if (dataIndex != None):
-                        dataLength = len(self.navigationData)
-                        output = output.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
+        if not threadModeEnabled:
+            self.setPendingQuery(False)
+            self.queryMethod = None
+            if (output != ""):
+                if (self.queriesIndex >= 0):
+                    if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
+                        dataIndex = lindex(self.navigationData, searchString)
+                        if (dataIndex != None):
+                            dataLength = len(self.navigationData)
+                            output = output.replace("<navigator />", self.cache[self.queriesIndex].htmlRenderLink("navigator", dataIndex, dataLength))
 
-            self.wvOutput.setHtml(output)
+                self.wvOutput.setHtml(output)
 
-        self.setAppCursor()
-        self.leSearch.readOnly = False
-        self.repaint()
+            self.setAppCursor()
+            self.leSearch.readOnly = False
+            self.repaint()
 
-        # Handle possible warnings.
-        warningMsg = ""
-        for warning in self.warningsList:
-            if warningMsg != "":
-                warningMsg += "\n\n"
+            # Handle possible warnings.
+            warningMsg = ""
+            for warning in self.warningsList:
+                if warningMsg != "":
+                    warningMsg += "\n\n"
 
-            if warning[0] == "BUG001":
-                warningMsg += "There is a know bug using negation without a shortcut.\n" \
-                        "Please notice that the results may be inaccurate.\n\n"
-                for i in range(1, len(warning)):
-                    warningMsg += "Change \"%s\" for something like \"title:%s\" to solve this issue.\n" \
-                    % (warning[i], warning[i])
+                #if warning[0] == "BUG001":
+                    #warningMsg += "There is a know bug using negation without a shortcut.\n" \
+                            #"Please notice that the results may be inaccurate.\n\n"
+                    #for i in range(1, len(warning)):
+                        #warningMsg += "Change \"%s\" for something like \"title:%s\" to solve this issue.\n" \
+                        #% (warning[i], warning[i])
 
-            #else:
-                #pass
+                #else:
+                    #pass
 
-        self.warningsList = []
+            self.warningsList = []
 
-        if warningMsg != "":
-            QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
+            if warningMsg:
+                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
 
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
@@ -2246,10 +2305,9 @@ def develFunction():
 
     query = "SELECT * WHERE { ?r ?p ?v . } LIMIT 10"
     model = Nepomuk2.ResourceManager.instance().mainModel()
-    queryTime = time.time()
 
     #http://techbase.kde.org/Development/Tutorials/Python_introduction_to_signals_and_slots#Signals_and_slots_and_threading
-    threadQuery = runSparqlQuery(model, query, False)
+    threadQuery = runSparqlQuery(model, "", query, False)
     threadQuery.start()
     QObject.connect(threadQuery, SIGNAL("SparqlExecuted"), threadQuery.printResults, Qt.QueuedConnection)
     threadQuery.execQuery()
