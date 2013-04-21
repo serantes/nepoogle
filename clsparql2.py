@@ -138,6 +138,7 @@ class cSparqlBuilder2():
                     ['_nmm:actor<-nie:title', _('actorsmedia'), _('am'), _("actors in media title")], \
                     ['_nmm:actor<-nmm:series->nie:title', _('actorstvseries'), _('at'), _("actors in tv series")], \
                     ['_nmm:albumArtist->nco:fullname', _('albumartist'), _('aa'), _("albums by artist")], \
+                    ['_rdf:type=nmm:MusicPiece->nmm:musicAlbum->nmm:albumArtist->*',_('albumartistsongs'),  _('aas'), _("songs by album artist")], \
                     ['albums: nmm:musicAlbum<-contentcreated', _('albumyear'), _('ay'), _("album published year")], \
                     ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
