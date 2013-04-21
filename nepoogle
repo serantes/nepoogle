@@ -29,6 +29,7 @@ try:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
     from PyQt4.QtWebKit import *
+
 except:
     msgError = "PyQt is not istalled."
     if sys.stdout.isatty():
@@ -43,7 +44,7 @@ except:
 try:
     import PyKDE4.kdecore as kdecore
     from PyKDE4.kdecore import i18n, KAboutData, KCmdLineArgs, KCmdLineOptions, ki18n, KUrl
-    from PyKDE4.kdeui import KApplication, KIconLoader
+    from PyKDE4.kdeui import KApplication, KIconLoader, KMessageBox
     from PyKDE4.soprano import Soprano
 
 except:
@@ -951,11 +952,6 @@ class Nepoogle(QWidget):
 
 
     def addProperty(self, uri = None, ontology = "", value = ""):
-        if ontology:
-            if (self.ontologyInfo(ontology)[3] == 1):
-                QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("There can be only one ontology of this kind per resource but you can edit it's value using Shift+Click or even delete it."))
-                return False
-
         if (uri == None):
             uri = toUnicode(self.leSearch.text()).strip()
 
@@ -979,11 +975,9 @@ class Nepoogle(QWidget):
             query = 'SELECT DISTINCT ?r\n' \
                     'WHERE {\n' \
                         '\t{\n' \
-                        '\t\t?r rdfs:domain %s .FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
+                        '\t\t?r rdfs:domain %s . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t} UNION {\n' \
-                        '\t\t?r rdfs:range rdfs:Literal . FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
-                        '\t} UNION {\n' \
-                        '\t\t?r rdfs:range xsd:string .FILTER(REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) .\n' \
+                        '\t\t?r rdfs:range ?range . FILTER(?range IN (rdfs:Literal, xsd:date, xsd:string)) . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t}\n' \
                     '}\n' \
                     % (resourceMainType)
@@ -1024,28 +1018,34 @@ class Nepoogle(QWidget):
             ontologyResource = ontology
             labelResource = ontology
 
-        if not ((ontologyResource == None) or (ontologyResource == "")):
-            if (value == ""):
-                value = dialogInputBox(_("Value to store in \"%s\":") % self.ontologyInfo(ontologyResource)[1])
+        ontologyInfo = None
+        if ontologyResource:
+            ontologyInfo = self.ontologyInfo(ontologyResource)
+            if (ontologyInfo[3] == 1):
+                # Check if exists.
+                if resource.hasProperty(NOC(ontologyResource)):
+                    QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("There can be only one ontology of this kind per resource but you can edit it's value using Shift+Click or even delete it."))
+                    return False
 
-            if (value != ""):
-                #resourceReply = QMessageBox.question(self, '%s - add value' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (value, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                #if resourceReply == QMessageBox.Yes:
-                if True:
-                    #redirector = stderrReader()
-                    print("%s: property %s added" % (uri, ontologyResource))
-                    if ontologyResource == ONTOLOGY_NUMERIC_RATING:
-                        self.setRating(resource, value)
+        if ontologyResource:
+            if not value:
+                value = dialogInputBox(("Value to store in \"%s\":") % ontologyInfo[1], ontologyInfo[2])
 
-                    else:
-                        resource.addProperty(NOC(ontologyResource, True), toVariant(value))
+            if value:
+                #redirector = stderrReader()
+                print("%s: property %s added" % (uri, ontologyResource))
+                if ontologyResource == ONTOLOGY_NUMERIC_RATING:
+                    self.setRating(resource, value)
 
-                    #stderr_data = redirector.read()
-                    #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _(stderr_data))
+                else:
+                    resource.addProperty(NOC(ontologyResource, True), toVariant(value))
 
-                    mustRefresh = SLEEP_AFTER_UPDATE
+                #stderr_data = redirector.read()
+                #QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _(stderr_data))
 
-                    self.lastOntologySelected = ontologyResource
+                mustRefresh = SLEEP_AFTER_UPDATE
+
+                self.lastOntologySelected = ontologyResource
 
         else:
             QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Sorry, I don't know what to do with this resource and custom ontologies are not supported yet."))
@@ -1062,7 +1062,7 @@ class Nepoogle(QWidget):
 
 
     def editProperty(self, uri = None, ontology = None):
-        if (uri == None):
+        if not uri:
             uri = toUnicode(self.leSearch.text()).strip()
 
         if (not uri[:13] == "nepomuk:/res/"):
@@ -1071,7 +1071,7 @@ class Nepoogle(QWidget):
 
         mustRefresh = SLEEP_NO_SLEEP
 
-        if (self.model == None):
+        if not self.model:
             return False
 
         if INTERNAL_RESOURCE:
@@ -1089,7 +1089,7 @@ class Nepoogle(QWidget):
                 oldItem = ""
                 for item in text.toStringList():
                     item = toUnicode(item)
-                    if item == oldItem:
+                    if (item == oldItem):
                         continue
 
                     oldItem = item
@@ -1098,7 +1098,7 @@ class Nepoogle(QWidget):
                         status = "off"
 
                 text, dummyValue = dialogList(parameters, _("Select value to edit:"))
-                if text.strip() == "":
+                if not text.strip():
                     return False
 
             else:
@@ -1111,14 +1111,19 @@ class Nepoogle(QWidget):
         except:
             text = None
 
-        if (text != None):
-            newText = dialogTextInputBox("Editing \"%s\":" % self.ontologyInfo(ontology)[1], text)
+        if text:
+            ontologyInfo = self.ontologyInfo(ontology)
+            newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo[1], text, ontologyInfo[2])
             if (newText != text):
-                resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (self.ontologyInfo(ontology)[1]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if (resourceReply == QMessageBox.Yes):
+                #resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontologyInfo[1]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                #if (resourceReply == QMessageBox.Yes):
+                if True:
                     print("%s: property %s edited" % (uri, ontology))
                     if (ontology == ONTOLOGY_NUMERIC_RATING):
                         self.setRating(resource, newText)
+
+                    elif (ontologyInfo[3] == 1):
+                        resource.setProperty(NOC(ontology, True), toVariant(newText))
 
                     else:
                         ontologyFull = NOC(ontology, True)

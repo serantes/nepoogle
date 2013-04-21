@@ -26,6 +26,7 @@ import datetime, md5, os, re, subprocess, sys, tempfile
 
 from PyQt4.QtCore import *
 from PyKDE4.kdecore import KUrl
+from PyKDE4.kdeui import KMessageBox
 from PyKDE4.nepomuk2 import Nepomuk2
 from PyKDE4.soprano import Soprano
 
@@ -91,28 +92,14 @@ def addLinksToText(text = ''):
     return text
 
 
-def dialogInputBox(message = _("Text")):
-    parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
-    dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-    dialogProcess.wait()
-    value = u""
-    for line in iter(dialogProcess.stdout.readline, ''):
-        value += toUnicode(line)
+def dialogInputBox(message = _("Text"), ontType = "string"):
+    if (ontType == "date"):
+        parameters = ["zenity", "--calendar", "--title=" + PROGRAM_NAME, "--text=" + message, "--date-format=%Y-%m-%d"]
 
-    # Cleaning last "\n".
-    if (value[-1] == "\n"):
-        value = value[:-1]
+    else:
+        parameters = ["kdiadlog", "--title", PROGRAM_NAME, "--inputbox", message]
 
-    print(toUtf8("dialogInputBox:%s" % value))
-    return value
-
-
-def dialogList(parameters = [], message = _("Select")):
-    value = label = None
-
-    if parameters != []:
-        parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", message] \
-                        + parameters
+    try:
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
         dialogProcess.wait()
         value = u""
@@ -123,29 +110,78 @@ def dialogList(parameters = [], message = _("Select")):
         if (value[-1] == "\n"):
             value = value[:-1]
 
-        try:
-            label = toUnicode(parameters[parameters.index(value) + 1])
+        print(toUtf8("dialogInputBox:%s" % value))
 
-        except:
-            label = toUnicode(value)
+    except:
+        value = None
+        KMessageBox.error(None, "Zenity and KDialog are required to edit resources.")
 
-    print(toUtf8("dialogList:%s" % value))
+    return value
+
+
+def dialogList(parameters = [], message = _("Select")):
+    value = label = None
+
+    try:
+        if parameters:
+            parameters = ["kdialog", "--title", PROGRAM_NAME, "--radiolist", message] \
+                            + parameters
+            dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+            dialogProcess.wait()
+            value = u""
+            for line in iter(dialogProcess.stdout.readline, ''):
+                value += toUnicode(line)
+
+            # Cleaning last "\n".
+            if (value[-1] == "\n"):
+                value = value[:-1]
+
+            try:
+                label = toUnicode(parameters[parameters.index(value) + 1])
+
+            except:
+                label = toUnicode(value)
+
+        print(toUtf8("dialogList:%s" % value))
+
+    except:
+        KMessageBox.error(None, "Zenity and KDialog are required to edit resources.")
+
     return value, label
 
 
-def dialogTextInputBox(message = _("Text"), value = ""):
-    parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, value]
-    dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-    dialogProcess.wait()
-    value = u""
-    for line in iter(dialogProcess.stdout.readline, ''):
-        value += toUnicode(line)
+def dialogTextInputBox(message = _("Text"), value = "", ontType = "string"):
+    try:
+        if (ontType == "date"):
+            oldYear = ""
+            oldMonth = ""
+            oldDay = ""
+            if value:
+                oldYear = "--year=%s" % value[:4]
+                oldMonth = "--month=%s" % value[5:7]
+                oldDay = "--day=%s" % value[8:10]
 
-    # Cleaning last "\n".
-    if (value[-1] == "\n"):
-        value = value[:-1]
+            parameters = ["zenity", "--calendar", "--title=" + PROGRAM_NAME, "--text=" + message, oldYear, oldMonth, oldDay, "--date-format=%Y-%m-%d"]
 
-    print(toUtf8("dialogTextInputBox:%s" % value))
+        else:
+            parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, value]
+
+        dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
+        dialogProcess.wait()
+        value = u""
+        for line in iter(dialogProcess.stdout.readline, ''):
+            value += toUnicode(line)
+
+        # Cleaning last "\n".
+        if (value[-1] == "\n"):
+            value = value[:-1]
+
+        print(toUtf8("dialogTextInputBox:%s" % value))
+
+    except:
+        value = None
+        KMessageBox.error(None, "Zenity and KDialog are required to edit resources.")
+
     return value
 
 
