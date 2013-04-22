@@ -97,7 +97,7 @@ def dialogInputBox(message = _("Text"), ontType = "string"):
         parameters = ["zenity", "--calendar", "--title=" + PROGRAM_NAME, "--text=" + message, "--date-format=%Y-%m-%d"]
 
     else:
-        parameters = ["kdiadlog", "--title", PROGRAM_NAME, "--inputbox", message]
+        parameters = ["kdialog", "--title", PROGRAM_NAME, "--inputbox", message]
 
     try:
         dialogProcess = subprocess.Popen(parameters, stdout=subprocess.PIPE)
