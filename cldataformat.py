@@ -679,7 +679,7 @@ class cDataFormat():
                 else:
                     songSearch = "&quot;%s&quot;" % urlHtmlEncode(trackName)
 
-                trackInfo = "<b>%s</b>" % trackName
+                trackInfo = "<b>%s</b>" % urlHtmlEncode(trackName)
 
                 trackName = "<a title='%(uri)s' href='%(uri)s'>%(title)s</a>" \
                                 % {"uri": item[1], "title": trackName}
@@ -725,7 +725,7 @@ class cDataFormat():
                 else:
                     performers = [[None, _("No performers")]]
 
-                trackInfo += "<br/>&nbsp;&nbsp;by <b>" + ", ".join([item[1] for item in performers]) + "</b>"
+                trackInfo += "<br/>&nbsp;&nbsp;by <b>" + ", ".join([urlHtmlEncode(item[1]) for item in performers]) + "</b>"
 
                 if performers == oldPerformers:
                     performers = []
@@ -747,7 +747,7 @@ class cDataFormat():
                     albumTitle = self.readProperty(resTmp, 'nie:title', 'str')
 
                     if albumTitle:
-                        trackInfo += "<br /><br />on <b>%s</b>" % albumTitle
+                        trackInfo += "<br /><br />on <b>%s</b>" % urlHtmlEncode(albumTitle)
 
                     else:
                         trackInfo += "<br /><br />on <b>%s</b>" % _("Unknown album")
@@ -780,7 +780,7 @@ class cDataFormat():
 
                         albumArtists = sorted(albumArtists, key=lambda item: toUtf8(item[1]))
                         if albumArtists:
-                            trackAlbumArtists = "<br/>&nbsp;&nbsp;by <b>" + ", ".join([item[1] for item in albumArtists]) + "</b>"
+                            trackAlbumArtists = "<br/>&nbsp;&nbsp;by <b>" + ", ".join([urlHtmlEncode(item[1]) for item in albumArtists]) + "</b>"
 
                         linkAlbumArtists = ""
                         for artist in albumArtists:
@@ -999,7 +999,7 @@ class cDataFormat():
             if playlistMode:
                 pageTitle = "<b>Audio player</b><br />\n"
 
-            output += "<div class=\"audioplayer\">\n"
+            output += "<div class=\"mainaudioplayer\">\n"
             output += "%s" \
                         "<audio id=\"%splayer\" " \
                             "src=\"file://%s\" controls preload>No audio support</audio><br />\n" \
@@ -1009,7 +1009,7 @@ class cDataFormat():
             if playlistMode:
                 pageTitle = "<b>Video player</b><br />\n"
 
-            output += "<div class=\"videoplayer\">\n"
+            output += "<div class=\"mainvideoplayer\">\n"
             output += "%s" \
                         "<video id=\"%splayer\" " \
                             "src=\"file://%s\" height=\"%s\" width=\"%s\" controls preload>No video support</video><br />\n" \
