@@ -280,7 +280,7 @@ class cWebView(QWebView):
 
 
 # NepoogleMain class
-class NepoogleMain():
+class NepoogleMain(QMainWindow):
 
     def __init__(self):
         self.windows = []
@@ -354,7 +354,7 @@ class Nepoogle(QWidget):
     def __init__(self, parent = None, searchString = '', verboseMode = False, screenRect = None, SPARQLBuilderV1 = False):
         super(Nepoogle, self).__init__(None)
 
-        self.nepoogleMain = parent
+        #self.nepoogleMain = parent
 
         if (screenRect != None):
             self.screenHeight = screenRect.height()
@@ -484,7 +484,8 @@ class Nepoogle(QWidget):
 
 
     def closeEvent(self, event):
-        self.nepoogleMain.closeWindow(self)
+        #self.nepoogleMain.closeWindow(self)
+        sys.exit()
 
 
     #def downloadLinkToDisk(self, checked):
@@ -545,6 +546,11 @@ class Nepoogle(QWidget):
             if url:
                 #subprocess.Popen([PROGRAM_URL, "--gui", toUtf8(url)])
                 nepoogleMain.addWindow(url, False, QDesktopWidget().availableGeometry(-1), self.sparqlBuilderV1)
+                nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
+                nepoogle.show()
+                nepoogle.repaint()
+                if searchString != '':
+                    nepoogle.execQuery()
 
 
     def loadFinished(self, ok):
@@ -2523,19 +2529,15 @@ def main(args):
         #KCmdLineArgs.addCmdLineOptions(options)
 
         app = KApplication()
-        #window = Nepoogle(searchString)
-        #window.show()
-
-        #if searchString != '':
-        #    window.execQuery()
-
         #app = QApplication(args)
-        nepoogleMain = NepoogleMain()
-        nepoogleMain.newWindow(searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
-        #nepoogle.show()
-        #nepoogle.repaint()
-        #if searchString != '':
-        #    nepoogle.execQuery()
+        
+        #nepoogleMain = NepoogleMain()
+        #nepoogleMain.newWindow(searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
+        nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
+        nepoogle.show()
+        nepoogle.repaint()
+        if searchString != '':
+            nepoogle.execQuery()
 
         sys.exit(app.exec_())
 
