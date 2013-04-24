@@ -1192,7 +1192,7 @@ class Nepoogle(QWidget):
         except:
             text = None
 
-        if text:
+        if (text != None): # Handle empty values in ontologies.
             ontologyInfo = self.ontologyInfo(ontology)
             newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo["label"], text, ontologyInfo["type"])
             if (newText != text):
