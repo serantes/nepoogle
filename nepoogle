@@ -1038,32 +1038,32 @@ class Nepoogle(QWidget):
             resource = Nepomuk2.Resource(uri)
 
         resourceMainType = NOCR(resource.type())
-        if (ontology == ""):
+        if not ontology:
             query = 'SELECT DISTINCT ?r\n' \
                     'WHERE {\n' \
                         '\t{\n' \
                         '\t\t?r rdfs:domain %s . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t} UNION {\n' \
-                        '\t\t?r rdfs:range ?range . FILTER(?range IN (rdfs:Literal, xsd:date, xsd:string)) . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
+                        '\t\t?r rdfs:range ?range . FILTER(?range IN (rdfs:Literal, xsd:date, xsd:dateTime, xsd:string)) . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t}\n' \
                     '}\n' \
                     % (resourceMainType)
 
             values = []
-            values += [[ONTOLOGY_ALTLABEL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_ALTLABEL)[1], ONTOLOGY_ALTLABEL)], \
-                        [ONTOLOGY_COMMENT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_COMMENT)[1], ONTOLOGY_COMMENT)], \
-                        [ONTOLOGY_DESCRIPTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DESCRIPTION)[1], ONTOLOGY_DESCRIPTION)], \
-                        [ONTOLOGY_LANGUAGE, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LANGUAGE)[1], ONTOLOGY_LANGUAGE)], \
-                        [ONTOLOGY_NUMERIC_RATING, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_NUMERIC_RATING)[1], ONTOLOGY_NUMERIC_RATING)], \
-                        [ONTOLOGY_PREFLABEL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_PREFLABEL)[1], ONTOLOGY_PREFLABEL)], \
-                        [ONTOLOGY_SUBJECT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)], \
-                        [ONTOLOGY_TITLE, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_TITLE)[1], ONTOLOGY_TITLE)], \
+            values += [[ONTOLOGY_ALTLABEL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_ALTLABEL)["label"], ONTOLOGY_ALTLABEL)], \
+                        [ONTOLOGY_COMMENT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_COMMENT)["label"], ONTOLOGY_COMMENT)], \
+                        [ONTOLOGY_DESCRIPTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DESCRIPTION)["label"], ONTOLOGY_DESCRIPTION)], \
+                        [ONTOLOGY_LANGUAGE, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LANGUAGE)["label"], ONTOLOGY_LANGUAGE)], \
+                        [ONTOLOGY_NUMERIC_RATING, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_NUMERIC_RATING)["label"], ONTOLOGY_NUMERIC_RATING)], \
+                        [ONTOLOGY_PREFLABEL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_PREFLABEL)["label"], ONTOLOGY_PREFLABEL)], \
+                        [ONTOLOGY_SUBJECT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SUBJECT)["label"], ONTOLOGY_SUBJECT)], \
+                        [ONTOLOGY_TITLE, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_TITLE)["label"], ONTOLOGY_TITLE)], \
                         ]
             queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
             if queryResultSet.isValid():
                 while queryResultSet.next():
                     ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                    values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)[1], ontology)]]
+                    values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)["label"], ontology)]]
 
             if (values != []):
                 parameters = []
@@ -1078,7 +1078,7 @@ class Nepoogle(QWidget):
                     parameters += [item[0], item[1], status]
 
                 ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
-                if ((ontologyResource == None) or (ontologyResource == "")):
+                if not ontologyResource:
                     return False
 
         else:
@@ -1088,7 +1088,7 @@ class Nepoogle(QWidget):
         ontologyInfo = None
         if ontologyResource:
             ontologyInfo = self.ontologyInfo(ontologyResource)
-            if (ontologyInfo[3] == 1):
+            if (ontologyInfo["cardinality"] == 1):
                 # Check if exists.
                 if resource.hasProperty(NOC(ontologyResource)):
                     QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("There can be only one ontology of this kind per resource but you can edit it's value using Shift+Click or even delete it."))
@@ -1096,9 +1096,23 @@ class Nepoogle(QWidget):
 
         if ontologyResource:
             if not value:
-                value = dialogInputBox(("Value to store in \"%s\":") % ontologyInfo[1], ontologyInfo[2])
+                value = dialogInputBox(("Value to store in \"%s\":") % ontologyInfo["label"], ontologyInfo["type"])
 
             if value:
+                # TODO: some processing strings must be required for certain types.
+                if (ontologyInfo["type"] in ("date", "datep", "datetime", "datetimep")):
+                    valTemp = re.sub('[-/]', '', value.strip())
+                    if valTemp.isalnum():
+                        if (len(valTemp) == 6):
+                            if (int(valTemp[:2]) >= 30):
+                                value = "19%s-%s-%s" % (valTemp[:2], valTemp[2:4], valTemp[4:6])
+
+                            else:
+                                value = "20%s-%s-%s" % (valTemp[:2], valTemp[2:4], valTemp[4:6])
+
+                        elif (len(valTemp) == 8):
+                            value = "%s-%s-%s" % (valTemp[:4], valTemp[4:6], valTemp[6:8])
+
                 #redirector = stderrReader()
                 print("%s: property %s added" % (uri, ontologyResource))
                 if ontologyResource == ONTOLOGY_NUMERIC_RATING:
@@ -1180,16 +1194,16 @@ class Nepoogle(QWidget):
 
         if text:
             ontologyInfo = self.ontologyInfo(ontology)
-            newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo[1], text, ontologyInfo[2])
+            newText = dialogTextInputBox("Editing \"%s\":" % ontologyInfo["label"], text, ontologyInfo["type"])
             if (newText != text):
-                #resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontologyInfo[1]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                #resourceReply = QMessageBox.question(self, '%s - edit value' % PROGRAM_NAME, _("Save changes to '%s'?") % (ontologyInfo["label"]), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 #if (resourceReply == QMessageBox.Yes):
                 if True:
                     print("%s: property %s edited" % (uri, ontology))
                     if (ontology == ONTOLOGY_NUMERIC_RATING):
                         self.setRating(resource, newText)
 
-                    elif (ontologyInfo[3] == 1):
+                    elif (ontologyInfo["cardinality"] == 1):
                         resource.setProperty(NOC(ontology, True), toVariant(newText))
 
                     else:
@@ -1271,7 +1285,7 @@ class Nepoogle(QWidget):
                 label = resourcesList[0][1]
 
             if ((value != None) and (value != "")):
-                reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (self.ontologyInfo(ontology)[1], label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (self.ontologyInfo(ontology)["label"], label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                 if (reply == QMessageBox.Yes):
                     print("%s: property %s removed" % (uri, ontology))
                     #print("Removing property: %s, %s, %s" % (uri, ontology, toUtf8(value)))
@@ -1388,13 +1402,13 @@ class Nepoogle(QWidget):
 
                 if (dropType == "image"):
                     if (i == 0):
-                        parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
-                                        ONTOLOGY_DEPICTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
-                                        ONTOLOGY_SYMBOL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
-                                        ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
+                        parameters = [ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)["label"], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
+                                        ONTOLOGY_DEPICTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DEPICTION)["label"], ONTOLOGY_DEPICTION), "on", \
+                                        ONTOLOGY_SYMBOL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL)["label"], ONTOLOGY_SYMBOL), "off", \
+                                        ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)["label"], ONTOLOGY_SYMBOL_CONTACT), "off"]
 
                         ontologyImages, labelImages = dialogList(parameters, _("Select an ontology:"))
-                        if ((ontologyImages == None) or (ontologyImages == "")):
+                        if not ontologyImages:
                             continue
 
                         if (len(event.mimeData().urls()) > 1):
@@ -1425,13 +1439,13 @@ class Nepoogle(QWidget):
                     if (len(uris) == 1):
                         uri = uris[0]
                         if (dropType == "url_image"):
-                            parameters = [ONTOLOGY_LINK, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK), "on", \
-                                            ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)[1], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
-                                            ONTOLOGY_DEPICTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DEPICTION)[1], ONTOLOGY_DEPICTION), "on", \
-                                            ONTOLOGY_SYMBOL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL)[1], ONTOLOGY_SYMBOL), "off", \
-                                            ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)[1], ONTOLOGY_SYMBOL_CONTACT), "off"]
+                            parameters = [ONTOLOGY_LINK, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LINK)["label"], ONTOLOGY_LINK), "on", \
+                                            ONTOLOGY_MUSIC_ALBUM_COVER, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_MUSIC_ALBUM_COVER)["label"], ONTOLOGY_MUSIC_ALBUM_COVER), "off", \
+                                            ONTOLOGY_DEPICTION, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_DEPICTION)["label"], ONTOLOGY_DEPICTION), "on", \
+                                            ONTOLOGY_SYMBOL, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL)["label"], ONTOLOGY_SYMBOL), "off", \
+                                            ONTOLOGY_SYMBOL_CONTACT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SYMBOL_CONTACT)["label"], ONTOLOGY_SYMBOL_CONTACT), "off"]
                             ontologyUrl, labelUrl = dialogList(parameters, _("Select an ontology:"))
-                            if ((ontologyUrl == None) or (ontologyUrl == "")):
+                            if not ontologyUrl:
                                 continue
 
                             #if (len(event.mimeData().urls()) > 1):
@@ -1466,6 +1480,9 @@ class Nepoogle(QWidget):
                                 uriResource = Nepomuk2.Resource(uri)
                                 uriResource.addProperty(NOC(ontologyUrl, True), toVariant(urlLocalResource))
                                 mustRefresh = SLEEP_AFTER_UPDATE
+
+                            else:
+                                KMessageBox.error(None, _("Download failed."))
 
                         else:
                             urlReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (url, ONTOLOGY_LINK), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1509,14 +1526,14 @@ class Nepoogle(QWidget):
                                 '}\n' \
                                 % (resourceMainType)
 
-                    values = [[ONTOLOGY_LINK, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LINK)[1], ONTOLOGY_LINK)], \
-                                [ONTOLOGY_SUBJECT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SUBJECT)[1], ONTOLOGY_SUBJECT)]]
+                    values = [[ONTOLOGY_LINK, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_LINK)["label"], ONTOLOGY_LINK)], \
+                                [ONTOLOGY_SUBJECT, "%s (%s)" % (self.ontologyInfo(ONTOLOGY_SUBJECT)["label"], ONTOLOGY_SUBJECT)]]
                     queryResultSet = self.model.executeQuery(query, SOPRANO_QUERY_LANGUAGE)
                     if queryResultSet.isValid():
                         while queryResultSet.next():
                             ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
                             if (not ontology in (ONTOLOGY_LINK, ONTOLOGY_SUBJECT)):
-                                values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)[1], ontology)]]
+                                values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)["label"], ontology)]]
 
                     if (values != []):
                         values = sorted(values, key=lambda item: item[1].lower())
@@ -1531,7 +1548,7 @@ class Nepoogle(QWidget):
                             parameters += [value[0], value[1], status]
 
                         ontologyResource, labelResource = dialogList(parameters, _("Select an ontology:"))
-                        if ((ontologyResource == None) or (ontologyResource == "")):
+                        if not ontologyResource:
                             continue
 
                         #resourceReply = QMessageBox.question(self, '%s - add resource' % PROGRAM_NAME, "Add \"%s\" as \"%s\"?" % (resourceGenericLabel, ontologyResource), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1894,7 +1911,7 @@ class Nepoogle(QWidget):
         if not model:
             model = self.model
 
-        return ontologyInfo(ontology, model)
+        return ontologyInfo(ontology, model, True)
 
 
     def processMacros(self, searchString = ""):
