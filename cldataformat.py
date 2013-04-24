@@ -627,7 +627,7 @@ class cDataFormat():
         return  ", ".join(result)
 
 
-    def buildPlaylist(self, data = [], listType = "audio", playlistMode = True):
+    def buildPlaylist(self, data = [], listType = "audio", playlistMode = True, mustSortPlaylist = True):
         if playlistMode:
             enableButtons = True
 
@@ -645,7 +645,9 @@ class cDataFormat():
         if len(data) < 1:
             return ""
 
-        data = sorted(data, key=lambda item: item[0])
+        if mustSortPlaylist:
+            data = sorted(data, key=lambda item: item[0])
+
         i = 0
         playList = []
         output = ""
@@ -989,7 +991,9 @@ class cDataFormat():
             playList += [[item[1], i, url, trackName, sortColumn, songSearch, trackCover, trackInfo]]
             i += 1
 
-        playList = sorted(playList, key=lambda item: toUtf8(item[4]))
+        if mustSortPlaylist:
+            playList = sorted(playList, key=lambda item: toUtf8(item[4]))
+
         url = playList[0][2]
         if url[:7] == "file://":
             url = url[7:]
@@ -2266,7 +2270,7 @@ class cDataFormat():
         if vartype(param1) != "list":
             raise Exception('error')
 
-        if self.data == []:
+        if not self.data:
             self.data = list(param1)
             self.structure = list(structure)
 
@@ -2336,7 +2340,7 @@ class cDataFormat():
                 lines += u"Image: %s<br />\n" % item[0]
 
             if len(videos) > 0:
-                output += self.buildPlaylist(videos, 'video')
+                output += self.buildPlaylist(videos, 'video', True, self.searchString.find('--sort') >= 0)
 
         output += self.htmlTableFooter
         output += "<br />\n" + self.htmlStadistics \
