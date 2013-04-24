@@ -2019,7 +2019,7 @@ class Nepoogle(QWidget):
                 self.sparql = cSparqlBuilder()
 
             else:
-                self.sparql = cSparqlBuilder2()
+                self.sparql = cSparqlBuilder2(self.model)
 
             threadModeEnabled = self.threadModeEnabled
             if ((searchString[:10] == "<nepomuk:/") and (searchString[-1] == ">")):

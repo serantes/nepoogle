@@ -116,6 +116,8 @@ class cSparqlBuilder2():
 
     lastSPARQLQuery = ""
 
+    model = None
+
     regExpOntologies = ("nie:url", "rdf:type")
 
     resultField = "?r"
@@ -228,8 +230,8 @@ class cSparqlBuilder2():
     warningsList = []
 
 
-    def __init__(self):
-        pass
+    def __init__(self, model = None):
+        self.model = model
 
 
     def __del__(self):
@@ -624,7 +626,9 @@ class cSparqlBuilder2():
                         filterExpression = "FILTER(bif:contains(?v, \"'%(val)s'\")) ." % {'val': value}
 
                     elif (operator == "!="):
+                        #TODO: qué pasa aquí.
                         filterExpression = "FILTER(!bif:contains((?v, \"'%(val)s'\")) ." % {'val': value}
+                        #filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
                     else:
                         filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': operator, 'val': value}
@@ -914,7 +918,7 @@ class cSparqlBuilder2():
                                 # Text search in all resource ontologies.
                                 # Sample: ?r nmm:performer [ ?p ?v ] .
                                 clause += "%(r)s ?p %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
-                                
+
                             else:
                                 clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
 
@@ -927,12 +931,12 @@ class cSparqlBuilder2():
                 clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
                 if negationWithNotExists:
                     if (filterToUse == None):
-                        strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
+                        strTerm = indent + self.resultFieldSubqueries + " a ?v1 . FILTER NOT EXISTS {\n" \
                                 + indent2 + clause + self.buildExpressionFilter(valType, "=", self.valuePreprocess(value, lastOntology), lastOntology in self.regExpOntologies) + "\n" \
                                 + indent + "}\n"
 
                     else:
-                        strTerm = indent + self.resultFieldSubqueries + " %s ?v1 . FILTER NOT EXISTS {\n" % (firstOntology) \
+                        strTerm = indent + self.resultFieldSubqueries + " %s a . FILTER NOT EXISTS {\n" \
                                     + indent2 + clause + "\n" \
                                     + indent + "}\n"
 
@@ -1342,11 +1346,15 @@ class cSparqlBuilder2():
 
     def executeQuery(self, query = ""):
         try:
-            if DO_NOT_USE_NEPOMUK:
-                model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+            if not self.model:
+                if DO_NOT_USE_NEPOMUK:
+                    model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
+
+                else:
+                    model = Nepomuk2.ResourceManager.instance().mainModel()
 
             else:
-                model = Nepomuk2.ResourceManager.instance().mainModel()
+                model = self.model
 
             queryTime = time.time()
             if self.enableInference:
