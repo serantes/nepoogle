@@ -2340,7 +2340,7 @@ class cDataFormat():
                 lines += u"Image: %s<br />\n" % item[0]
 
             if len(videos) > 0:
-                output += self.buildPlaylist(videos, 'video', True, self.searchString.find('--sort') >= 0)
+                output += self.buildPlaylist(videos, 'video', True, self.searchString.find('--sort') < 0)
 
         output += self.htmlTableFooter
         output += "<br />\n" + self.htmlStadistics \
@@ -2565,7 +2565,7 @@ class cDataFormat():
                     #else:
                     #    value = toUnicode(resource.type())
 
-                    if value == '':
+                    if not value:
                         shorcut = lvalue(knownShortcuts, ontLabel, 0, 1)
                         if shorcut == None:
                             shorcut = ontLabel
@@ -2689,9 +2689,10 @@ class cDataFormat():
                     except:
                         value = ""
 
-                if value != '':
+                # Sometimes there are empty properties with cardinality = 1.
+                #if value:
                     #processedData += [[currOnt, ontologyToHuman(currOnt), value]]
-                    processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
+                processedData += [[currOnt, ontologyToHuman(ontInfo[0]), value]]
 
             if (not isAnEmptyResource and not mainResource.hasProperty(NOC("nao:numericRating", True))):
                 try:
