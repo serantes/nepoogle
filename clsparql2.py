@@ -1135,12 +1135,12 @@ class cSparqlBuilder2():
         #print toUtf8(items)
 
         self.command = ""
-        command = ""
+        commands = []
         commandsFound = 0
         addAnd = False
         for item in items:
             if item[:2] == '--':
-                command = item
+                commands += [item]
                 commandsFound += 1
                 continue
                 #oneFilter = [item, '', '']
@@ -1277,64 +1277,66 @@ class cSparqlBuilder2():
             raise Exception(_("Syntax error, please check your search text."))
 
         if ((commandsFound > 0) and (len(allFilters) > 1)):
-            commandLower = command.lower()
-            if (commandLower not in ("--musicplayer", "--playlist", "--playmixed") and (commandLower[:6] != "--sort")):
-                allFilters = []
-                raise Exception(_("Syntax error, commands and queries are mutual exclude."))
+            for command in commands:
+                commandLower = command.lower()
+                if (commandLower not in ("--musicplayer", "--playlist", "--playmixed") and (commandLower[:6] != "--sort")):
+                    allFilters = []
+                    raise Exception(_("Syntax error, commands and queries are mutual exclude."))
 
         # ¿Es un comando?
         if (commandsFound >= 1):
-            dummy = command.split(':')
-            commandLower = dummy[0].lower()
+            for command in commands:
+                dummy = command.split(':')
+                commandLower = dummy[0].lower()
 
-            # Commands that don't support filters.
-            if commandLower in ("--musicplayer", "--playlist", "--playmixed"):
-                if (len(dummy) > 1):
-                    raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % commandLower)
+                # Commands that don't support filters.
+                if commandLower in ("--musicplayer", "--playlist", "--playmixed"):
+                    if (len(dummy) > 1):
+                        raise Exception(_("Syntax error, command <b>%s</b> don't support an associated filter.") % commandLower)
 
-                commandsFound -= 1
+                    commandsFound -= 1
 
-            # Sort command.
-            elif (commandLower == "--sort"):
-                if ((len(dummy) <= 1) or (dummy[1] == "")):
-                    raise Exception(_("Syntax error, command <b>%s</b> needs at least an ontology as a parameter.") % commandLower)
+                # Sort command.
+                elif (commandLower[:6] == "--sort"):
+                    if ((len(dummy) <= 1) or (dummy[1] == "")):
+                        raise Exception(_("Syntax error, command <b>%s</b> needs at least an ontology as a parameter.") % commandLower)
 
-                dummy = command[7:].split(',')
+                    dummy = command[7:].split(',')
 
-                self.fields = []
-                i = 0
-                for item in dummy:
-                    item = item.strip()
-                    if (item[0] in ("+", "-")):
-                        ascending = (item[0] == "+")
-                        item = item[1:]
+                    self.fields = []
+                    i = 0
+                    for item in dummy:
+                        item = item.strip()
+                        if (item[0] in ("+", "-")):
+                            ascending = (item[0] == "+")
+                            item = item[1:]
+
+                        else:
+                            ascending = True
+
+                        self.fields += [[i, item, True, True, ascending]]
+
+                    commandsFound -= 1
+                    commandLower = ""
+
+                # Commands that support filters.
+                elif ((len(dummy) > 1) and (dummy[1] != "")):
+                    if dummy[1][0] == '-':
+                        allFilters = [[dummy[1][1:], '!=', '']]
+
+                    elif dummy[1][0] == '+':
+                        allFilters = [[dummy[1][1:], '==', '']]
 
                     else:
-                        ascending = True
-
-                    self.fields += [[i, item, True, True, ascending]]
-
-                commandsFound -= 1
-                commandLower = ""
-
-            # Commands that support filters.
-            elif ((len(dummy) > 1) and (dummy[1] != "")):
-                if dummy[1][0] == '-':
-                    allFilters = [[dummy[1][1:], '!=', '']]
-
-                elif dummy[1][0] == '+':
-                    allFilters = [[dummy[1][1:], '==', '']]
+                        allFilters = [[dummy[1], '=', '']]
 
                 else:
-                    allFilters = [[dummy[1], '=', '']]
+                    allFilters = []
 
-            else:
-                allFilters = []
+                if (commandsFound > 1):
+                    raise Exception(_("Syntax error, only one command per query."))
 
-            if (commandsFound > 1):
-                raise Exception(_("Syntax error, only one command per query."))
-            
-            command = commandLower
+                #command = commandLower
 
         # Commands associated to queries.
         if ((len(allFilters) == 0) and (command in ("--musicplayer", "--playlist", "--playmixed", "--sort"))):
