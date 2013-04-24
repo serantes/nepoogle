@@ -1342,7 +1342,12 @@ class cSparqlBuilder2():
         if ((len(allFilters) == 0) and (command in ("--musicplayer", "--playlist", "--playmixed", "--sort"))):
             raise Exception(_("Syntax error, command <b>%s</b> require an associated query.") % command)
 
-        self.command = command
+        if commands:
+            self.command = commands[-1].split(':')[0].replace("--sort", "")
+
+        else:
+            self.command = ""
+
         return allFilters
 
 
