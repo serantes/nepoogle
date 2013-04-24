@@ -24,44 +24,46 @@
 
 import unittest
 from clsparql import *
+from clsparql2 import *
 from lglobals import *
 
 class Test_cSparqlBuilder(unittest.TestCase):
 
     albumQueries = [\
-                        [unicode('album:heart', 'utf-8'), 93, 6], \
-                        [unicode('album:"heart station"', 'utf-8'), 13, 6], \
-                        [unicode('album:+"HEART STATION"', 'utf-8'), 13, 6], \
+                        [unicode('album:heart', 'utf-8'), 78, 1], \
+                        [unicode('album:"heart station"', 'utf-8'), 13, 1], \
+                        [unicode('album:+"HEART STATION"', 'utf-8'), 13, 1], \
                         [unicode('album:+"heart station"', 'utf-8'), 0, 0], \
-                        [unicode('album:+"Singin\' In the Rain OST"', 'utf-8'), 30, 6] \
+                        [unicode('album:+"Singin\' In the Rain OST"', 'utf-8'), 30, 1] \
                     ]
 
     andQueries = [\
-                    [unicode('actor:"Zhang Ziyi" and actor:"Bingbing Fan"', 'utf-8'), 1, 6], \
-                    [unicode('actor:+"Zhang Ziyi" and actor:+"Bingbing Fan"', 'utf-8'), 1, 6], \
-                    [unicode('actor:+"Zhang Ziyi" and actor:-"Bingbing Fan"', 'utf-8'), 2, 6], \
-                    [unicode('-dorama +"takeuchi yuuko" "hiroshi"', 'utf-8'), 2, 6], \
-                    [unicode('ht:-dorama ht:+"takeuchi yuuko" ht:"hiroshi"', 'utf-8'), 2, 6], \
-                    [unicode('hasTag:+dorama rating:>=5'), 4, 6],  \
-                    [unicode('mimetype:video/x-msvideo url:".avi$"'), 1, 6],  \
-                    [unicode('playcount:0 genre:drama actor:+"Yeong-ae Lee" director:Park'), 1, 6], \
-                    [unicode('tvshow:Coupling season:2 episode:4'), 1, 6] \
+                    [unicode('actor:"Zhang Ziyi" and actor:"Bingbing Fan"', 'utf-8'), 1, 1], \
+                    [unicode('actor:+"Zhang Ziyi" and actor:+"Bingbing Fan"', 'utf-8'), 1, 1], \
+                    [unicode('actor:+"Zhang Ziyi" and actor:-"Bingbing Fan"', 'utf-8'), 1, 1], \
+                    [unicode('-dorama +"takeuchi yuuko" "hiroshi"', 'utf-8'), 2, 1], \
+                    [unicode('ht:-dorama ht:+"takeuchi yuuko" ht:"hiroshi"', 'utf-8'), 2, 1], \
+                    [unicode('hasTag:+dorama rating:>=5'), 4, 1],  \
+                    [unicode('mimetype:video/x-msvideo url:".avi$"'), 1601, 1],  \
+                    [unicode('genre:drama actor:+"Yeong-ae Lee" director:Park'), 1, 1], \
+                    [unicode('tvshow:Coupling season:2 episode:4'), 1, 1] \
                 ]
 
     basicQueries = [\
-                        [unicode('4minute', 'utf-8'), 274, 6], \
-                        [unicode('película', 'utf-8'), 128, 6], \
-                        [unicode('+película', 'utf-8'), 118, 6], \
-                        [unicode('宇多田', 'utf-8'), 176, 6] \
+                        [unicode('4minute', 'utf-8'), 335, 1], \
+                        [unicode('película', 'utf-8'), 112, 1], \
+                        [unicode('+película', 'utf-8'), 112, 1], \
+                        [unicode('宇多田', 'utf-8'), 136, 1], \
+                        [unicode('actors:.*bing.*', 'utf-8'), 2, 1] \
                     ]
 
     commandQueries = [\
-                    [unicode('--tags', 'utf-8'), 144, 3], \
-                    [unicode('--actors:bing', 'utf-8'), 1, 2] \
+                    [unicode('--tags', 'utf-8'), 147, 1], \
+                    [unicode('--actors:.*bing.*', 'utf-8'), 2, 1] \
                 ]
 
     orQueries = [\
-                    [unicode('película or hasTag:"takeuchi yuuko"', 'utf-8'), 144, 6] \
+                    [unicode('película or hasTag:"takeuchi yuuko"', 'utf-8'), 128, 1] \
                 ]
 
     def setUp(self):
@@ -69,12 +71,11 @@ class Test_cSparqlBuilder(unittest.TestCase):
 
     def runQueryAndCheck(self, textQuery = '', auxData = []):
         if (textQuery != '') and auxData != []:
-            o = cSparqlBuilder()
-            o.columns = '?x0 AS ?id ' + o.columns
+            o = cSparqlBuilder2()
             query = o.buildQuery(textQuery)
             data, structure, time = o.executeQuery(query)
-            self.assertEqual(len(data), auxData[0], 'Query = %s' % textQuery)
-            self.assertEqual(len(structure), auxData[1], 'Query = %s' % textQuery)
+            self.assertEqual(len(data), auxData[0], 'Query = %s (%s != %s)' % (textQuery, len(data), auxData[0]))
+            #self.assertEqual(len(structure), auxData[1], 'Query = %s (%s != %s)' % (textQuery, len(structure), auxData[0]))
             o = None
 
     def test_albumQueries(self):
@@ -103,4 +104,7 @@ class Test_cSparqlBuilder(unittest.TestCase):
             self.runQueryAndCheck(itemQuery[0], [itemQuery[1], itemQuery[2]])
 
 if __name__ == '__main__':
+    # Whithout this nepomuk don't works.
+    app = QCoreApplication(sys.argv)
+
     unittest.main()
