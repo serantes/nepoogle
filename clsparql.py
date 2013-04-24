@@ -126,7 +126,8 @@ ontologyTypes = [ \
                     ['nuao:usagecount', 'number'] \
                 ]
 
-ontologiesInfo = []
+ontologiesInfo = dict()
+
 ontologiesRank = [["http://www.w3.org/2000/01/rdf-schema#Resource", 0]]
 resourcesCache = dict()
 
@@ -223,18 +224,21 @@ def ontologyToHuman(ontology = '', reverse = False):
     return result
 
 
-def ontologyInfo(ontology = '', model = None):
+def ontologyInfo(ontology = None, model = None, returnDict = False):
     global ontologiesInfo
 
-    if (ontology == ""):
-        return ["", "", ""]
+    if not ontology:
+        if returnDict:
+            return dict(ontology = "", label = "", type = "", cardinality = 0)
+
+        else:
+            return ["", "", "", 0]
 
     # Ontology cleanup because sometimes has additional information as
     # suffix like in nmm:musicAlbum=?x0.
     ontology = ontology.split("=")[0].split("->")[0]
     shortOnt = NOCR(ontology)
-    i = lindex(ontologiesInfo, shortOnt, column = 0)
-    if (i == None):
+    if not ontologiesInfo.has_key(shortOnt):
         if not model:
             if DO_NOT_USE_NEPOMUK:
                 model = Soprano.Client.DBusModel('org.kde.NepomukStorage', '/org/soprano/Server/models/main')
@@ -267,14 +271,13 @@ def ontologyInfo(ontology = '', model = None):
                 except:
                     cardinality = 0
 
-                ontologiesInfo += [[shortOnt, toUnicode(data["label"].toString()), ontType, cardinality]]
-                i = -1
+                ontologiesInfo[shortOnt] = dict(ontology = shortOnt, label = toUnicode(data["label"].toString()), type = ontType, cardinality = cardinality)
 
-    if i == None:
-        return [shortOnt, shortOnt, "string", 0]
+    if returnDict:
+        return ontologiesInfo[shortOnt]
 
     else:
-        return [ontologiesInfo[i][0], ontologiesInfo[i][1], ontologiesInfo[i][2], ontologiesInfo[i][3]]
+        return [ontologiesInfo[shortOnt]["ontology"], ontologiesInfo[shortOnt]["label"], ontologiesInfo[shortOnt]["type"], ontologiesInfo[shortOnt]["cardinality"]]
 
 
 def toN3(url = ''):
