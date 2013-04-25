@@ -30,12 +30,12 @@ from lglobals import *
 class Test_cSparqlBuilder(unittest.TestCase):
 
     albumQueries = [\
-                        [unicode('album:heart', 'utf-8'), 78, 1], \
-                        [unicode('album:"heart station"', 'utf-8'), 13, 1], \
-                        [unicode('album:+"HEART STATION"', 'utf-8'), 13, 1], \
-                        [unicode('album:+"heart station"', 'utf-8'), 0, 0], \
-                        [unicode('album:+"Singin\' In the Rain OST"', 'utf-8'), 30, 1] \
-                    ]
+                    [unicode('album:heart', 'utf-8'), 78, 1], \
+                    [unicode('album:"heart station"', 'utf-8'), 13, 1], \
+                    [unicode('album:+"HEART STATION"', 'utf-8'), 13, 1], \
+                    [unicode('album:+"heart station"', 'utf-8'), 0, 0], \
+                    [unicode('album:+"Singin\' In the Rain OST"', 'utf-8'), 30, 1] \
+                ]
 
     andQueries = [\
                     [unicode('actor:"Zhang Ziyi" and actor:"Bingbing Fan"', 'utf-8'), 1, 1], \
@@ -46,16 +46,18 @@ class Test_cSparqlBuilder(unittest.TestCase):
                     [unicode('hasTag:+dorama rating:>=5'), 4, 1],  \
                     [unicode('mimetype:video/x-msvideo url:".avi$"'), 1601, 1],  \
                     [unicode('genre:drama actor:+"Yeong-ae Lee" director:Park'), 1, 1], \
-                    [unicode('tvshow:Coupling season:2 episode:4'), 1, 1] \
+                    [unicode('tvshow:Coupling season:2 episode:4'), 1, 1], \
+                    [unicode('mimetype:video performer:beg releasedate:-'), 14, 1], \
+                    [unicode('flash:yes meteringmode:"center weighted average" whitebalance:auto saturation:- sharpness:-'), 6, 1] \
                 ]
 
     basicQueries = [\
-                        [unicode('4minute', 'utf-8'), 335, 1], \
-                        [unicode('película', 'utf-8'), 112, 1], \
-                        [unicode('+película', 'utf-8'), 112, 1], \
-                        [unicode('宇多田', 'utf-8'), 136, 1], \
-                        [unicode('actors:.*bing.*', 'utf-8'), 2, 1] \
-                    ]
+                    [unicode('4minute', 'utf-8'), 335, 1], \
+                    [unicode('película', 'utf-8'), 112, 1], \
+                    [unicode('+película', 'utf-8'), 112, 1], \
+                    [unicode('宇多田', 'utf-8'), 136, 1], \
+                    [unicode('actors:.*bing.*', 'utf-8'), 2, 1] \
+                ]
 
     commandQueries = [\
                     [unicode('--tags', 'utf-8'), 147, 1], \
@@ -64,6 +66,12 @@ class Test_cSparqlBuilder(unittest.TestCase):
 
     orQueries = [\
                     [unicode('película or hasTag:"takeuchi yuuko"', 'utf-8'), 128, 1] \
+                ]
+
+    parenthesesQueries = [\
+                    [unicode('(performer:miryo or performer:narsha) and performer:-beg and hastag:videoclip', 'utf-8'), 9, 1], \
+                    [unicode('performer:-beg and (performer:miryo or performer:narsha) and (url:.mp3$ or mimetype:mpeg)', 'utf-8'), 8, 1], \
+                    [unicode('movies: and (actor:bing or actor:ziyi)', 'utf-8'), 3, 1] \
                 ]
 
     def setUp(self):
@@ -101,6 +109,11 @@ class Test_cSparqlBuilder(unittest.TestCase):
     def test_orQueries(self):
         #return True
         for itemQuery in self.orQueries:
+            self.runQueryAndCheck(itemQuery[0], [itemQuery[1], itemQuery[2]])
+
+    def test_parenthesesQueries(self):
+        #return True
+        for itemQuery in self.parenthesesQueries:
             self.runQueryAndCheck(itemQuery[0], [itemQuery[1], itemQuery[2]])
 
 if __name__ == '__main__':
