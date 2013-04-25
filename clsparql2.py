@@ -480,7 +480,7 @@ class cSparqlBuilder2():
 
     def buildExpressionFilter(self, valType, operator, value, forceRegEx = False):
         # If string is between " they must be removed.
-        if (value[0] == value[-1] == '"'):
+        if (value and (value[0] == value[-1] == '"')):
             value = value[1:-1]
 
         filterExpression = ""
@@ -1145,16 +1145,16 @@ class cSparqlBuilder2():
                 continue
                 #oneFilter = [item, '', '']
 
-            elif item.lower() == 'or':
+            elif (item.lower() == 'or'):
                 oneFilter = ['or', '', '']
                 addAnd = False
 
-            elif item.lower() == 'and':
+            elif (item.lower() == 'and'):
                 oneFilter = ['and', '', '']
                 addAnd = False
 
             else:
-                if addAnd == True:
+                if addAnd:
                     allFilters += [['and', '', '']]
 
                 ontology = ''
@@ -1162,13 +1162,13 @@ class cSparqlBuilder2():
                     if item == "":
                         item = ".*"
 
-                    if item[0] in ('"', "'") and item[-1] in ('"', "'"):
+                    if ((item[0] in ('"', "'")) and (item[-1] in ('"', "'"))):
                         parts = [item[1:-1], '', '']
 
                     else:
                         parts = item.partition(':')
 
-                    if parts[1] == ':':
+                    if (parts[1] == ':'):
                         ontology += parts[0] + ':'
                         item = parts[2]
 
@@ -1177,19 +1177,15 @@ class cSparqlBuilder2():
                         data = parts[0]
                         break
 
-                if data == '':
+                if not data:
                     raise Exception(_("Syntax error, please check your search text."))
 
-                if data == '':
-                    operator = ''
-
-                else:
-                    operator = data[0]
+                operator = data[0]
 
                 #Hack operador negativo.
                 if ((len(data) > 1) and (operator == "-")):
                     # "-<" ==> ">"
-                    if data[1] == "<":
+                    if (data[1] == "<"):
                         operator = ">"
                         if (len(data) > 2) and (data[2] == "="):
                             data = ">" + data[3:]
@@ -1198,9 +1194,9 @@ class cSparqlBuilder2():
                             data = ">=" + data[2:]
 
                     # "->" ==> "<"
-                    elif data[1] == ">":
+                    elif (data[1] == ">"):
                         operator = "<"
-                        if (len(data) > 2) and (data[2] == "="):
+                        if ((len(data) > 2) and (data[2] == "=")):
                             data = "<" + data[3:]
 
                         else:
