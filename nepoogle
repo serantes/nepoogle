@@ -1579,7 +1579,7 @@ class Nepoogle(QWidget):
 
         elif (event.mimeData().hasText()):
             text = toUnicode(event.mimeData().text())
-            if (text == ""):
+            if not text:
                 return False
 
             self.addProperty(uri, "", text)
@@ -2264,6 +2264,8 @@ class Nepoogle(QWidget):
 
             if warningMsg:
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
+
+            self.setAppCursor()
 
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
