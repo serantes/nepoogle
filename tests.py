@@ -48,7 +48,8 @@ class Test_cSparqlBuilder(unittest.TestCase):
                     [unicode('genre:drama actor:+"Yeong-ae Lee" director:Park'), 1, 1], \
                     [unicode('tvshow:Coupling season:2 episode:4'), 1, 1], \
                     [unicode('mimetype:video performer:beg releasedate:-'), 14, 1], \
-                    [unicode('flash:yes meteringmode:"center weighted average" whitebalance:auto saturation:- sharpness:-'), 6, 1] \
+                    [unicode('flash:yes meteringmode:"center weighted average" whitebalance:auto saturation:- sharpness:-'), 6, 1], \
+                    [unicode('hastag:live released:-'), 529, 1] \
                 ]
 
     basicQueries = [\
