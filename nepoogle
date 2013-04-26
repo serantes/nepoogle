@@ -1740,10 +1740,10 @@ class Nepoogle(QWidget):
 
             if fmtOntology.find('_') >= 0:
                 fmtOntology = fmtOntology.replace('_', '')
-                info += ' (using optionals to negate)'
+                info += ' (using FILTER NOT EXISTS to negate)'
 
             shortcuts += '<tr><td width=150px><b>%(abr)s</b>,<b>%(shortcut)s</b>:</td>' \
-                            '<td>%(help)s</td>' \
+                            '<td width=150px>%(help)s</td>' \
                             '<td><em>%(ontology)s</em>%(info)s</td></tr>\n' \
                         % {'abr': shortcut[2], 'shortcut': shortcut[1], 'help': ontHelp, 'ontology': fmtOntology, 'info': info}
 
