@@ -202,10 +202,10 @@ class cSparqlBuilder2():
                     ['nco:topic?->*', _('topics'), _('tos'), _("topics")], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts'), _("tvshows by series")], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs'), _("tvseries")], \
-                    ['_nmm:seriesr<-nmm:actor->nco:fullname', _('tvseriesactors'), _('tva'), _("tv series by actor")], \
-                    ['_nmm:seriesr<-nmm:director->nco:fullname', _('tvseriesdirectors'), _('tvd'), _("tv series by director")], \
-                    ['_nmm:seriesr<-nmm:producer->nco:fullname', _('tvseriesproducers'), _('tvp'), _("tv series by producer")], \
-                    ['_nmm:seriesr<-nmm:writer->nco:fullname', _('tvserieswriters'), _('tvw'), _("tv series by writer")], \
+                    ['_nmm:series<-nmm:actor->nco:fullname', _('tvseriesactors'), _('tva'), _("tv series by actor")], \
+                    ['_nmm:series<-nmm:director->nco:fullname', _('tvseriesdirectors'), _('tvd'), _("tv series by director")], \
+                    ['_nmm:series<-nmm:producer->nco:fullname', _('tvseriesproducers'), _('tvp'), _("tv series by producer")], \
+                    ['_nmm:series<-nmm:writer->nco:fullname', _('tvserieswriters'), _('tvw'), _("tv series by writer")], \
                     ['nmm:series->nie:title', _('tvshow'), _('tv'), _("tvshows by title")], \
                     ['rdf:type=nmm:TVShow->nie:title', _('tvshows'), _('tvw'), _("tvshows")], \
                     ['!rdf:type', _('type'), _('ty'), _("resource type")], \
