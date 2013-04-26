@@ -485,7 +485,7 @@ class cSparqlBuilder2():
 
         filterExpression = ""
 
-        if (value == "") or (value == ".*"):
+        if ((value == "") or (value == ".*")):
             pass
 
         elif (valType in ('number', 'int', 'integer')):
@@ -913,6 +913,9 @@ class cSparqlBuilder2():
                             clause += indent2 + "%(r)s %(ont)s %(v)s . %(f)s\n" % {'ont': ontologyGroup[-1], 'r': rName, 'v': vName, 'f': filterToUse}
                             clause += indent + "}"
 
+                            if not filterToUse:
+                                filterToUse = "dummy value"
+
                         else:
                             if (ontology == "*"):
                                 # Text search in all resource ontologies.
@@ -923,25 +926,25 @@ class cSparqlBuilder2():
                                 clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
 
                         i += 1
-                        if (firstOntology == None):
+                        if not firstOntology:
                             firstOntology = ontology
 
                         lastOntology = ontology
 
                 clause = clause.replace(fieldUsedAsResult, self.resultFieldSubqueries + " ").replace("?x%d " % i, "?v ")
                 if negationWithNotExists:
-                    if (filterToUse == None):
+                    if not filterToUse:
                         strTerm = indent + self.resultFieldSubqueries + " a ?v1 . FILTER NOT EXISTS {\n" \
                                 + indent2 + clause + self.buildExpressionFilter(valType, "=", self.valuePreprocess(value, lastOntology), lastOntology in self.regExpOntologies) + "\n" \
                                 + indent + "}\n"
 
                     else:
-                        strTerm = indent + self.resultFieldSubqueries + " %s a . FILTER NOT EXISTS {\n" \
+                        strTerm = indent + self.resultFieldSubqueries + " a ?v1 . FILTER NOT EXISTS {\n" \
                                     + indent2 + clause + "\n" \
                                     + indent + "}\n"
 
                 else:
-                    if (filterToUse == None):
+                    if not filterToUse:
                         strTerm = indent + clause + self.buildExpressionFilter(valType, operator, self.valuePreprocess(value, lastOntology), lastOntology in self.regExpOntologies) + "\n"
 
                     else:
