@@ -136,7 +136,7 @@ class cSparqlBuilder2():
 
     shortcuts = [ \
                     ['_nmm:actor->*',_('actor'), _('ac'), _("resources by actor")], \
-                    ['_nmm:actor?->*', _('actors'), _('acs'), _("actors")], \
+                    ['nmm:actor?->*', _('actors'), _('acs'), _("actors")], \
                     ['_nmm:actor<-nie:title', _('actorsmedia'), _('am'), _("actors in media title")], \
                     ['_nmm:actor<-nmm:series->nie:title', _('actorstvseries'), _('at'), _("actors in tv series")], \
                     ['_nmm:albumArtist->*', _('albumartist'), _('aa'), _("albums by artist")], \
@@ -146,17 +146,17 @@ class cSparqlBuilder2():
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
                     ['nao:altLabel', _('altlabel'), _('all'), _("alternative label")], \
                     ['_nmm:composer->*',_('composer'), _('co'), _("music pieces by composer")], \
-                    ['_nmm:composer?->*', _('composers'), _('cos'), _("composers")], \
+                    ['nmm:composer?->*', _('composers'), _('cos'), _("composers")], \
                     ['?ont->nco:fullname', _('contact'), _('co'), _("resources by contact")], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos'), _("contacts")], \
                     ['nao:created', _('created'), _('cd'), _("created")], \
                     ['nie:contentCreated', _('contentcreated'), _('cc'), _("content created")], \
                     ['_nco:creator->*', _('creator'), _('cr'), _("resources by creator")], \
-                    ['_nco:creator?->*', _('creators'), _('crs'), _("creators")], \
+                    ['nco:creator?->*', _('creators'), _('crs'), _("creators")], \
                     ['nfo:depiction<-nco:fullname', _('cdepictions'), _('cds'), _("contact depictions")], \
                     ['nao:description', _('description'), _('de'), _("description")], \
                     ['_nmm:director->*', _('director'), _('di'), _("resources by director")], \
-                    ['_nmm:director?->*', _('directors'), _('dis'), _("directors")], \
+                    ['nmm:director?->*', _('directors'), _('dis'), _("directors")], \
                     ['_nmm:director<-nie:title', _('directorsmedia'), _('dm'), _("directors in media title")], \
                     ['_nmm:director<-nmm:series->nie:title', _('directorstvseries'), _('dt'), _("directors in tv series")], \
                     ['nmm:setNumber', _('discnumber'), _('dn'), _("music album disc number")], \
@@ -177,10 +177,10 @@ class cSparqlBuilder2():
                     ['nie:url', _('name'), _('na'), _("file urls")], \
                     ['nao:numericRating', _('numericrating'), _('nr'), _("rating")], \
                     ['_nmm:performer->*', _('performer'), _('pe'), _("music pieces by performer")], \
-                    ['_nmm:performer?->*', _('performers'), _('pes'), _("performers")], \
+                    ['nmm:performer?->*', _('performers'), _('pes'), _("performers")], \
                     ['nmm:musicAlbum=?vma->nmm:performer->nco:fullname',_('performeralbum'), _('pa'), _("albums by performer")], \
                     ['_nmm:producer->*', _('producer'), _('pr'), _("resources by producer")], \
-                    ['_nmm:producer?->*', _('producers'), _('prs'), _("producers")], \
+                    ['nmm:producer?->*', _('producers'), _('prs'), _("producers")], \
                     ['_nmm:producer<-nie:title', _('producersmedia'), _('pm'), _("producers in media title")], \
                     ['_nmm:producer<-nmm:series->nie:title', _('directorstvseries'), _('pt'), _("producers in tv series")], \
                     ['nco:photo<-nco:fullname', _('photos'), _('ps'), _("photographs")], \
@@ -199,7 +199,7 @@ class cSparqlBuilder2():
                     ['nie:title', _('title'), _('ti'), _("resource title")], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn'), _("song track number")], \
                     ['_nco:topic->*',_('topic'), _('to'), _("resources by topic")], \
-                    ['_nco:topic?->*', _('topics'), _('tos'), _("topics")], \
+                    ['nco:topic?->*', _('topics'), _('tos'), _("topics")], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts'), _("tvshows by series")], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs'), _("tvseries")], \
                     ['_nmm:seriesr<-nmm:actor->nco:fullname', _('tvseriesactors'), _('tva'), _("tv series by actor")], \
@@ -215,7 +215,7 @@ class cSparqlBuilder2():
                     ['nfo:width', _('width'), _('wi'), _("width")], \
                     ['nexif:whiteBalance', _('whitebalance'), _('wb'), _("photograph white balance")], \
                     ['_nmm:writer->*', _('writer'), _('wr'), _("resources by writer")], \
-                    ['_nmm:writer?->*', _('writers'), _('wrs'), _("writers")], \
+                    ['nmm:writer?->*', _('writers'), _('wrs'), _("writers")], \
                     ['_nmm:writer<-nie:title', _('writersmedia'), _('wm'), _("writers in media title")], \
                     ['_nmm:writer<-nmm:series->nie:title', _('writerstvseries'), _('wt'), _("writers in tv series")] \
                 ]
