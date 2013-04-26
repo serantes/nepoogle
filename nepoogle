@@ -1712,14 +1712,14 @@ class Nepoogle(QWidget):
                 commands += '<li>%(command)s:"text"</a></li>\n' % {"command": command[0]}
 
             elif (command[0] == "--sort"):
-                commands += '<li>%(command)s:"shortontology[,shortontology]..."</a></li>\n' % {"command": command[0]}
+                commands += '<li>%(command)s:"[+|-]shortontology[,[+|-]shortontology]..."</a></li>\n' % {"command": command[0]}
 
             else:
                 commands += '<li><a href="command:/%(command)s">%(command)s</a></li>\n' % {"command": command[0]}
 
         commands += '</ul></p>\n'
 
-        shortcuts = '<p><b>Onlologies shorcuts</b>:<ul>\n' + htmlTableHeader \
+        shortcuts = '<p><b>Shortcuts</b>:<ul>\n' + htmlTableHeader \
                         % {'border': 0, 'cellpadding': 0}
         for shortcut in oSparqlBuilder.shortcuts:
             info = ''
@@ -1751,7 +1751,7 @@ class Nepoogle(QWidget):
 
         remarks = "<p><b>Remarks</b>:<br \>\n" \
                     "<ul>\n" \
-                    "<li>This program needs <b>KDE 4.10</b> and <a href=\"http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git\">Python Nepomuk2 Bindings</a> installed and Nepomuk running to work." \
+                    "<li>This program needs to work <b>KDE 4.10</b>, <a href=\"http://quickgit.kde.org/?p=scratch%2Fsedwards%2Fpykde4nepomuk2.git\">Python Nepomuk2 Bindings</a> installed and Nepomuk running." \
                     "<li>Query syntax is inspired in Google's search syntax.</li>\n" \
                     "<li>You can use regular expressions searching strings.</li>\n" \
                     "<li>Nepoogle uses own query engine but Nepomuk query parser it's available using prefix e0.</li>\n" \
@@ -1808,8 +1808,8 @@ class Nepoogle(QWidget):
                     "<em>chars</em> :== any number of utf-8 characters<br />\n" \
                     "<em>time</em> :== hh:mm:ss | hour | minute | seconds<br />\n" \
                     "<em>hour</em> :== 1..24[h]<br />\n" \
-                    "<em>minute</em> :== 25..60 | 1..60m<br />\n" \
-                    "<em>seconds</em> :== 1..60s<br />\n" \
+                    "<em>minute</em> :== 25..59 | 1..59m<br />\n" \
+                    "<em>seconds</em> :== 1..59s<br />\n" \
                     "<br />\n" \
                     "<em>command</em> :== instruction[:string]<br />\n" \
                     "<em>instruction</em> :== %(instructions)s<br />\n" \
@@ -1842,29 +1842,33 @@ class Nepoogle(QWidget):
                     "<tr><td><em>movie</em></td>\n" \
                         "<td>contains word 'movie'</td></tr>\n" \
                     "<tr><td><em>-movie</em></td>\n" \
-                        "<td>not contains word 'movie' (caution, this query is dangerous in a big database)</td></tr>\n" \
+                        "<td>not contains word 'movie' (caution, this query could be very slow in a big database)</td></tr>\n" \
                     "<tr><td><em>hastag:-dorama and ('Takeuchi' or 'Hiroshi')</em></td>\n" \
                         "<td>not tagged as 'dorama' and contains 'Takeuchi' or 'Hiroshi'</td></tr>\n" \
                     "<tr><td><em>movie or actor:'takeuchi yuuko'</em></td>\n" \
-                        "<td>contains movie or one of the actors is 'takeuchi yuuko'</td></tr>\n" \
+                        "<td>contains word movie or one of the actors is 'takeuchi yuuko'</td></tr>\n" \
                     "<tr><td><em>hasTag:+movie rating:>=5</em></td>\n" \
                         "<td>tagged exactly 'movie' and rating >= 5</td></tr>\n" \
                     "<tr><td><em>url:\"^file:///media\" mimetype:image mimetype:-image/jpeg</em></td>\n" \
                         "<td>all image files, except jpegs, located in /media</td></tr>\n" \
-                    "<tr><td><em>mimetype:png ((height:1200 width:1600) or width:>1900)</em></td>\n" \
-                        "<td>all pngs with a resolution of 1600x1200 or greater than 1900</td></tr>\n" \
+                    "<tr><td><em>mimetype:png ((height:1200 width:1600) or height:>1900)</em></td>\n" \
+                        "<td>all pngs with a resolution of 1600x1200 or with a height greater than 1900</td></tr>\n" \
                     "<tr><td><em>genre:drama actor:+'Yeong-ae Lee' director:Park</em></td>\n" \
-                        "<td>all drame resources with actress 'Yeong-ae Lee' and a director whose name contains 'Park'</td></tr>\n" \
+                        "<td>all drama resources with actress 'Yeong-ae Lee' and a director whose name contains 'Park'</td></tr>\n" \
                     "<tr><td><em>actor:'Zhang Ziyi' and actor:-'Bingbing Fan'</em></td>\n" \
                         "<td>all resources with actress 'Zhang Ziyi' but without actress 'Bingbing Fan'</td></tr>\n" \
-                    "<tr><td><em>tvshow:Coupling season:2 (episode:4 or episode:5)</em></td>\n" \
-                        "<td>episodes 4 and 5 of season 2 of Coupling</td></tr>\n" \
+                    "<tr><td><em>tvshow:Coupling season:2 (episode:4 or episode:5) --playlist</em></td>\n" \
+                        "<td>episodes 4 and 5 of season 2 of Coupling displayed using playlist view</td></tr>\n" \
                     "<tr><td><em>--tags</em></td>\n" \
                         "<td>all tags</td></tr>\n" \
-                    "<tr><td><em>albums: nmm:musicAlbum<-contentcreated:2012</em></td>\n" \
+                    "<tr><td><em>albums: nmm:musicAlbum<-released:2012</em></td>\n" \
                         "<td>all albums released on 2012</td></tr>\n" \
                     "<tr><td><em>flash:yes whitebalance:auto nexif:exposureTime:1/60 nexif:fNumber:2.8 nexif:focalLength:>5.4</em></td>\n" \
                         "<td>photos with flash, automatic white balance, a exposure time of 1/60 s, a relative aperture of 2.8 mm and a focal length greather than 5.4 mm</td></tr>\n" \
+                    "<tr><td><em>contacts: --sort:-nao:numericRating,nco:fullname</em></td>\n" \
+                        "<td>all contacts sorted descending by rating and ascending by fullname</td></tr>\n" \
+                    "<tr><td><em>album:\"25 Years The Chain\" --musicplayer</em></td>\n" \
+                        "<td>album \"25 Years the Chain\" displayed using music player view</td></tr>\n" \
                     + htmlTableFooter + \
                     "</p>\n"
 
@@ -1880,7 +1884,7 @@ class Nepoogle(QWidget):
                     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" \
                     "\n  </head>\n<body>\n" \
                     "<p><h3>%(program)s's help</h3></p>\n" \
-                    "<p><b>%(program)s</b> is a tool to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system but search indexed data in <em>Nepomuk's database</em>.</p>\n" \
+                    "<p><b>%(program)s</b> is a tool to query the <em>Nepomuk's database</em>. <b>%(program)s</b> does not search the file system but search previously indexed data by <em>Nepomuk</em>.</p>\n" \
                     "%(examples)s" \
                     "%(remarks)s" \
                     "%(commands)s" \
