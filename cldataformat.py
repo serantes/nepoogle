@@ -921,13 +921,6 @@ class cDataFormat():
                         sortColumn = dummyVal + sortColumn
                         trackName = dummyVal + trackName
 
-                    # Watched?.
-                    if (res.hasProperty(NOC('nuao:usageCount', True)) and (res.property(NOC('nuao:usageCount', True)).toString() == '1')):
-                        trackName += " <b><input type='checkbox' onclick='window.open(\"%s\");' name='watched' checked=true><em>watched</em></b>" % item[1]
-
-                    else:
-                        trackName += " <b><input type='checkbox' onclick='window.open(\"%s\");' name='watched' checked=false><em>not watched</em></b>" % item[1]
-
                     # Series title.
                     if res.hasProperty(NOC('nmm:series', True)):
                         if INTERNAL_RESOURCE:
@@ -943,6 +936,13 @@ class cDataFormat():
                             sortColumn = dummyVal + sortColumn
                             trackName = "<em><a title='%(uri)s' href='%(uri)s'>%(title)s</a></em>: %(trackName)s" \
                                             % {"uri": toUnicode(resTmp.uri()), "title": dummyVal, "trackName": trackName}
+
+                # Watched?.
+                if (res.hasProperty(NOC('nuao:usageCount', True)) and (res.property(NOC('nuao:usageCount', True)).toString() == '1')):
+                    trackName += " <b><input type='checkbox' disabled='disabled' onclick='window.open(\"%s\");' name='watched' checked=true><em>watched</em></b>" % item[1]
+
+                else:
+                    trackName += " <b><input type='checkbox' disabled='disabled' onclick='window.open(\"%s\");' name='watched' checked=false><em>not watched</em></b>" % item[1]
 
                 # Maybe it's a music video with Performers.
                 performers = []
