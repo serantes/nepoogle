@@ -691,9 +691,12 @@ class cDataFormat():
                 if discNumber != None:
                     trackName = "%02d/" % discNumber + trackName
 
+                # This property is deprecated.
                 albumYear = self.readProperty(res, 'nie:contentCreated', 'year')
-                if albumYear == None:
-                    albumYear = 0
+                if not albumYear:
+                    albumYear = self.readProperty(res, 'nmm:releaseDate', 'year')
+                    if not albumYear:
+                        albumYear = 0
 
                 sortColumn = trackName
                 coverUrl = None
