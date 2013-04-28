@@ -2130,7 +2130,10 @@ class cDataFormat():
                 #print "[Page %s: %s..%s]" % (renderPage, firstRow, lastRow)
                 for i in range(firstRow, lastRow):
                     row = self.data[i]
-                    if (row[0][:9] != "nepomuk:/"):
+                    if (row[0] == "ont://nmm:genre"):
+                        pass
+
+                    elif (row[0][:9] != "nepomuk:/"):
                         self.hiddenResults += 1
                         self.data[i][0] = self.ignoredRowMark + self.data[i][0]
                         continue
@@ -2160,13 +2163,23 @@ class cDataFormat():
                             line = self.htmlTableRow % (value, "", "")
 
                     else:
+                        columns = ["", "", ""]
                         for i in range(0, numColumns):
-                            if line:
-                                line += "<br />\n"
+                            columns[i] = "%s" % row[i]
+                            #if line:
+                            #    line += "<br />\n"
 
-                            line += "%s" % row[i]
+                            #line += "%s" % row[i]
 
-                        line = self.htmlTableRow % (line, "", "")
+                        if (columns[0] == "ont://nmm:genre"):
+                            #if not columns[1]:
+                                #TODO: arreglar esto ya que aunque se visualiza la query luego falla.
+                            #    columns[1] = "&nbsp;"
+
+                            columns[0] = "<a href=\"query:/genre:+'%(label)s'\">%(label)s</a>" % {"label": columns[1]}
+                            columns[1] = row[0]
+
+                        line = self.htmlTableRow % (columns[0], columns[1], columns[2])
 
                     if line:
                         self.renderedLines[renderPage] += [line]
