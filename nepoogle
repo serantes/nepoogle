@@ -752,6 +752,17 @@ class Nepoogle(QWidget):
             url = "http://www.google.com:/search?q=%s&ie=UTF-8&oe=UTF-8" % url[14:].replace("?", "%3F").replace("&", "%26")
             subprocess.Popen(["kioclient", "exec", url])
 
+        elif (url[:16] == "html2clipboard:/"):
+            try:
+                #TODO: check this because seems like toHtml() is not working properly.
+                html = toUnicode(self.wvOutput.page().mainFrame().toHtml().toUtf8())
+                if html:
+                    subprocess.Popen(["qdbus", "org.kde.klipper", "/klipper", "setClipboardContents", html])
+
+            except:
+                pass
+
+
         elif url[:6] == 'konq:/':
             subprocess.Popen(['konqueror', url[6:]])
 
@@ -975,7 +986,7 @@ class Nepoogle(QWidget):
 
             self.setRating(None, rating)
 
-        elif (url[:17] == "sprql2clipboard:/"):
+        elif (url[:18] == "sparql2clipboard:/"):
             try:
                 if (self.lastSPARQLQuery != ""):
                     subprocess.Popen(["qdbus", "org.kde.klipper", "/klipper", "setClipboardContents", self.lastSPARQLQuery])
