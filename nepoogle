@@ -1925,6 +1925,12 @@ class Nepoogle(QWidget):
         elif (searchString.find("--mnia:") >= 0):
             searchString = searchString.replace("--mnia:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
 
+        elif (searchString.find("--mmar:") >= 0):
+            searchString = searchString.replace("--mmar:", "--musicplayer genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+
+        elif (searchString.find("--mmal:") >= 0):
+            searchString = searchString.replace("--mmal:", "--musicplayer genre:-instrumental album:")
+
         return searchString
 
 
