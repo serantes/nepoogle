@@ -2432,7 +2432,8 @@ class cCfgManager():
                             value = oCP.getint(group, key)
 
                         elif (self.cfg[group][key][1] == "lst"):
-                            value = oCP.get(group, key).split(",")
+                            #value = re.sub(r'\s', '', oCP.get(group, key)).split(',')
+                            value = [item.strip() for item in oCP.get(group, key).split(',')]
 
                         else:
                             value = oCP.get(group, key)
