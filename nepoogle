@@ -1950,10 +1950,6 @@ class Nepoogle(QWidget):
             return searchString
 
         items = searchString.split(":")
-        if (len(items) > 3):
-            # Not supported so let's general syntax error handle it.
-            return searchString
-
         macroId = items[1]
         try:
             filterValue = items[2]
@@ -1965,8 +1961,7 @@ class Nepoogle(QWidget):
 
         idx = lindex(self.macros, macroId, 0)
         if (idx != None):
-            searchString = self.macros[idx][1] + filterValue
-            print searchString
+            searchString = searchString.replace("--m:%s:" % macroId, self.macros[idx][1])
 
         #if (searchString.find("--mnit:") >= 0):
             #searchString = searchString.replace("--mnit:", "--playlist genre:-instrumental performer:")
