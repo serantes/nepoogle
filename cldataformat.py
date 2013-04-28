@@ -2835,7 +2835,7 @@ class cDataFormat():
 
                         elif (defaultType == ONTOLOGY_TYPE_MUSIC_ALBUM):
                             title = toUnicode(mainResource.property(noc_nieTitle).toString())
-                            output += '<h2><a title=\"Open album in music player view\" href="query:/--musicplayer album:\'%(title)s\'">%(title)s</a></h2><h4>%(rating)s</h4></td></tr>' \
+                            output += '<h2><a title=\"Open album in music player view\" href="query:/--musicplayer album:+\'%(title)s\'">%(title)s</a></h2><h4>%(rating)s</h4></td></tr>' \
                                         % {"title": title, "rating": self.getRatingHtml(mainResource, 22)}
 
                         elif (defaultType == ONTOLOGY_TYPE_MOVIE):
