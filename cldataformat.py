@@ -48,6 +48,7 @@ _CONST_ICONS_LIST = (_CONST_ICON_PROPERTIES, _CONST_ICON_REMOVE, \
                         _CONST_ICON_SYSTEM_RUN)
 
 class cDataFormat():
+    cfgId = "Display"
     columnsCount = 3
     coverFileNames = ['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg']
     data = []
@@ -55,14 +56,14 @@ class cDataFormat():
     hiddenOntologiesInResults = ["kao", "rdfs:Resource"] # This hidden ontologies are for results view.
     #hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:userVisible", "nao:annotation", "rdfs:comment", "nie:relatedTo"]
     hiddenOntologies = ["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"]
-    #hiddenOntologiesInverse = [NOC("nao:hasSubResource", False), NOC("dces:contributor", False), NOC("nco:contributor", False)]
-    hiddenOntologiesInverse = [NOC("nao:hasSubResource", False)]
+    #hiddenOntologiesInverse = ["nao:hasSubResource", "dces:contributor", "nco:contributor"]
+    hiddenOntologiesInverse = ["nao:hasSubResource"]
     hiddenResults = 0
     ignoredRowMark = "[#]"
     maxPageNumber = 20
     model = None
     navegable = False
-    ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
+    ontologyMusicAlbumCover = ONTOLOGY_MUSIC_ALBUM_COVER
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
     playlistDescendingOrderByAlbumYear = True
@@ -72,7 +73,7 @@ class cDataFormat():
     renderedDataRows = 0
     renderedDataText = ""
     renderedLines = []
-    skippedOntologiesInResourceIsA = [NOC("nao:hasSubResource", False)]
+    skippedOntologiesInResourceIsA = ["nao:hasSubResource"]
     structure = []
     uri = None
     videojsEnabled = False
@@ -396,7 +397,13 @@ class cDataFormat():
                     ]
 
 
-    def __init__(self, searchString = "", model = None, screenWidth = 1024, renderedDataText = None, parent = None):
+    def __init__(self, searchString = "", model = None, screenWidth = 1024, renderedDataText = None, parent = None, cfgManager = None):
+        if (cfgManager and cfgManager.cfg[self.cfgId]):
+            for key in cfgManager.cfg[self.cfgId]:
+                value = cfgManager.cfg[self.cfgId][key][0]
+                self.__dict__[key] = value
+                #print("%s: value = %s, readed = %s" % (key, self.__dict__[key], value))
+
         self.searchString = searchString
         if model == None:
             if DO_NOT_USE_NEPOMUK:
@@ -435,14 +442,15 @@ class cDataFormat():
         coverUrl = self.iconNoCover
 
         # First try to extract this information from the resource.
-        if res.hasProperty(self.ontologyMusicAlbumCover):
+        ontologyMusicAlbumCover = NOC(self.ontologyMusicAlbumCover, True)
+        if res.hasProperty(ontologyMusicAlbumCover):
             if INTERNAL_RESOURCE:
-                resUris = res.property(self.ontologyMusicAlbumCover)
+                resUris = res.property(ontologyMusicAlbumCover)
                 if vartype(resUris) != "list":
                     resUris = [resUris]
 
             else:
-                resUris = res.property(self.ontologyMusicAlbumCover).toStringList()
+                resUris = res.property(ontologyMusicAlbumCover).toStringList()
 
             for uri in resUris:
                 if INTERNAL_RESOURCE:
@@ -616,8 +624,10 @@ class cDataFormat():
                 ontologies += [toUnicode(queryResultSet["p"].toString())]
 
         for ontology in ontologies:
-            if not ontology in self.skippedOntologiesInResourceIsA:
-                result += [self.ontologyInfo(ontology)[1]]
+            if NOCR(ontology) in self.skippedOntologiesInResourceIsA:
+                continue
+
+            result += [self.ontologyInfo(ontology)[1]]
 
         # list -> to set (duplicates are removed) -> to list again.
         result = list(set(result))
@@ -2890,7 +2900,7 @@ class cDataFormat():
         if data.isValid():
             while data.next():
                 resUri = toUnicode(data["uri"].toString())
-                ontology = toUnicode(data["ont"].toString())
+                ontology = NOCR(toUnicode(data["ont"].toString()))
                 if ontology in self.hiddenOntologiesInverse:
                     continue
 

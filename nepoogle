@@ -25,6 +25,12 @@
 
 import datetime, gettext, locale, md5, os, re, signal, subprocess, sys, tempfile, threading, time
 
+if (int(sys.version.split()[0].split(".")[0]) > 2):
+    import configparser
+
+else:
+    import ConfigParser as configparser
+
 try:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
@@ -146,12 +152,15 @@ from cldataformat import *
 #ENDIF
 
 
-class nCompleter(QCompleter):
+#
+# cCompleter class
+#
+class cCompleter(QCompleter):
 
     separator = " "
 
     def __init__(self, sparqlBuilderV1, *args):
-        super(nCompleter, self).__init__(*args)
+        super(cCompleter, self).__init__(*args)
 
         model = QStringListModel()
         wordList = [ \
@@ -279,7 +288,9 @@ class cWebView(QWebView):
     #    print(checked, action)
 
 
+#
 # NepoogleMain class
+#
 class NepoogleMain(QMainWindow):
 
     def __init__(self):
@@ -319,14 +330,18 @@ class NepoogleMain(QMainWindow):
 # Nepoogle class
 #
 class Nepoogle(QWidget):
+    autoResize = True
     cache = []
     cacheRendered = []
+    cfgId = "General"
+    cfgIdMacros = "Macros"
     currUri = None
     clearResourceManagerCache = True
     defaultTextInSearchControl = _(u'Type search here')
     keyModifiers = Qt.NoModifier
     lastOntologySelected = ONTOLOGY_TITLE
     lastSPARQLQuery = ""
+    macros = []
     model = None
     navigationData = []
     nepoogleMain = None
@@ -355,6 +370,15 @@ class Nepoogle(QWidget):
         super(Nepoogle, self).__init__(None)
 
         #self.nepoogleMain = parent
+        global cfgManager
+        if cfgManager.cfg[self.cfgId]:
+            for key in cfgManager.cfg[self.cfgId]:
+                value = cfgManager.cfg[self.cfgId][key][0]
+                self.__dict__[key] = value
+                #print("%s: value = %s, readed = %s" % (key, self.__dict__[key], value))
+
+        if cfgManager.cfg[self.cfgIdMacros]:
+            self.macros = cfgManager.cfg[self.cfgIdMacros]
 
         if (screenRect != None):
             self.screenHeight = screenRect.height()
@@ -377,7 +401,7 @@ class Nepoogle(QWidget):
         self.setWindowIcon(QIcon(KIconLoader().loadIcon('nepomuk', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
 
         self.leSearch = QLineEdit(self)
-        self.leSearch.setCompleter(nCompleter(self.sparqlBuilderV1))
+        self.leSearch.setCompleter(cCompleter(self.sparqlBuilderV1))
         self.leSearch.selectOnEntry = True
 
         self.pbBackward = QPushButton(self)
@@ -447,9 +471,11 @@ class Nepoogle(QWidget):
         self.grid.addLayout(self.hbl, 1, 1)
         self.grid.addWidget(self.wvOutput, 2, 1, 5, 1)
 
+
         self.setLayout(self.grid)
 
-        self.resize(int((self.screenWidth) / 2), self.screenHeight - 50)
+        if self.autoResize:
+            self.resize(int((self.screenWidth) / 2), self.screenHeight - 50)
 
         if searchString == '':
             self.leSearch.setText(self.defaultTextInSearchControl)
@@ -680,7 +706,7 @@ class Nepoogle(QWidget):
 
         elif url[:11] == "autocover:/":
             uri = url[11:]
-            oDataFormat = cDataFormat("", self.model, self.screenWidth)
+            oDataFormat = cDataFormat("", self.model, self.screenWidth, None, None, cfgManager)
             coverUrl = oDataFormat.getCoverUrl(uri, "", False) # unknown url and don't use html encodig for url.
             if coverUrl in ("", "file://" + oDataFormat.iconNoCover) :
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("error")), _("Cover not detected.\n\nYou can drag&drop and image as \"artwork (nmm:artwork)\" to manually set one."))
@@ -1919,17 +1945,40 @@ class Nepoogle(QWidget):
 
 
     def processMacros(self, searchString = ""):
-        if (searchString.find("--mnit:") >= 0):
-            searchString = searchString.replace("--mnit:", "--playlist genre:-instrumental performer:")
+        idx = searchString.find("--m:")
+        if (idx < 0):
+            return searchString
 
-        elif (searchString.find("--mnia:") >= 0):
-            searchString = searchString.replace("--mnia:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+        items = searchString.split(":")
+        if (len(items) > 3):
+            # Not supported so let's general syntax error handle it.
+            return searchString
 
-        elif (searchString.find("--mmar:") >= 0):
-            searchString = searchString.replace("--mmar:", "--musicplayer genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+        macroId = items[1]
+        try:
+            filterValue = items[2]
+            if not filterValue:
+                raise Exception(_("An additional search string is required with a macro."))
 
-        elif (searchString.find("--mmal:") >= 0):
-            searchString = searchString.replace("--mmal:", "--musicplayer genre:-instrumental album:")
+        except:
+            raise Exception(_("An additional search string is required with a macro."))
+
+        idx = lindex(self.macros, macroId, 0)
+        if (idx != None):
+            searchString = self.macros[idx][1] + filterValue
+            print searchString
+
+        #if (searchString.find("--mnit:") >= 0):
+            #searchString = searchString.replace("--mnit:", "--playlist genre:-instrumental performer:")
+
+        #elif (searchString.find("--mnia:") >= 0):
+            #searchString = searchString.replace("--mnia:", "--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+
+        #elif (searchString.find("--mmar:") >= 0):
+            #searchString = searchString.replace("--mmar:", "--musicplayer genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:")
+
+        #elif (searchString.find("--mmal:") >= 0):
+            #searchString = searchString.replace("--mmal:", "--musicplayer genre:-instrumental album:")
 
         return searchString
 
@@ -1948,7 +1997,7 @@ class Nepoogle(QWidget):
             self.resultData, self.resultStructure, self.resultTime = self.threadQuery.getResult()
             searchString = self.threadQuery.searchString
 
-        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
+        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self, cfgManager)
         if (('musicplayer' in self.sparql.externalParameters) or ('--musicplayer' in self.sparql.externalParameters)):
             output = oDataFormat.formatAsMusicPlayer('musicplayer', self.resultData, self.resultStructure, self.resultTime)
             if self.resizeMainWindowInMusicPlayerView:
@@ -2061,7 +2110,7 @@ class Nepoogle(QWidget):
                     cachedData = lvalue(self.cacheRendered, searchString, 0, 1)
 
                 if (cachedData == None):
-                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self, cfgManager)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
 
                 else:
@@ -2069,12 +2118,12 @@ class Nepoogle(QWidget):
 
                 if (self.queryMethod == "navbutton"):
                     if (oDataFormat == None):
-                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self)
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self, cfgManager)
 
                     self.cache[self.queriesIndex] = oDataFormat
 
                 elif (self.queryMethod == "refresh"):
-                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self)
+                    oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, None, self, cfgManager)
                     output = oDataFormat.formatResourceInfo(searchString, self.sparql.shortcuts, ontologyTypes)
                     self.cache[self.queriesIndex] = oDataFormat
 
@@ -2101,7 +2150,7 @@ class Nepoogle(QWidget):
                             self.cache = self.cache[:self.queriesIndex]
 
                     if (oDataFormat == None):
-                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self)
+                        oDataFormat = cDataFormat(searchString, self.model, self.screenWidth, output, self, cfgManager)
 
                     self.cache += [oDataFormat]
 
@@ -2200,7 +2249,7 @@ class Nepoogle(QWidget):
                     self.getQueryData(searchString[3:])
 
             else:
-                raise Exception('Please, type something.')
+                raise Exception(_("Please, type something."))
 
         #try:
         #    pass
@@ -2276,6 +2325,101 @@ class Nepoogle(QWidget):
                 QMessageBox.warning(self, "%s - %s" % (PROGRAM_NAME, _("warning")), warningMsg)
 
             self.setAppCursor()
+
+
+#
+# cCfgManager class
+#
+class cCfgManager():
+
+    def __init__(self):
+
+        self.cfg = dict()
+
+        self.cfg["General"] = dict()
+        self.cfg["General"]['autoResize'] = [True, "bool"]
+        self.cfg["General"]['clearResourceManagerCache'] = [True, "bool"]
+        self.cfg["General"]['resizeMainWindowInMusicPlayerView'] = [True, "bool"]
+        self.cfg["General"]['screenHeight'] = [600, "int"]
+        self.cfg["General"]['screenWidth'] = [800, "int"]
+
+        self.cfg["Display"] = dict()
+        self.cfg["Display"]['columnsCount'] = [3, "int"]
+        self.cfg["Display"]['coverFileNames'] = [['cover.png', 'Cover.png', 'cover.jpg', 'Cover.jpg'], "lst"]
+        self.cfg["Display"]['enableImageViewer'] = [True, "bool"]
+        self.cfg["Display"]['hiddenOntologiesInResults'] = [["kao", "rdfs:Resource"], "lst"]
+        self.cfg["Display"]['hiddenOntologies'] = [["kext:unixFileGroup", "kext:unixFileMode", "kext:unixFileOwner", "nao:hasSubResource", "nao:userVisible"], "lst"]
+        self.cfg["Display"]['hiddenOntologiesInverse'] = [["nao:hasSubResource"], "lst"]
+        self.cfg["Display"]['ignoredRowMark'] = ['[#]', "str"]
+        self.cfg["Display"]['maxPageNumber'] = [20, "int"]
+        self.cfg["Display"]['ontologyMusicAlbumCover'] = ['nmm:artwork', "str"]
+        self.cfg["Display"]['playlistShowWithOneElement'] = [True, "bool"]
+        self.cfg["Display"]['playlistDescendingOrderByAlbumYear'] = [True, "bool"]
+        self.cfg["Display"]['readOnlyOntologies'] = [["kext:indexingLevel", "nie:url", "rdf:type"], "lst"]
+        self.cfg["Display"]['renderSize'] = [25, "int"]
+        self.cfg["Display"]['skippedOntologiesInResourceIsA'] = [["nao:hasSubResource"], "lst"]
+        self.cfg["Display"]['videojsEnabled'] = [False, "bool"]
+
+        self.cfg["Macros"] = dict()
+        #self.cfg["Macros"]['maa'] = ['--musicplayer genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:', "str"]
+        #self.cfg["Macros"]['mal'] = ['--musicplayer genre:-instrumental album:', "str"]
+        #self.cfg["Macros"]['nia'] = ['--playlist genre:-instrumental nmm:musicAlbum->nmm:albumArtist->nco:fullname:', "str"]
+        #self.cfg["Macros"]['nit'] = ['--playlist genre:-instrumental performer:', "str"]
+        self.cfg["Macros"]['playalbum'] = ['--musicplayer genre:-instrumental album:', "str"]
+
+
+    def loadCfg(self):
+        oCP = configparser.RawConfigParser()
+        oCP.read(NEPOOGLE_CONFIG_FILE)
+
+        for group in self.cfg.iterkeys():
+            if (group == "Macros"):
+                self.cfg[group] = []
+                for key in oCP.options(group):
+                    self.cfg[group] += [[key, oCP.get(group, key)]]
+
+            else:
+                for key in self.cfg[group]:
+                    try:
+                        if (self.cfg[group][key][1] == "bool"):
+                            value = oCP.getboolean(group, key)
+
+                        elif (self.cfg[group][key][1] == "float"):
+                            value = oCP.getfloat(group, key)
+
+                        elif (self.cfg[group][key][1] == "int"):
+                            value = oCP.getint(group, key)
+
+                        elif (self.cfg[group][key][1] == "lst"):
+                            value = oCP.get(group, key).split(",")
+
+                        else:
+                            value = oCP.get(group, key)
+
+                        self.cfg[group][key][0] = value
+
+                    except:
+                        pass
+
+        #for group in self.cfg.iterkeys():
+        #    print("[%s]" % group)
+        #    for key in self.cfg[group]:
+        #        print("%s = %s" % (key, self.cfg[group][key][0]))
+
+
+    def saveCfg(self):
+        oCP = configparser.ConfigParser()
+        for group in self.cfg.iterkeys():
+            oCP.add_section(group)
+            for key in self.cfg[group]:
+                if (self.cfg[group][key][1] == "lst"):
+                    oCP.set(group, key, ", ".join(self.cfg[group][key][0]))
+
+                else:
+                    oCP.set(group, key, self.cfg[group][key][0])
+
+        with open(NEPOOGLE_CONFIG_FILE, 'wb') as configfile:
+            oCP.write(configfile)
 
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
@@ -2567,6 +2711,9 @@ def main(args):
 
     searchString = parameters.strip()
     if gui:
+        global cfgManager
+        cfgManager = cCfgManager()
+
         if verboseMode == None:
             verboseMode = gui
 
@@ -2585,12 +2732,18 @@ def main(args):
         #options.add("nostdout", ki18n("force no stdout in gui mode"))
         #KCmdLineArgs.addCmdLineOptions(options)
 
+        if not os.path.isfile(NEPOOGLE_CONFIG_FILE):
+            cfgManager.saveCfg()
+
+        else:
+            cfgManager.loadCfg()
+
         app = KApplication()
         #app = QApplication(args)
-        
         #nepoogleMain = NepoogleMain()
         #nepoogleMain.newWindow(searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
         nepoogle = Nepoogle(None, searchString, verboseMode, QDesktopWidget().availableGeometry(-1), SPARQLBuilderV1)
+
         nepoogle.show()
         nepoogle.repaint()
         if searchString != '':
@@ -2708,7 +2861,7 @@ def main(args):
                     output += '\n\nWARNING: ' + toUtf8(warningMsg)
 
             else:
-                raise Exception('Please, type something.')
+                raise Exception(_("Please, type something."))
 
         #try:
         #    pass
