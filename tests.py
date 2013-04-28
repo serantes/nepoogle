@@ -47,9 +47,9 @@ class Test_cSparqlBuilder(unittest.TestCase):
                     [unicode('mimetype:video/x-msvideo url:".avi$"'), 1601, 1],  \
                     [unicode('genre:drama actor:+"Yeong-ae Lee" director:Park'), 1, 1], \
                     [unicode('tvshow:Coupling season:2 episode:4'), 1, 1], \
-                    [unicode('mimetype:video performer:beg releasedate:-'), 14, 1], \
+                    [unicode('mimetype:video performer:beg releasedate:-'), 13, 1], \
                     [unicode('flash:yes meteringmode:"center weighted average" whitebalance:auto saturation:- sharpness:-'), 6, 1], \
-                    [unicode('hastag:live released:-'), 529, 1] \
+                    [unicode('hastag:live released:-'), 513, 1] \
                 ]
 
     basicQueries = [\
@@ -61,7 +61,7 @@ class Test_cSparqlBuilder(unittest.TestCase):
                 ]
 
     commandQueries = [\
-                    [unicode('--tags', 'utf-8'), 147, 1], \
+                    [unicode('--tags', 'utf-8'), 146, 1], \
                     [unicode('--actors:.*bing.*', 'utf-8'), 2, 1] \
                 ]
 
