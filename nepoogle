@@ -2409,7 +2409,7 @@ class cCfgManager():
 
     def saveCfg(self):
         oCP = configparser.ConfigParser()
-        for group in self.cfg.iterkeys():
+        for group in sorted(self.cfg.iterkeys()):
             oCP.add_section(group)
             for key in self.cfg[group]:
                 if (self.cfg[group][key][1] == "lst"):

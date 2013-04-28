@@ -438,7 +438,7 @@ def urlDecode(url, retryIfThereArePercentCharacters = True):
 def urlHtmlEncode(url):
     if not url:
         return url
-    
+
     if ((url[0] == "/") or (url[:7] == "file://")):
         return url.replace("\"", "&quot;").replace("#", "%23").replace("'", "&#39;").replace("?", "%3F")
 

@@ -97,7 +97,7 @@ if (SYSTEM_ENCODING == ""):
 KDE4_CONFIG_PATH = unicode(kdecore.KStandardDirs().locate("config", ""), SYSTEM_ENCODING).split(":")[0].strip()
 KDE4_DATA_PATH = unicode(kdecore.KStandardDirs().locate("data", ""), SYSTEM_ENCODING).split(":")[0].strip()
 
-NEPOOGLE_CONFIG_FILE = KDE4_CONFIG_PATH + PROGRAM_NAME + ".rc"
+NEPOOGLE_CONFIG_FILE = KDE4_CONFIG_PATH + PROGRAM_NAME + "rc"
 #NEPOOGLE_DATA_PATH = KDE4_DATA_PATH + PROGRAM_NAME + "/"
 NEPOOGLE_DATA_PATH = KDE4_DATA_PATH + "nepomuk/data/" + PROGRAM_NAME + "/"
 NEPOOGLE_DOWNLOADS_PATH = NEPOOGLE_DATA_PATH + "downloads/"
