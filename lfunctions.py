@@ -163,6 +163,9 @@ def dialogTextInputBox(message = _("Text"), value = "", ontType = "string"):
 
             parameters = ["zenity", "--calendar", "--title=" + PROGRAM_NAME, "--text=" + message, oldYear, oldMonth, oldDay, "--date-format=%Y-%m-%d"]
 
+        elif (ontType == "sparql"):
+            parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, value, "800", "600"]
+
         else:
             parameters = ["kdialog", "--title", PROGRAM_NAME, "--textinputbox", message, value]
 

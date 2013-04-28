@@ -421,6 +421,12 @@ class Nepoogle(QWidget):
         self.pbRefreshStop.setToolTip(_("Refresh"))
         self.connect(self.pbRefreshStop, SIGNAL("clicked()"), self.refreshStopAction)
 
+        self.pbSparql = QPushButton(self)
+        self.pbSparql.setIcon(QIcon(KIconLoader().loadIcon('sparql', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
+        self.pbSparql.setToolTip(_("Edit Sparql"))
+        #self.pbForward.setGeometry(QRect(self.leSearch.height(), self.leSearch.height(), self.leSearch.height(), self.leSearch.height()))
+        self.connect(self.pbSparql, SIGNAL("clicked()"), self.editSparql)
+
         self.pbHelp = QPushButton(self)
         self.pbHelp.setIcon(QIcon(KIconLoader().loadIcon('help-contents', KIconLoader.NoGroup, KIconLoader.SizeSmall)))
         self.pbHelp.setToolTip(_("Help"))
@@ -433,6 +439,7 @@ class Nepoogle(QWidget):
         self.hbl.addWidget(self.pbForward)
         self.hbl.addWidget(self.pbRefreshStop)
         self.hbl.addWidget(self.leSearch)
+        self.hbl.addWidget(self.pbSparql)
         self.hbl.addWidget(self.pbHelp)
 
         self.wvOutput = cWebView(self)
@@ -1717,6 +1724,34 @@ class Nepoogle(QWidget):
                 self.queryMethod = "refresh"
                 self.wvOutput.setHtml('<html><body><h3>Searching... <img src="file://%s"></h3></body></html>' \
                     % self.iconProcessIdle)
+
+
+    def editSparql(self):
+        searchString = toUnicode(self.leSearch.text().trimmed().toUtf8())
+        sparql = None
+        if (searchString[:3] in ("-m0 ", "-m1 ")):
+            searchString = searchString[3:]
+
+        elif (searchString[:7].lower() == "sparql:"):
+            sparql = searchString[7:]
+
+        else:
+            pass
+
+        if not sparql:
+            sparql = self.sparql.buildQuery(searchString).strip()
+
+        newSparql = dialogTextInputBox("Edit SPARQL:", sparql, "sparql")
+
+        if (newSparql and (newSparql != sparql)):
+            self.leSearch.setText("SPARQL:" + newSparql)
+            self.setAppCursor(Qt.BusyCursor)
+            self.setPendingQuery(True)
+            self.wvOutput.setHtml('<html><body><h3>Reading... <img src="file://%s"></h3></body></html>' \
+                                    % self.iconProcessIdle)
+            if forceExec:
+                self.execQuery()
+                self.setPendingQuery(False)
 
 
     def showHelp(self):
