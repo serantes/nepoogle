@@ -65,7 +65,7 @@ class cDataFormat():
     ontologyMusicAlbumCover = NOC(ONTOLOGY_MUSIC_ALBUM_COVER, True)
     outFormat = 1  # 1- Text, 2- Html
     playlistShowWithOneElement = True
-    playlistDescendingOrderInAlbumYear = True
+    playlistDescendingOrderByAlbumYear = True
     queryString = ""
     readOnlyOntologies = ["kext:indexingLevel", "nie:url", "rdf:type"]
     renderSize = 25
@@ -873,7 +873,7 @@ class cDataFormat():
                                     + trackName
 
                 trackName = trackName.replace('"', '&quot;')
-                if self.playlistDescendingOrderInAlbumYear:
+                if self.playlistDescendingOrderByAlbumYear:
                     sortAdjustment = 9999
 
                 else:
