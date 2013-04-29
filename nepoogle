@@ -1310,6 +1310,10 @@ class Nepoogle(QWidget):
                 else:
                     label = value
 
+                if not value:
+                    value = "<empty>"
+                    label = "<empty>"
+
                 resourcesList += [[value, label]]
 
             if (len(values) > 1):
@@ -1327,6 +1331,9 @@ class Nepoogle(QWidget):
             else:
                 value = resourcesList[0][0]
                 label = resourcesList[0][1]
+                if not value:
+                    value = "<empty>"
+                    label = "<empty>"
 
             if ((value != None) and (value != "")):
                 reply = QMessageBox.question(self, '%s - remove property' % PROGRAM_NAME, "Remove property \"%s\" with value \"%s\"?" % (self.ontologyInfo(ontology)["label"], label), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -1340,6 +1347,9 @@ class Nepoogle(QWidget):
 
                     else:
                         resource = Nepomuk2.Resource(uri)
+                        if (value == "<empty>"):
+                            value = ""
+
                         resource.removeProperty(NOC(ontology, True), toVariant(value))
                         mustRefresh = SLEEP_AFTER_UPDATE
 
