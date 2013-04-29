@@ -2464,7 +2464,7 @@ class cCfgManager():
         oCP = configparser.ConfigParser()
         for group in sorted(self.cfg.iterkeys()):
             oCP.add_section(group)
-            for key in self.cfg[group]:
+            for key in sorted(self.cfg[group]):
                 if (self.cfg[group][key][1] == "lst"):
                     oCP.set(group, key, ", ".join(self.cfg[group][key][0]))
 
