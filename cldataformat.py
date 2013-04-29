@@ -2172,9 +2172,9 @@ class cDataFormat():
                             #line += "%s" % row[i]
 
                         if (columns[0] == "ont://nmm:genre"):
-                            #if not columns[1]:
+                            if not columns[1]:
                                 #TODO: arreglar esto ya que aunque se visualiza la query luego falla.
-                            #    columns[1] = "&nbsp;"
+                                columns[1] = "&nbsp;"
 
                             columns[0] = "<a href=\"query:/genre:+'%(label)s'\">%(label)s</a>" % {"label": columns[1]}
                             columns[1] = row[0]

@@ -606,6 +606,9 @@ class cSparqlBuilder2():
         else:
             # String.
             if (operator == "=="):
+                if (value == u'\xa0'): # &nbsp; character, a special case to allow search for empty strings from the gui.
+                    value = ""
+
                 filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': "=", 'val': value}
 
             else:
