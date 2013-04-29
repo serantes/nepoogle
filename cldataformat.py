@@ -73,6 +73,7 @@ class cDataFormat():
     renderedDataRows = 0
     renderedDataText = ""
     renderedLines = []
+    showCopyHtmlLink = False
     skippedOntologiesInResourceIsA = ["nao:hasSubResource"]
     structure = []
     uri = None
@@ -2277,7 +2278,12 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        text += " Copy <a href=\"html2clipboard:/\">HTML</a> or last executed <a href=\"sparql2clipboard:/\">SPARQL query</a> to clipboard."
+        if self.showCopyHtmlLink:
+            text += " Copy <a href=\"html2clipboard:/\">HTML</a> or last executed <a href=\"sparql2clipboard:/\">SPARQL query</a> to clipboard."
+
+        else:
+            text += " Copy last executed <a href=\"sparql2clipboard:/\">SPARQL query</a> to clipboard."
+
         text += "<div class=\"bottom\" style=\"clear: both;\">\n" \
                     + self.htmlProgramInfo \
                     + "</div>\n" \
@@ -2375,7 +2381,9 @@ class cDataFormat():
                     % {'records': len(self.data), \
                         'seconds': queryTime, \
                         'sechtml': time.time() - htmlQueryTime}
-        output += " Copy <a href=\"html2clipboard:/\">HTML</a> to clipboard."
+        if self.showCopyHtmlLink:
+            output += " Copy <a href=\"html2clipboard:/\">HTML</a> to clipboard."
+
         output += "<div class=\"bottom\" style=\"clear: both;\">\n" \
                     + self.htmlProgramInfo \
                     + "</div>\n" \
@@ -3027,7 +3035,9 @@ class cDataFormat():
         if len(audios) + len(images) + len(videos) > 0:
             output += "\n</div>\n"
 
-        output += " Copy <a href=\"html2clipboard:/\">HTML</a> to clipboard."
+        if self.showCopyHtmlLink:
+            output += " Copy <a href=\"html2clipboard:/\">HTML</a> to clipboard."
+
         output += "<div class=\"bottom\" style=\"clear: both;\">\n" \
                     + self.htmlProgramInfo \
                     + "</div>\n" \

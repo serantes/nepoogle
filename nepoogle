@@ -2408,6 +2408,7 @@ class cCfgManager():
         self.cfg["Display"]['playlistDescendingOrderByAlbumYear'] = [True, "bool"]
         self.cfg["Display"]['readOnlyOntologies'] = [["kext:indexingLevel", "nie:url", "rdf:type"], "lst"]
         self.cfg["Display"]['renderSize'] = [25, "int"]
+        self.cfg["Display"]['showCopyHtmlLink'] = [False, "bool"]
         self.cfg["Display"]['skippedOntologiesInResourceIsA'] = [["nao:hasSubResource"], "lst"]
         self.cfg["Display"]['videojsEnabled'] = [False, "bool"]
 
