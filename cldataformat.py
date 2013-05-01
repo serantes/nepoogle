@@ -2366,15 +2366,16 @@ class cDataFormat():
                 audios += videos
                 videos = []
 
+            mustSort = (self.searchString.find('--sort') < 0)
             if len(audios) > 0:
-                output += self.buildPlaylist(audios, 'audio')
+                output += self.buildPlaylist(audios, 'audio', True, mustSort)
 
             #TODO: it's this loop used?
             for item in images:
                 lines += u"Image: %s<br />\n" % item[0]
 
             if len(videos) > 0:
-                output += self.buildPlaylist(videos, 'video', True, self.searchString.find('--sort') < 0)
+                output += self.buildPlaylist(videos, 'video', True, mustSort)
 
         output += self.htmlTableFooter
         output += "<br />\n" + self.htmlStadistics \
@@ -2464,7 +2465,7 @@ class cDataFormat():
             if (len(audios) > 0):
                 oldPlaylistHeigh = self.playlistHeight
                 self.playlistHeight = self.playlistHeight*1.80
-                output += self.buildPlaylist(audios, 'audio', False)
+                output += self.buildPlaylist(audios, 'audio', False, (self.searchString.find('--sort') < 0))
                 self.playlistHeight = oldPlaylistHeigh
 
             #if (len(videos) > 0):
