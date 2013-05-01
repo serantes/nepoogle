@@ -212,6 +212,24 @@ class cCompleter(QCompleter):
 #
 # cWebView class
 #
+class cWebkitBridge(QObject):
+    model = None
+
+    def __init__(self, *args):
+        super(cWebkitBridge, self).__init__(*args)
+
+
+    def test(self):
+        return "test"
+
+
+    def getLyrics(self, uri = None):
+        return "getLyrics (%s)" % qrand()
+
+
+#
+# cWebView class
+#
 class cWebView(QWebView):
 
     owner = None
@@ -345,6 +363,7 @@ class Nepoogle(QWidget):
     model = None
     navigationData = []
     nepoogleMain = None
+    oBridge = None
     pendingQuery = False
     queriesIndex = -1
     queryMethod = None
@@ -393,6 +412,9 @@ class Nepoogle(QWidget):
             self.model = Nepomuk2.ResourceManager.instance().mainModel()
 
         self.sparqlBuilderV1 = SPARQLBuilderV1
+
+        #self.oBridge = cWebkitBridge()
+        #self.oBridge.model = self.model
 
         #self.setGeometry(300, 300, 250, 150)
         #self.setWindowTitle(os.path.basename(sys.argv[0]))
@@ -449,6 +471,7 @@ class Nepoogle(QWidget):
         self.connect(self.wvOutput, SIGNAL("loadProgress(int)"), self.loadProgress)
         #self.connect(self.wvOutput, SIGNAL("dropEvent(QDropEvent*)"), self.dropHandler)
         #self.connect(self.wvOutput.page(), SIGNAL("customContextMenuRequested(const QPoint&)"), self.customContextMenuRequested)
+        self.connect(self.wvOutput, SIGNAL("javaScriptWindowObjectCleared"), self.javaScriptWindowObjectCleared)
 
         # This action has no changes.
         self.actionOpenLink = self.wvOutput.pageAction(QWebPage.OpenLink)
@@ -477,7 +500,6 @@ class Nepoogle(QWidget):
         #self.grid.addWidget(self.leSearch, 1, 1)
         self.grid.addLayout(self.hbl, 1, 1)
         self.grid.addWidget(self.wvOutput, 2, 1, 5, 1)
-
 
         self.setLayout(self.grid)
 
@@ -593,9 +615,16 @@ class Nepoogle(QWidget):
             self.execQuery()
 
         self.textToFind = ""
+        #self.wvOutput.page().mainFrame().addToJavaScriptWindowObject("nepoogleBridge", self.oBridge)
+
 
     def loadProgress(self, progress):
         #print('loadProgress:', progress)
+        pass
+
+
+    def javaScriptWindowObjectCleared(self):
+        #self.wvOutput.page().mainFrame().addToJavaScriptWindowObject("nepoogleBridge", self.oBridge)
         pass
 
 
@@ -1086,11 +1115,12 @@ class Nepoogle(QWidget):
             query = 'SELECT DISTINCT ?r\n' \
                     'WHERE {\n' \
                         '\t{\n' \
-                        '\t\t?r rdfs:domain %s . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
+                        '\t\t?r rdfs:domain %s . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nie#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t} UNION {\n' \
-                        '\t\t?r rdfs:range ?range . FILTER(?range IN (rdfs:Literal, xsd:date, xsd:dateTime, xsd:string)) . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
+                        '\t\t?r rdfs:range ?range . FILTER(?range IN (rdfs:Literal, xsd:date, xsd:dateTime, xsd:string)) . FILTER(REGEX(?r, "/nco#", "i") || REGEX(?r, "/nie#", "i") || REGEX(?r, "/nmm#", "i")) .\n' \
                         '\t}\n' \
                     '}\n' \
+                    'ORDER BY ?r\n' \
                     % (resourceMainType)
 
             values = []
@@ -1107,7 +1137,8 @@ class Nepoogle(QWidget):
             if queryResultSet.isValid():
                 while queryResultSet.next():
                     ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                    values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)["label"], ontology)]]
+                    if (lindex(values, ontology) == None):
+                        values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)["label"], ontology)]]
 
             if (values != []):
                 parameters = []
@@ -1569,7 +1600,7 @@ class Nepoogle(QWidget):
                     if (dropType == "resource"):
                         query = 'SELECT DISTINCT ?r\n' \
                                 'WHERE {\n' \
-                                    '\t?r rdfs:range %s . FILTER(REGEX(?r, "nao#", "i") || REGEX(?r, "nco#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
+                                    '\t?r rdfs:range %s . FILTER(REGEX(?r, "nao#", "i") || REGEX(?r, "nco#", "i") || REGEX(?r, "nie#", "i") || REGEX(?r, "nmm#", "i")) . \n' \
                                 '}\n' \
                                 % (resourceMainType)
 
@@ -1586,7 +1617,7 @@ class Nepoogle(QWidget):
                     if queryResultSet.isValid():
                         while queryResultSet.next():
                             ontology = NOCR(toUnicode(queryResultSet["r"].toString()))
-                            if (not ontology in (ONTOLOGY_LINK, ONTOLOGY_SUBJECT)):
+                            if (lindex(values, ontology) == None):
                                 values += [[ontology, "%s (%s)" % (self.ontologyInfo(ontology)["label"], ontology)]]
 
                     if (values != []):
