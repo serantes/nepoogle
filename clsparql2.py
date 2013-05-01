@@ -528,7 +528,7 @@ class cSparqlBuilder2():
 
         elif (valType == "flash"):
             value = value.lower()
-            if (value.lower() in NEXIF_FLASH_LOWER):
+            if (value in NEXIF_FLASH_LOWER):
                 value = lindex(NEXIF_FLASH_LOWER, value)
 
             else:
@@ -551,7 +551,8 @@ class cSparqlBuilder2():
             filterExpression = self.buildFloatFilter(value, operator, 1)
 
         elif (valType == "indexinglevel"):
-            if (value.lower() in KEXT_INDEXING_LEVEL_LOWER):
+            value = value.lower()
+            if (value in KEXT_INDEXING_LEVEL_LOWER):
                 value = lindex(KEXT_INDEXING_LEVEL_LOWER, value)
 
             else:
@@ -560,7 +561,8 @@ class cSparqlBuilder2():
             filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "meteringmode"):
-            if (value.lower() in NEXIF_METERING_MODE_LOWER):
+            value = value.lower()
+            if (value in NEXIF_METERING_MODE_LOWER):
                 value = lindex(NEXIF_METERING_MODE_LOWER, value)
                 if (value == 7):
                     value = 255
@@ -577,7 +579,8 @@ class cSparqlBuilder2():
             filterExpression = "FILTER(?v %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "saturation"):
-            if (value.lower() in NEXIF_SATURATION_LOWER):
+            value = value.lower()
+            if (value in NEXIF_SATURATION_LOWER):
                 value = lindex(NEXIF_SATURATION_LOWER, value)
 
             else:
@@ -586,7 +589,8 @@ class cSparqlBuilder2():
             filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "sharpness"):
-            if (value.lower() in NEXIF_SHARPNESS_LOWER):
+            value = value.lower()
+            if (value in NEXIF_SHARPNESS_LOWER):
                 value = lindex(NEXIF_SHARPNESS_LOWER, value)
 
             else:
@@ -595,7 +599,8 @@ class cSparqlBuilder2():
             filterExpression = "FILTER(xsd:integer(?v) %(op)s %(val)s) ." % {'op': operator, 'val': value}
 
         elif (valType == "whitebalance"):
-            if (value.lower() in NEXIF_WHITE_BALANCE_LOWER):
+            value = value.lower()
+            if (value in NEXIF_WHITE_BALANCE_LOWER):
                 value = lindex(NEXIF_WHITE_BALANCE_LOWER, value)
 
             else:
