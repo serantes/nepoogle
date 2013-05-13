@@ -1362,7 +1362,24 @@ class cSparqlBuilder2():
         return allFilters
 
 
-    def executeQuery(self, query = ""):
+    def getNextWord(self, word = None):
+        result = []
+        if word:
+            query= "SELECT DISTINCT ?v\n" \
+                    "WHERE {\n" \
+                    "  ?r ?p ?v . ?v bif:contains \"'%s*'\" . FILTER(REGEX(?v, \"^%s\"^^xsd:string, \"i\")) .\n" \
+                    "}\n" % (word, word)
+
+            result, structure, queryTime = self.executeQuery(query, False)
+            #print query
+            #print queryTime
+            #for item in result:
+            #    print item
+
+        return result
+
+
+    def executeQuery(self, query = "", enableInference = None):
         try:
             if not self.model:
                 if DO_NOT_USE_NEPOMUK:
@@ -1374,8 +1391,11 @@ class cSparqlBuilder2():
             else:
                 model = self.model
 
+            if (enableInference == None):
+                enableInference = self.enableInference
+
             queryTime = time.time()
-            if self.enableInference:
+            if enableInference:
                 result = model.executeQuery(query, Soprano.Query.QueryLanguageSparql)
 
             else:

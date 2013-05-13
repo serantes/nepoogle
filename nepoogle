@@ -168,15 +168,15 @@ class cCompleter(QCompleter):
                     ]
 
         if sparqlBuilderV1:
-            oSparqlBuilder = cSparqlBuilder()
+            self.oSparqlBuilder = cSparqlBuilder()
 
         else:
-            oSparqlBuilder = cSparqlBuilder2()
+            self.oSparqlBuilder = cSparqlBuilder2()
 
-        for shortcut in oSparqlBuilder.shortcuts:
+        for shortcut in self.oSparqlBuilder.shortcuts:
             wordList += [shortcut[1] + ":"]
 
-        for command in oSparqlBuilder.commands:
+        for command in self.oSparqlBuilder.commands:
             if (command[0] in ("--editcfg", "--help", "--musicplayer", "--playlist", "--playmixed", "--shownepoogleupdates")):
                 wordList += [command[0]]
 
@@ -198,7 +198,7 @@ class cCompleter(QCompleter):
         path = QCompleter.pathFromIndex(self, index)
 
         lst = str(self.widget().text()).split(self.separator)
-        if len(lst) > 1:
+        if (len(lst) > 1):
             path = '%s%s%s' % (self.separator.join(lst[:-1]), self.separator, path)
 
         return path
@@ -206,6 +206,13 @@ class cCompleter(QCompleter):
 
     def splitPath(self, path):
         path = str(path.split(self.separator)[-1]).lstrip(self.separator)
+        #if (not path and (self.currentRow() < 0)):
+        #    try:
+        #        data = self.oSparqlBuilder.getNextWord(toUnicode(self.currentCompletion().toUtf8()).strip().split(" ")[-1])
+
+        #    except:
+        #        pass
+
         return [path]
 
 
@@ -2346,7 +2353,6 @@ class Nepoogle(QWidget):
                 output = self.buildHelp(self.sparql)
 
             elif (msgError == "editcfg"):
-                global cfgManager
                 output = cfgManager.readRawCfg()
 
             elif (msgError == "notindexed"):
