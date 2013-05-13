@@ -177,7 +177,7 @@ class cCompleter(QCompleter):
             wordList += [shortcut[1] + ":"]
 
         for command in oSparqlBuilder.commands:
-            if (command[0] in ("--help", "--musicplayer", "--playlist", "--playmixed", "--shownepoogleupdates")):
+            if (command[0] in ("--editcfg", "--help", "--musicplayer", "--playlist", "--playmixed", "--shownepoogleupdates")):
                 wordList += [command[0]]
 
             else:
@@ -515,7 +515,7 @@ class Nepoogle(QWidget):
         self.leSearch.setSelection(0,999)
         self.leSearch.setFocus()
 
-        if searchString == '':
+        if not searchString:
             self.execQuery('--help')
 
 
@@ -2282,7 +2282,11 @@ class Nepoogle(QWidget):
 
                 if (searchEngine == 0):
                     processedSearchString = searchString[3:]
-                    if processedSearchString.find("--help") >= 0:
+                    if (processedSearchString.find("--help") >= 0):
+                        self.execQuery("e1 " + processedSearchString)
+                        return True
+
+                    elif (processedSearchString.fin("--editcfg") >= 0):
                         self.execQuery("e1 " + processedSearchString)
                         return True
 
@@ -2338,8 +2342,12 @@ class Nepoogle(QWidget):
 
         except:
             msgError = "%s" % sys.exc_info()[1]
-            if msgError == 'help':
+            if (msgError == 'help'):
                 output = self.buildHelp(self.sparql)
+
+            elif (msgError == "editcfg"):
+                global cfgManager
+                output = cfgManager.readRawCfg()
 
             elif (msgError == "notindexed"):
                 output = "<html>\n  <head>\n    <title>%(title)s</title>\n    " \
@@ -2371,7 +2379,7 @@ class Nepoogle(QWidget):
         if not threadModeEnabled:
             self.setPendingQuery(False)
             self.queryMethod = None
-            if (output != ""):
+            if output:
                 if (self.queriesIndex >= 0):
                     if ((self.cache[self.queriesIndex-1].navegable) or (self.cache[self.queriesIndex].navegable)):
                         dataIndex = lindex(self.navigationData, searchString)
@@ -2504,6 +2512,34 @@ class cCfgManager():
 
         with open(NEPOOGLE_CONFIG_FILE, 'wb') as configfile:
             oCP.write(configfile)
+
+
+    def readRawCfg(self):
+        try:
+            f = open(NEPOOGLE_CONFIG_FILE, 'r')
+            try:
+                result = "<HTML><HEAD><meta charset='UTF-8'></HEAD><BODY>you can modify these values at your own risk.<TABLE>\n"
+                for line in f:
+                    lstLines = line.strip().split("=")
+                    if (len(lstLines) > 1):
+                        result += "<TR><TD>%s</TD><TD><P contenteditable='true'>%s</P></TD></TR>" % (lstLines[0], lstLines[1])
+
+                    else:
+                        result += "</TABLE><BR/><B>%s</B><TABLE>" % lstLines[0]
+
+
+                result += "\n</TABLE></BODY></HTML>"
+
+            finally:
+                f.close()
+
+        except:
+            result = ""
+
+        return result
+
+    def writeRawCfg(self, cfg):
+        pass
 
 
 def hackQueryParser(query = '', hackLevel = 'e2'):
@@ -2964,7 +3000,7 @@ def main(args):
         except:
             msgError = "%s" % sys.exc_info()[1]
             output = ""
-            if msgError == 'help':
+            if (msgError == "help"):
                 output = buildHelp()
 
             elif (msgError == "notindexed"):
@@ -3000,7 +3036,7 @@ def main(args):
                 else:
                     output = "ERROR: %s" % sys.exc_info()[1]
 
-        if output != "":
+        if output:
             print(toUtf8(output))
 
 

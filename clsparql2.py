@@ -67,6 +67,7 @@ class cSparqlBuilder2():
                 #[_('--findduplicates'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 #[_('--findduplicatemusic'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nmm:MusicPiece .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
                 #[_('--findduplicatephotos'), ['SELECT DISTINCT ?hash AS ?id\nWHERE {\n  ?x0 nao:userVisible 1 .\n  ?x0 nfo:hasHash ?hash .\n  ?x0 a nexif:Photo .\n}\nGROUP BY ?hash\nHAVING (COUNT(?x0) > 1)\nORDER BY ?hash', [], [], []]], \
+                [_('--editcfg'), ['editcfg', [], [], []]], \
                 [_('--genres'), ['\'ont://nmm:genre\' AS ?id ?v', [[0, 'nmm:genre', True, True, True]], ['nmm:genre'], []]], \
                 [_('--help'), ['help', [], [], []]], \
                 [_('--images'), ['?r', [[0, 'nie:url', True, True, True], [1, 'nie:title', True, True, True]], ['nie:url'], ['nfo:RasterImage']]], \
@@ -272,7 +273,10 @@ class cSparqlBuilder2():
                 raise Exception("Unknown command <b>%s</b>, try <b>--help</b> command." % self.command)
 
             # Comandos especiales.
-            if self.tempData[0] == 'help':
+            if (self.tempData[0] == "help"):
+                raise Exception(self.tempData[0])
+
+            elif (self.tempData[0] == "editcfg"):
                 raise Exception(self.tempData[0])
 
             elif (self.tempData[0] == "notindexed"):
