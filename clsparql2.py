@@ -131,6 +131,8 @@ class cSparqlBuilder2():
     searchForUrlsTooInBasicSearch = True
 
     sortCaseInsensitive = True
+    sortEmptyToEnd = True
+    sortMagicChar = unichr(0xFF)
     sortSuffix = '_sort'
 
     stdoutQuery = False
@@ -752,7 +754,11 @@ class cSparqlBuilder2():
                     columnName = "?" + item[1].split(":")[1]
                     if self.sortCaseInsensitive:
                         if (ontologyInfo(item[1])[2].lower() in ("string", "resource", "literal")):
-                            sortText += "%s(bif:lower(%s)) " % (sortType, columnName)
+                            if self.sortEmptyToEnd:
+                                sortText += u"%s(bif:concat(bif:lower(%s), '%s')) " % (sortType, columnName, self.sortMagicChar)
+
+                            else:
+                                sortText += u"%s(bif:lower(%s)) " % (sortType, columnName)
 
                         else:
                             sortText += "%s(%s) " % (sortType, columnName)
@@ -817,7 +823,7 @@ class cSparqlBuilder2():
                 strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, value)
                 if self.searchForUrlsTooInBasicSearch:
                     strTerm += indent + "} UNION {\n"
-                    strTerm += indent2 + "%s nie:url ?v . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, value)
+                    strTerm += indent2 + "%s nie:url ?v . FILTER(?v = \"%s\"^^xsd:string) .\n" % (self.resultFieldSubqueries, toN3(value))
 
                 strTerm += indent + "}\n"
 
@@ -828,7 +834,7 @@ class cSparqlBuilder2():
                 strTerm += indent2 + "%s ?p1 [ ?p2 ?v ] . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 if self.searchForUrlsTooInBasicSearch:
                     strTerm += indent + "} UNION {\n"
-                    strTerm += indent2 + "%s nie:url ?v . FILTER(REGEX(?v, \"%s\"^^xsd:string, 'i')) .\n" % (self.resultFieldSubqueries, value)
+                    strTerm += indent2 + "%s nie:url ?v . FILTER(REGEX(?v, \"%s\"^^xsd:string, 'i')) .\n" % (self.resultFieldSubqueries, toN3(value))
 
                 strTerm += indent + "}\n"
 
