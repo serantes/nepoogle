@@ -131,7 +131,7 @@ class cSparqlBuilder2():
     searchForUrlsTooInBasicSearch = True
 
     sortCaseInsensitive = True
-    sortEmptyToEnd = True
+    sortEmptyToEnd = False
     sortMagicChar = unichr(0xFF)
     sortSuffix = '_sort'
 
@@ -939,6 +939,16 @@ class cSparqlBuilder2():
                                 # Text search in all resource ontologies.
                                 # Sample: ?r nmm:performer [ ?p ?v ] .
                                 clause += "%(r)s ?p %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
+
+                            #TODO: this must be changed to fields comparison method and not only a method for width and heigh ontologies.
+                            elif ((value == "height") and (ontology == "nfo:width")):
+                                clause += "%(r)s %(ont)s %(v)s ; nfo:height ?height . " % {'ont': ontology, 'r': rName, 'v': vName}
+                                value = "?" + value
+
+                            elif ((value == "width") and (ontology == "nfo:height")):
+                                clause += "%(r)s %(ont)s %(v)s ; nfo:width ?width . " % {'ont': ontology, 'r': rName, 'v': vName}
+                                value = "?" + value
+                            #TODO: this must be changed to fields comparison method and not only a method for width and heigh ontologies.
 
                             else:
                                 clause += "%(r)s %(ont)s %(v)s . " % {'ont': ontology, 'r': rName, 'v': vName}
