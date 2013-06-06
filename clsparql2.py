@@ -828,6 +828,12 @@ class cSparqlBuilder2():
                 strTerm += indent + "}\n"
 
             else:
+                testBifContainsList = value.split()
+                wildCardError = False
+                for item in testBifContainsList:
+                    if ((len(item) <= 4) and (item.find("*") > -1)):
+                        raise Exception(_("Wildcard word needs at least 4 leading characters because a Virtuoso backend limitation."))
+
                 strTerm += indent + "{\n"
                 strTerm += indent2 + "%s ?p ?v . FILTER(bif:contains(?v, \"'%s'\")) .\n" % (self.resultFieldSubqueries, value)
                 strTerm += indent + "} UNION {\n"
