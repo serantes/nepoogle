@@ -391,6 +391,14 @@ class cDataFormat():
                                 "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]", \
                             "{type}", \
                             _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE + _CONST_ICON_DOLPHIN + _CONST_ICON_KONQUEROR], \
+                        ["nmo:Email", \
+                            "<b>From</b>: {nmo:from->nco:fullname|l|s:contact} %[<b>To</b>: {nmo:to->nco:fullname|l|s:contact}%]" \
+                                "%[<br /><b>Date</b>: {nmo:sentDate}%]" \
+                                "%[<br /><b>Subject</b>: {nmo:messageSubject}%]" \
+                                "%[<br /><b>Url</b>: {nie:url|of}%]" \
+                                "%[<br /><b>Rating</b>: {nao:numericRating|x:rating}%]", \
+                            "{type}", \
+                            _CONST_ICON_PROPERTIES + _CONST_ICON_REMOVE], \
                         ["rdfs:Resource", \
                             "{nie:url|l|of|ol}%[<br />Title: {nie:title}%]", \
                             "{type}", \
@@ -1103,7 +1111,7 @@ class cDataFormat():
                     iconRun = iconRun.replace('"', "'")
                     iconDir = self.htmlLinkOpenLocation % {"uri": urlHtmlEncode(os.path.dirname(item[2]))}
                     iconDir = iconDir.replace('"', "'")
-                    if item[5] != "":
+                    if item[5]:
                         iconGoogleLyrics = self.htmlRenderLink('googlemultisearch', "lyrics " + item[5])
                         iconGoogleLyrics = iconGoogleLyrics.replace('"', "'")
 
@@ -1153,6 +1161,9 @@ class cDataFormat():
                 % {"type": listType, "scrollTop": self.playlistHeight - self.playlistScrollHeight, "scrollBottom": self.playlistScrollHeight}
 
             if not playlistMode:
+                #output += \
+                #    "    var lyrics = document.getElementById('lyrics');\n" \
+                #    "    lyrics.innerHTML = nepoogleBridge.test();\n" \
                 output += \
                     "    var trackcover = document.getElementById('trackcover');\n" \
                     "    trackcover.setAttribute('src', %(type)splayList[%(type)scurrItem][2]);\n" \
@@ -2472,6 +2483,9 @@ class cDataFormat():
             #    output += self.buildPlaylist(videos, 'video')
 
         output += self.htmlTableFooter
+        if self.showCopyHtmlLink:
+            output += " Copy <a href=\"html2clipboard:/\">HTML</a> to clipboard."
+
         output += self.htmlFooter
 
         #if True:
