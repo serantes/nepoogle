@@ -167,6 +167,7 @@ class cSparqlBuilder2():
                     ['nmm:episodeNumber', _('episode'), _('ep'), _("tvshow episode number")], \
                     ['nexif:flash', _('flash'), _('fl'), _("photograph flash")], \
                     ['nco:fullname', _('fullname'), _('fn'), _("contact's fullname")], \
+                    ['_nmo:from->*', _('from'), _('fr'), _("email from")], \
                     ['!nmm:genre', _('genre'), _('ge'), _("genre")], \
                     ['_nao:hasTag->nao:identifier', _('hastag'), _('ht'), _("tag name")], \
                     ['nfo:height', _('height'), _('he'), _("height")], \
@@ -197,12 +198,14 @@ class cSparqlBuilder2():
                     ['nexif:sharpness', _('sharpness'), _('sh'), _("photograph sharpness")], \
                     ['nmm:season', _('season'), _('se'), _("tvshow season")], \
                     ['nmm:setNumber', _('setnumber'), _('sn'), _("music album disc number")], \
+                    ['nmo:messageSubject', _('subject'), _('su'), _("email subject")], \
                     ['nao:identifier', _('tag'), _('ta'), _("tag name")], \
                     ['nfo:depiction<-nie:title', _('tdepictions'), _('tds'), _("tvseries depictions")], \
                     ['nie:title', _('title'), _('ti'), _("resource title")], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn'), _("song track number")], \
-                    ['_nco:topic->*',_('topic'), _('to'), _("resources by topic")], \
-                    ['nco:topic?->*', _('topics'), _('tos'), _("topics")], \
+                    ['_nmo:to->*', _('to'), _('to'), _("email to")], \
+                    ['_nco:topic->*',_('topic'), _('tp'), _("resources by topic")], \
+                    ['nco:topic?->*', _('topics'), _('tps'), _("topics")], \
                     ['nmm:series->nie:title', _('tvserie'), _('ts'), _("tvshows by series")], \
                     ['rdf:type=nmm:TVSeries->nie:title', _('tvseries'), _('tvs'), _("tvseries")], \
                     ['_nmm:series<-nmm:actor->nco:fullname', _('tvseriesactors'), _('tva'), _("tv series by actor")], \
