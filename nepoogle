@@ -2293,7 +2293,7 @@ class Nepoogle(QWidget):
                         self.execQuery("e1 " + processedSearchString)
                         return True
 
-                    elif (processedSearchString.fin("--editcfg") >= 0):
+                    elif (processedSearchString.find("--editcfg") >= 0):
                         self.execQuery("e1 " + processedSearchString)
                         return True
 
