@@ -148,10 +148,12 @@ class cSparqlBuilder2():
                     ['nmm:musicAlbum->nie:title', _('album'), _('al'), _("music pieces in album")], \
                     ['rdf:type=nmm:MusicAlbum->nie:title',_('albums'), _('als'), _("albums")], \
                     ['nao:altLabel', _('altlabel'), _('all'), _("alternative label")], \
-                    ['_nmm:composer->*',_('composer'), _('co'), _("music pieces by composer")], \
-                    ['nmm:composer?->*', _('composers'), _('cos'), _("composers")], \
+                    ['_nmm:composer->*',_('composer'), _('com'), _("music pieces by composer")], \
+                    ['nmm:composer?->*', _('composers'), _('coms'), _("composers")], \
                     ['?ont->nco:fullname', _('contact'), _('co'), _("resources by contact")], \
                     ['rdf:type=nco:Contact->nco:fullname', _('contacts'), _('cos'), _("contacts")], \
+                    ['nco:contributor->nco:fullname', _('contribute'), _('coe'), _("contribute to a resource")], \
+                    ['nco:contributor<-nco:fullname', _('contributor'), _('cor'), _("resource contributors")], \
                     ['nao:created', _('created'), _('cd'), _("created")], \
                     ['nie:contentCreated', _('contentcreated'), _('cc'), _("content created")], \
                     ['_nco:creator->*', _('creator'), _('cr'), _("resources by creator")], \
@@ -626,7 +628,10 @@ class cSparqlBuilder2():
                 filterExpression = "FILTER(?v %(op)s \"%(val)s\"^^xsd:string) ." % {'op': "=", 'val': value}
 
             else:
-                useRegEx = forceRegEx or not (("*" not in value) and (value[0] != "^") and (value[-1] != "$"))
+                chars = set('*^$&|,.')
+                useRegEx = forceRegEx or any((char in chars) for char in value)
+                #useRegEx = forceRegEx or not (("*" not in value) and (value[0] != "^") and (value[-1] != "$"))
+
                 if useRegEx:
                     value = value.replace('(', '\\\(').replace(')', '\\\)').replace('+', '\\\+')
                     if (operator == "="):
