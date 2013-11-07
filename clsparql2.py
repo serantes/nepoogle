@@ -201,7 +201,7 @@ class cSparqlBuilder2():
                     ['nmm:season', _('season'), _('se'), _("tvshow season")], \
                     ['nmm:setNumber', _('setnumber'), _('sn'), _("music album disc number")], \
                     ['nmo:messageSubject', _('subject'), _('su'), _("email subject")], \
-                    ['nao:identifier', _('tag'), _('ta'), _("tag name")], \
+                    ['rdf:type=nao:Tag->nao:prefLabel', _('tags'), _('ta'), _("tags by label")], \
                     ['nfo:depiction<-nie:title', _('tdepictions'), _('tds'), _("tvseries depictions")], \
                     ['nie:title', _('title'), _('ti'), _("resource title")], \
                     ['nmm:trackNumber', _('tracknumber'), _('tn'), _("song track number")], \
@@ -648,8 +648,8 @@ class cSparqlBuilder2():
                         filterExpression = "FILTER(bif:contains(?v, \"'%(val)s'\")) ." % {'val': value}
 
                     elif (operator == "!="):
-                        #TODO: qué pasa aquí.
-                        filterExpression = "FILTER(!bif:contains((?v, \"'%(val)s'\")) ." % {'val': value}
+                        #TODO: qué coño pasa aquí?
+                        filterExpression = "FILTER(!bif:contains(?v, \"'%(val)s'\")) ." % {'val': value}
                         #filterExpression = "FILTER(!REGEX(?v, \"%(val)s\"^^xsd:string, 'i')) ." % {'val': value}
 
                     else:
